@@ -2,8 +2,8 @@ name: Deploy to VPS
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "*"
 
 jobs:
   deploy:
@@ -24,7 +24,7 @@ jobs:
 
               set -e
 
-              cd /home/deploy/app
+              cd /home/deploy/ft_transcendence
 
               echo "Pulling latest code..."
               git pull origin main

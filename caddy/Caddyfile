@@ -1,0 +1,13 @@
+http://localhost {
+    handle /api/* {
+        reverse_proxy backend:7772    
+    }
+
+    handle /health {
+        respond "OK" 200
+    }
+
+    handle /* {
+        reverse_proxy frontend:7771
+    }
+}

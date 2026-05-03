@@ -1,0 +1,8 @@
+services:
+  backend:
+    ports:
+      - "7772:7772"
+
+  postgres:
+    ports:
+      - "7773:5432"

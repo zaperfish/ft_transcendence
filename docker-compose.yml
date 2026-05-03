@@ -7,7 +7,7 @@ services:
       - "7080:80"
       - "7443:443"
     volumes:
-      - $PWD:/etc/caddy
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
 
   frontend:

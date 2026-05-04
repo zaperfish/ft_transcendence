@@ -4,8 +4,8 @@ services:
     image: caddy:2.11.2-alpine
     restart: unless-stopped
     ports:
-      - "7080:80"
-      - "7443:443"
+      - "${HTTP_PORT:-7080}:80"
+      - "${HTTPS_PORT:-7443}:443"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -27,9 +27,9 @@ services:
     image: postgres:18.3
     restart: unless-stopped
     environment:
-      POSTGRES_USER: testuser
-      POSTGRES_PASSWORD: securepass
-      POSTGRES_DB: ft_transcendence
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pgdata:/var/lib/postgresql
 

@@ -21,6 +21,12 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
 
   postgres:
     container_name: ft_transcendence_postgres

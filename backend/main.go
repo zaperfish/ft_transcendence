@@ -2,17 +2,30 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func connectDB() (*gorm.DB, error) {
-	dsn := "user=testuser password=securepass dbname=ft_transcendence host=postgres port=5432 sslmode=disable"
+	dsn := fmt.Sprintf(
+		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"),
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_PORT"),
+	)
+
+	fmt.Println(dsn)
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
@@ -22,6 +35,14 @@ func connectDB() (*gorm.DB, error) {
 }
 
 func main() {
+	in_container_runtime := os.Getenv("CONTAINER_RUNTIME")
+	if in_container_runtime != "true" {
+		godotenv.Load()
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+	}
+
 	db, err := connectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -53,6 +74,7 @@ func main() {
 		})
 	})
 
+	fmt.Println("Start listening...")
 	err = http.ListenAndServe(":7772", r)
 	if err != nil {
 		log.Fatal(err)

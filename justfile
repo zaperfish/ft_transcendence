@@ -8,7 +8,7 @@ list:
 # Deploys the app to production
 prod:
     podman-compose down --remove-orphans
-    podman-compose -f docker-compose.yml up -d --build --force-recreate
+    podman-compose -f compose.yml up -d --build --force-recreate
 
 # Standard dev way to start the entire app
 up:
@@ -27,6 +27,10 @@ up-service service:
 # Show running containers
 ps:
     @podman ps --format "table {{{{.Names}}\t{{{{.Status}}\t{{{{.Ports}}"
+
+# Show log for a service
+logs service:
+    podman-compose logs -f {{service}}
 
 # ── Cleanup ────────────────────────────────────────────────────
 # Remove all stopped containers

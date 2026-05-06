@@ -37,10 +37,13 @@ func connectDB() (*gorm.DB, error) {
 func main() {
 	in_container_runtime := os.Getenv("CONTAINER_RUNTIME")
 	if in_container_runtime != "true" {
-		godotenv.Load()
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
+		fmt.Println("Started backend locally")
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		fmt.Println("Started backend in container")
 	}
 
 	db, err := connectDB()
@@ -74,7 +77,7 @@ func main() {
 		})
 	})
 
-	fmt.Println("Start listening...")
+	fmt.Println("Start listening on port 7772...")
 	err = http.ListenAndServe(":7772", r)
 	if err != nil {
 		log.Fatal(err)

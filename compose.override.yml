@@ -1,12 +1,12 @@
 services:
   frontend:
     ports:
-      - "7771:7771"
+      - "${FRONTEND_EXPOSED_PORT}:7771"
 
   backend:
     ports:
-      - "7772:7772"
+      - "${BACKEND_EXPOSED_PORT}:7772"
 
   postgres:
     ports:
-      - "7773:5432"
+      - "${POSTGRES_EXPOSED_PORT}:5432"

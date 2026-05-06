@@ -24,11 +24,14 @@ prod:
 
 # Standard dev way to start the entire app
 up:
-    podman-compose up -d
+    podman-compose up -d --build
 
 # Stop all services
 down:
     podman-compose down
+
+# Rebuild
+re: down up
 
 # Start a specific service (example: just up postgres)
 serve service:

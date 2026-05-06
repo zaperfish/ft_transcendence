@@ -1,4 +1,4 @@
-http://localhost {
+http://localhost, https://localhost {
     handle /api/* {
         reverse_proxy backend:7772    
     }
@@ -7,7 +7,28 @@ http://localhost {
         respond "OK" 200
     }
 
-    handle /* {
+    handle {
         reverse_proxy frontend:7771
     }
 }
+
+# Production needs a setup like this since the system caddy already handels
+# TLS this caddy should not handle TLS and use http
+# Havent found a good solution yet
+# Combining the site addresses causes weird errors (I should test this more)
+# Maybe to separate caddy files? One for prod and one for dev?
+# Issue for another day
+
+# :80 {
+#     handle /api/* {
+#         reverse_proxy backend:7772    
+#     }
+
+#     handle /healthcheck {
+#         respond "OK" 200
+#     }
+
+#     handle {
+#         reverse_proxy frontend:7771
+#     }
+# }

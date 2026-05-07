@@ -3,10 +3,12 @@ http://localhost, https://localhost {
         reverse_proxy backend:7772    
     }
 
-    handle /scalar {
-        rewrite * /index.html
-        root * /srv
-        file_server
+    handle /openapi.json {
+        reverse_proxy backend:7772
+    }
+
+    handle /docs {
+        reverse_proxy backend:7772
     }
 
     handle /health {

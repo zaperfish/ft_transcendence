@@ -3,6 +3,14 @@ http://localhost, https://localhost {
         reverse_proxy backend:7772    
     }
 
+    handle /openapi.json {
+        reverse_proxy backend:7772
+    }
+
+    handle /docs {
+        reverse_proxy backend:7772
+    }
+
     handle /health {
         respond "OK" 200
     }

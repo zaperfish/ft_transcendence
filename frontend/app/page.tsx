@@ -12,7 +12,7 @@ export default function Page() {
     setError(null);
     setResult(null);
     try {
-      const res = await fetch("/api/test");
+      const res = await fetch("/api/postgres-version");
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
       setResult(data);

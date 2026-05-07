@@ -3,6 +3,12 @@ http://localhost, https://localhost {
         reverse_proxy backend:7772    
     }
 
+    handle /scalar {
+        rewrite * /index.html
+        root * /srv
+        file_server
+    }
+
     handle /health {
         respond "OK" 200
     }

@@ -8,6 +8,7 @@ services:
       - "${HTTPS_PORT:-7443}:443"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/scalar.html:/srv/index.html
       - caddy_data:/data
 
   frontend:

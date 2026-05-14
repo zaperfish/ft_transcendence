@@ -7,11 +7,10 @@ ft_transcendence is the final group project of the 42 Common Core curriculum. It
 - [Team Roles](#team-roles)
 - [Architecture](#architecture)
 - [Contributing](#contributing)
-- [Notes](#notes)
 <br><br>
 
 ## About This Project
-TODO: @yingzhan can you add a description of the web app we are trying to build here?
+This project is a clone of the popular Meetup app, implementing its core functionality to help users discover, create, and join events.
 <br><br>
 
 ## Team Roles
@@ -50,7 +49,6 @@ Total achieved points: 4
 | Monitoring system (Prometheus + Grafana) |  | 2 |
 | Health checks & backup system |  | 1 |
 | CI/CD deployment pipeline |  | 1 |
-<br><br>
 
 ## Architecture
 
@@ -105,20 +103,45 @@ When developing the frontend:
 
 ## Contributing
 
-To contribute create your own development branch with a sensible name. If you are 
+To contribute, please create a feature or fix branch from the latest `main` branch and open a pull request.
 
-1. `git checkout -b docs/update-readme`
-2. `git add yourstuff`
-3. `git commit -m "docs: update docs`
-4. `git push -u origin docs/update-readme`
-5. `gh pr create`
+### Steps
 
-## Notes
+1. **Make sure your local `main` is up to date**
+```bash
+git checkout main
+git pull origin main
+```
 
-- Why are we using a justfile?
-    Makefiles original purpose was to compile your program, but nowadays it is commonly used as a command runner for a project. Just is a modern replacement for Make and focuses just on the command running part. In that sense it is stricly superior to make as it is more focused in its purpose and does not have the technical debt make has (one example: you dont have to deal with phony targets with just).
-- What is this flake.nix file?
-    The flake.nix file is a file used when you develop with the package manager nix or on nixos (if you dont use nix you can ignore this file). Here it provides a development shell with all the necessary tools to work on the project.
-- Why do we use the approach of **local development with dependencies in containers**?
-    TODO
-- 
+2. **Create a new branch**  
+Use a clear and descriptive name:
+```bash
+git checkout -b docs/update-readme
+```
+
+3. **Make your changes and stage them**
+```bash
+git add .
+```
+
+4. **Commit your changes**  
+Follow a clear commit message convention:
+```bash
+git commit -m "docs: update README"
+```
+
+5. **Push your branch**
+```bash
+git push -u origin docs/update-readme
+```
+
+6. **Open a pull request**
+```bash
+gh pr create
+```
+
+### Tips
+
+- Keep branches focused on a single change  
+- Use meaningful commit messages (`feat:`, `fix:`, `docs:`, etc.)  
+- Rebase or pull latest `main` if your branch gets outdated

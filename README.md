@@ -6,6 +6,7 @@ ft_transcendence is the final group project of the 42 Common Core curriculum. It
 - [About This Project](#about-this-project)
 - [Team Roles](#team-roles)
 - [Architecture](#architecture)
+- [Setup] (#setup)
 - [Contributing](#contributing)
 <br><br>
 
@@ -100,6 +101,21 @@ When developing the frontend:
 <p align="center">
   <img src="./docs/assets/backend_dev_architecture.drawio.svg" width="400"/>
 </p>
+
+## Setup
+
+1. Clone the repository and navigate to the project root:
+```bash
+git clone <repo_url>
+cd <repo_name>
+```
+
+2. Set up your environment variables:
+  - You can create your own .env file, or
+  - Use the provided example setup and execute:
+  ```bash
+  just init-env
+  ```
 
 ## Contributing
 

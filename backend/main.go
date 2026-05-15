@@ -1,8 +1,8 @@
 package main
 
 import (
-    "ft_transcendence/backend/internal/user"
-    "ft_transcendence/backend/internal/db"
+    "ft_transcendence/backend/user"
+    "ft_transcendence/backend/db"
 	"context"
 	// "encoding/json"
 	"fmt"

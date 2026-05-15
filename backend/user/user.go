@@ -2,7 +2,7 @@ package user
 
 import (
 	"net/http"
-    "ft_transcendence/backend/internal/db"
+    "ft_transcendence/backend/db"
 	"context"
     "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"

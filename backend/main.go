@@ -18,6 +18,11 @@ import (
 	"gorm.io/gorm"
 )
 
+type User struct {
+    gorm.Model
+    Name string
+}
+
 func connectDB() (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
@@ -34,6 +39,8 @@ func connectDB() (*gorm.DB, error) {
 	}
 
 	log.Println("Connected to DB:", dsn)
+
+    db.AutoMigrate(&User{})
 
 	return db, nil
 }
@@ -70,6 +77,8 @@ func main() {
 
 	huma.Get(api, "/api/postgres-version", h.HandlePostgresVersion)
 	huma.Get(api, "/api/greeting/{name}", h.HandleGreeting)
+    huma.Get(api, "/api/users/{name}", h.HandleUserGet)
+    huma.Post(api, "/api/users/new", h.HandleCreateUser)
 
 	log.Println("Listening on :7772...")
 	err = http.ListenAndServe(":7772", r)
@@ -115,52 +124,49 @@ func (h *Handler) HandleGreeting(ctx context.Context, input *GreetingInput) (*Gr
 	return resp, nil
 }
 
-// func main() {
-// 	if os.Getenv("CONTAINER_RUNTIME") != "true" {
-// 		err := godotenv.Load()
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
+type UserCreateInput struct {
+    Body struct {
+        Name string `json:"name" maxLength:"30" example:"Max" doc:"username"`
+    }
+}
 
-// 		fmt.Println("Started backend locally")
-// 	} else {
-// 		fmt.Println("Started backend in container")
-// 	}
+type UserGetInput struct {
+    Name string `path:"name" maxLength:"30" example:"1234" doc:"get user by id"`
+}
 
-// 	db, err := connectDB()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+type UserGetOutput struct {
+    Body struct {
+        Name string `json:"name" example:"Max" doc:"user creation confirmation"`
+    }
+}
 
-// 	r := chi.NewRouter()
-// 	r.Use(middleware.Logger)
+type UserCreateOutput struct {
+    Body struct {
+        Message string `json:"message" example:"'Max' created successfully" doc:"user creation confirmation"`
+    }
+}
 
-// 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-// 		w.Write([]byte("HELLO"))
-// 	})
+func (h *Handler) HandleUserGet(ctx context.Context, input *UserGetInput) (*UserGetOutput, error) {
+    resp := &UserGetOutput{}
 
-// 	r.Route("/api", func(r chi.Router) {
-// 		r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
-// 			var version string
-// 			if err := db.Raw("SELECT version()").Scan(&version).Error; err != nil {
-// 				http.Error(w, "query failed", http.StatusInternalServerError)
-// 				return
-// 			}
+    user, err := gorm.G[User](h.db).Where("name = ?", input.Name).First(ctx)
+    if err != nil {
+        return nil, err
+    }
 
-// 			w.Header().Set("Content-Type", "application/json")
-// 			json.NewEncoder(w).Encode(map[string]string{"version": version})
-// 			// data := map[string]string{"message": "This message got server by the backend"}
-// 			// w.Header().Set("Content-Type", "application/json")
-// 			// json.NewEncoder(w).Encode(data)
-// 		})
-// 		r.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
-// 			w.Write([]byte("Healthcheck ok"))
-// 		})
-// 	})
+    // resp.Body.Id = user.Id
+    resp.Body.Name = user.Name
+    return resp, nil
+}
 
-// 	fmt.Println("Start listening on port 7772...")
-// 	err = http.ListenAndServe(":7772", r)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
+func (h *Handler) HandleCreateUser(ctx context.Context, input *UserCreateInput) (*UserCreateOutput, error) {
+    resp := &UserCreateOutput{}
+    fmt.Println("name:", input.Body.Name)
+    err := gorm.G[User](h.db).Create(ctx, &User{Name: input.Body.Name})
+    if err != nil {
+        return nil, err
+    }
+
+    resp.Body.Message = fmt.Sprintf("'%s' created successfully", input.Body.Name)
+    return resp, nil
+}

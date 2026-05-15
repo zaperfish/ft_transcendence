@@ -37,6 +37,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_INTERNAL_PORT}
+      CONTAINER_RUNTIME: true
 
   postgres:
     container_name: ft_transcendence_postgres

@@ -1,6 +1,8 @@
 package main
 
 import (
+    "ft_transcendence/backend/user"
+    "ft_transcendence/backend/db"
 	"context"
 	// "encoding/json"
 	"fmt"
@@ -14,35 +16,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type User struct {
-    gorm.Model
-    Name string
-}
-
-func connectDB() (*gorm.DB, error) {
-	dsn := fmt.Sprintf(
-		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_DB"),
-		os.Getenv("POSTGRES_HOST"),
-		os.Getenv("POSTGRES_PORT"),
-	)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
-	log.Println("Connected to DB:", dsn)
-
-    db.AutoMigrate(&User{})
-
-	return db, nil
+type Handler struct {
+	db *gorm.DB
 }
 
 func main() {
@@ -57,7 +35,7 @@ func main() {
 		log.Println("Backend is in container")
 	}
 
-	db, err := connectDB()
+	db, err := db.ConnectDB()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,20 +53,15 @@ func main() {
 
 	h := &Handler{db: db}
 
+    user.RegisterApi(api, db)
 	huma.Get(api, "/api/postgres-version", h.HandlePostgresVersion)
 	huma.Get(api, "/api/greeting/{name}", h.HandleGreeting)
-    huma.Get(api, "/api/users/{name}", h.HandleUserGet)
-    huma.Post(api, "/api/users/new", h.HandleCreateUser)
 
 	log.Println("Listening on :7772...")
 	err = http.ListenAndServe(":7772", r)
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-type Handler struct {
-	db *gorm.DB
 }
 
 type PostgresVersionOutput struct {
@@ -122,51 +95,4 @@ func (h *Handler) HandleGreeting(ctx context.Context, input *GreetingInput) (*Gr
 	resp := &GreetingOutput{}
 	resp.Body.Message = fmt.Sprintf("Hello %s", input.Name)
 	return resp, nil
-}
-
-type UserCreateInput struct {
-    Body struct {
-        Name string `json:"name" maxLength:"30" example:"Max" doc:"username"`
-    }
-}
-
-type UserGetInput struct {
-    Name string `path:"name" maxLength:"30" example:"1234" doc:"get user by id"`
-}
-
-type UserGetOutput struct {
-    Body struct {
-        Name string `json:"name" example:"Max" doc:"user creation confirmation"`
-    }
-}
-
-type UserCreateOutput struct {
-    Body struct {
-        Message string `json:"message" example:"'Max' created successfully" doc:"user creation confirmation"`
-    }
-}
-
-func (h *Handler) HandleUserGet(ctx context.Context, input *UserGetInput) (*UserGetOutput, error) {
-    resp := &UserGetOutput{}
-
-    user, err := gorm.G[User](h.db).Where("name = ?", input.Name).First(ctx)
-    if err != nil {
-        return nil, err
-    }
-
-    // resp.Body.Id = user.Id
-    resp.Body.Name = user.Name
-    return resp, nil
-}
-
-func (h *Handler) HandleCreateUser(ctx context.Context, input *UserCreateInput) (*UserCreateOutput, error) {
-    resp := &UserCreateOutput{}
-    fmt.Println("name:", input.Body.Name)
-    err := gorm.G[User](h.db).Create(ctx, &User{Name: input.Body.Name})
-    if err != nil {
-        return nil, err
-    }
-
-    resp.Body.Message = fmt.Sprintf("'%s' created successfully", input.Body.Name)
-    return resp, nil
 }

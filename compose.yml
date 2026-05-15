@@ -4,8 +4,13 @@ services:
     image: caddy:2.11.2-alpine
     restart: unless-stopped
     ports:
-      - "${HTTP_PORT:-7080}:80"
-      - "${HTTPS_PORT:-7443}:443"
+      - "${CADDY_HTTP_HOST_PORT:-7080}:80"
+      - "${CADDY_HTTPS_HOST_PORT:-7443}:443"
+    environment:
+      HTTP_DOMAINS: ${CADDY_HTTP_DOMAINS}
+      HTTPS_DOMAINS: ${CADDY_HTTPS_DOMAINS}
+      FRONTEND_PORT: ${FRONTEND_INTERNAL_PORT}
+      BACKEND_PORT: ${BACKEND_INTERNAL_PORT}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - ./caddy/scalar.html:/srv/index.html
@@ -15,6 +20,9 @@ services:
     container_name: ft_transcendence_frontend
     build: ./frontend
     restart: unless-stopped
+    environment:
+      PORT: ${FRONTEND_INTERNAL_PORT}
+      NODE_ENV: ${NODE_ENV}
 
   backend:
     container_name: ft_transcendence_backend
@@ -23,12 +31,12 @@ services:
     depends_on:
       - postgres
     environment:
+      PORT: ${BACKEND_INTERNAL_PORT}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      CONTAINER_RUNTIME: "true"
+      POSTGRES_PORT: ${POSTGRES_INTERNAL_PORT}
 
   postgres:
     container_name: ft_transcendence_postgres

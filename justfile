@@ -7,6 +7,21 @@ default: list
 list:
     @just --list
 
+# ── Setup ────────────────────────────────────────────────────
+
+# Removes your old environment and replaces it with an example environment
+init-env:
+    rm .env
+    rm frontend/.env
+    rm backend/.env
+    cp .env.example .env
+    echo "LOCAL_API_BASE_URL=http://localhost:{{env_var('BACKEND_HOST_PORT')}}" >> frontend/.env
+    echo "POSTGRES_USER={{env_var('POSTGRES_USER')}}" >> backend/.env
+    echo "POSTGRES_PASSWORD={{env_var('POSTGRES_PASSWORD')}}" >> backend/.env
+    echo "POSTGRES_DB={{env_var('POSTGRES_DB')}}" >> backend/.env
+    echo "POSTGRES_PORT={{env_var('POSTGRES_HOST_PORT')}}" >> backend/.env
+    echo "POSTGRES_HOST=localhost" >> backend/.env
+
 # ── Production ────────────────────────────────────────────────────
 
 # Deploys the app to production

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"ft_transcendence/backend/db"
+	"ft_transcendence/backend/event"
 	"ft_transcendence/backend/user"
 	// "encoding/json"
 	"fmt"
@@ -54,6 +55,7 @@ func main() {
 	h := &Handler{db: db}
 
 	user.RegisterApi(api, db)
+	event.RegisterApi(api, db)
 	huma.Get(api, "/api/postgres-version", h.HandlePostgresVersion)
 	huma.Get(api, "/api/greeting/{name}", h.HandleGreeting)
 

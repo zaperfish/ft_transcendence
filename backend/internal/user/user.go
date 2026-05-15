@@ -3,7 +3,6 @@ package user
 import (
 	"net/http"
     "ft_transcendence/backend/internal/db"
-    // "fmt"
 	"context"
     "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
@@ -31,7 +30,7 @@ func registerCreate(api huma.API, database *gorm.DB) {
         Path:           "/api/users/new",
         Summary:        "Create a new user",
         Description:    "Create a new user with all the parameters",
-        // DefaultStatus:  201,
+        DefaultStatus:  201,
         Tags:           []string{"Users"},
     }, func(ctx context.Context, in *input) (*struct{}, error) {
         err := gorm.G[db.User](database).Create(ctx, &db.User{Name: in.Body.Name})
@@ -57,7 +56,7 @@ func registerGet(api huma.API, database *gorm.DB) {
         Path:           "/api/users/{name}",
         Summary:        "Query user information",
         Description:    "Get all the information about a user",
-        // DefaultStatus:  200,
+        DefaultStatus:  200,
         Tags:           []string{"Users"},
     }, func(ctx context.Context, in *input) (*output, error) {
         resp := &output{}
@@ -65,8 +64,6 @@ func registerGet(api huma.API, database *gorm.DB) {
         if err != nil {
             return nil, err
         }
-
-        // resp.Body.Id = user.Id
         resp.Body.Name = user.Name
         return resp, nil
     })

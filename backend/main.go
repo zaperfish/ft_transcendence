@@ -24,7 +24,7 @@ type Handler struct {
 }
 
 func main() {
-	if os.Getenv("LOCAL_DEV") == "true" {
+	if os.Getenv("CONTAINER_RUNTIME") != "true" {
 		err := godotenv.Load()
 		if err != nil {
 			log.Fatal(err)

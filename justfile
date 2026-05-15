@@ -21,6 +21,7 @@ init-env:
     echo "POSTGRES_DB={{env_var('POSTGRES_DB')}}" >> backend/.env
     echo "POSTGRES_PORT={{env_var('POSTGRES_HOST_PORT')}}" >> backend/.env
     echo "POSTGRES_HOST=localhost" >> backend/.env
+    echo "LOCAL_DEV=true" >> backend/.env
 
 # ── Production ────────────────────────────────────────────────────
 

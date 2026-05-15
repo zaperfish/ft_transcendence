@@ -1,6 +1,8 @@
 package main
 
 import (
+    "ft_transcendence/backend/internal/user"
+    "ft_transcendence/backend/internal/db"
 	"context"
 	// "encoding/json"
 	"fmt"
@@ -14,35 +16,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type User struct {
-    gorm.Model
-    Name string
-}
-
-func connectDB() (*gorm.DB, error) {
-	dsn := fmt.Sprintf(
-		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_DB"),
-		os.Getenv("POSTGRES_HOST"),
-		os.Getenv("POSTGRES_PORT"),
-	)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
-	log.Println("Connected to DB:", dsn)
-
-    db.AutoMigrate(&User{})
-
-	return db, nil
+type Handler struct {
+	db *gorm.DB
 }
 
 func main() {
@@ -57,7 +35,7 @@ func main() {
 		log.Println("Backend is in container")
 	}
 
-	db, err := connectDB()
+	db, err := db.ConnectDB()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,6 +53,7 @@ func main() {
 
 	h := &Handler{db: db}
 
+    user.RegisterApi(api, db)
 	huma.Get(api, "/api/postgres-version", h.HandlePostgresVersion)
 	huma.Get(api, "/api/greeting/{name}", h.HandleGreeting)
     huma.Get(api, "/api/users/{name}", h.HandleUserGet)
@@ -85,10 +64,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-type Handler struct {
-	db *gorm.DB
 }
 
 type PostgresVersionOutput struct {

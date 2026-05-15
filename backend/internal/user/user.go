@@ -1,19 +1,12 @@
 package user
 
 import (
+	"net/http"
     "ft_transcendence/backend/internal/db"
-    "fmt"
+    // "fmt"
 	"context"
-	// "net/http"
-
     "gorm.io/gorm"
-    // "gorm.io/driver/postgres"
-
 	"github.com/danielgtaylor/huma/v2"
-	// "github.com/danielgtaylor/huma/v2/adapters/humachi"
-	// "github.com/go-chi/chi/v5"
-	// "github.com/go-chi/chi/v5/middleware"
-
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
@@ -21,55 +14,60 @@ type handler struct {
     db *gorm.DB
 }
 
-func RegisterApi(api huma.API, db *gorm.DB) {
-    h := &handler{db: db}
-    huma.Get(api, "/api/users/{name}", h.HandleGet)
-    huma.Post(api, "/api/users/new", h.HandleCreate)
+func RegisterApi(api huma.API, database *gorm.DB) {
+    registerGet(api, database)
+    registerCreate(api, database)
 }
 
-type UserCreateInput struct {
-    Body struct {
-        Name string `json:"name" maxLength:"30" example:"Max" doc:"username"`
+func registerCreate(api huma.API, database *gorm.DB) {
+    type input struct {
+        Body struct {
+            Name string `json:"name" maxLength:"30" example:"Max" doc:"username"`
+        }
     }
+    huma.Register(api, huma.Operation{
+        OperationID:    "create-user",
+        Method:         http.MethodPost,
+        Path:           "/api/users/new",
+        Summary:        "Create a new user",
+        Description:    "Create a new user with all the parameters",
+        // DefaultStatus:  201,
+        Tags:           []string{"Users"},
+    }, func(ctx context.Context, in *input) (*struct{}, error) {
+        err := gorm.G[db.User](database).Create(ctx, &db.User{Name: in.Body.Name})
+        if err != nil {
+            return nil, err
+        }
+        return nil, nil
+    })
 }
 
-type UserGetInput struct {
-    Name string `path:"name" maxLength:"30" example:"1234" doc:"get user by id"`
-}
-
-type UserGetOutput struct {
-    Body struct {
-        Name string `json:"name" example:"Max" doc:"user creation confirmation"`
+func registerGet(api huma.API, database *gorm.DB) {
+    type input struct {
+        Name string `path:"name" maxLength:"30" example:"1234" doc:"get user by id"`
     }
-}
-
-type UserCreateOutput struct {
-    Body struct {
-        Message string `json:"message" example:"'Max' created successfully" doc:"user creation confirmation"`
+    type output struct {
+        Body struct {
+            Name string `json:"name" example:"Max" doc:"user creation confirmation"`
+        }
     }
-}
+    huma.Register(api, huma.Operation{
+        OperationID:    "get-user",
+        Method:         http.MethodGet,
+        Path:           "/api/users/{name}",
+        Summary:        "Query user information",
+        Description:    "Get all the information about a user",
+        // DefaultStatus:  200,
+        Tags:           []string{"Users"},
+    }, func(ctx context.Context, in *input) (*output, error) {
+        resp := &output{}
+        user, err := gorm.G[db.User](database).Where("name = ?", in.Name).First(ctx)
+        if err != nil {
+            return nil, err
+        }
 
-func (h *handler) HandleGet(ctx context.Context, input *UserGetInput) (*UserGetOutput, error) {
-    resp := &UserGetOutput{}
-
-    user, err := gorm.G[db.User](h.db).Where("name = ?", input.Name).First(ctx)
-    if err != nil {
-        return nil, err
-    }
-
-    // resp.Body.Id = user.Id
-    resp.Body.Name = user.Name
-    return resp, nil
-}
-
-func (h *handler) HandleCreate(ctx context.Context, input *UserCreateInput) (*UserCreateOutput, error) {
-    resp := &UserCreateOutput{}
-    fmt.Println("name:", input.Body.Name)
-    err := gorm.G[db.User](h.db).Create(ctx, &db.User{Name: input.Body.Name})
-    if err != nil {
-        return nil, err
-    }
-
-    resp.Body.Message = fmt.Sprintf("'%s' created successfully", input.Body.Name)
-    return resp, nil
+        // resp.Body.Id = user.Id
+        resp.Body.Name = user.Name
+        return resp, nil
+    })
 }

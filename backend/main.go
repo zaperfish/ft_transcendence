@@ -39,7 +39,7 @@ func connectDB() (*gorm.DB, error) {
 }
 
 func main() {
-	if os.Getenv("CONTAINER_RUNTIME") != "true" {
+	if os.Getenv("LOCAL_DEV") == "true" {
 		err := godotenv.Load()
 		if err != nil {
 			log.Fatal(err)
@@ -71,8 +71,13 @@ func main() {
 	huma.Get(api, "/api/postgres-version", h.HandlePostgresVersion)
 	huma.Get(api, "/api/greeting/{name}", h.HandleGreeting)
 
-	log.Println("Listening on :7772...")
-	err = http.ListenAndServe(":7772", r)
+	port, ok := os.LookupEnv("PORT")
+	if !ok || port == "" {
+		port = "4001"
+	}
+
+	log.Println("Listening on :" + port + "...")
+	err = http.ListenAndServe(":"+port, r)
 	if err != nil {
 		log.Fatal(err)
 	}

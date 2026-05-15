@@ -27,7 +27,7 @@ func registerCreate(api huma.API, database *gorm.DB) {
     huma.Register(api, huma.Operation{
         OperationID:    "create-user",
         Method:         http.MethodPost,
-        Path:           "/api/users/new",
+        Path:           "/api/users",
         Summary:        "Create a new user",
         Description:    "Create a new user with all the parameters",
         DefaultStatus:  201,

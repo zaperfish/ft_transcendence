@@ -60,6 +60,7 @@ ps:
 logs service:
     podman-compose logs -f {{service}}
 
+# Enter the postgres database
 db:
     podman exec -it ft_transcendence_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 

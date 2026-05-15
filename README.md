@@ -6,7 +6,7 @@ ft_transcendence is the final group project of the 42 Common Core curriculum. It
 - [About This Project](#about-this-project)
 - [Team Roles](#team-roles)
 - [Architecture](#architecture)
-- [Setup] (#setup)
+- [Setup](#setup)
 - [Contributing](#contributing)
 <br><br>
 

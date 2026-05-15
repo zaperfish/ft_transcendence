@@ -1,9 +1,9 @@
 package main
 
 import (
-    "ft_transcendence/backend/user"
-    "ft_transcendence/backend/db"
 	"context"
+	"ft_transcendence/backend/db"
+	"ft_transcendence/backend/user"
 	// "encoding/json"
 	"fmt"
 	"log"
@@ -53,13 +53,13 @@ func main() {
 
 	h := &Handler{db: db}
 
-    user.RegisterApi(api, db)
+	user.RegisterApi(api, db)
 	huma.Get(api, "/api/postgres-version", h.HandlePostgresVersion)
 	huma.Get(api, "/api/greeting/{name}", h.HandleGreeting)
 
 	port, ok := os.LookupEnv("PORT")
 	if !ok || port == "" {
-		port = "4001"
+		port = "4000"
 	}
 
 	log.Println("Listening on :" + port + "...")

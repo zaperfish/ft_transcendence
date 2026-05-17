@@ -23,6 +23,14 @@ init-env:
     echo "POSTGRES_HOST=localhost" >> backend/.env
     echo "LOCAL_DEV=true" >> backend/.env
 
+# Dump the data of the database into a seed.sql file
+dump-seed:
+    podman exec -t ft_transcendence_postgres pg_dump -U ${POSTGRES_USER} --data-only ft_transcendence > seed.sql
+
+# Seeds the database with example values
+seed-db:
+    podman exec -i ft_transcendence_postgres psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} < db/example_seed.sql
+
 # ── Production ────────────────────────────────────────────────────
 
 # Deploys the app to production
@@ -49,7 +57,7 @@ down:
 # Rebuild
 re: down up
 
-# Start a specific service (example: just up postgres)
+# Start a specific service (example: just serve postgres)
 serve service:
     podman-compose up -d --build {{service}}
 
@@ -62,8 +70,16 @@ logs service:
     podman-compose logs -f {{service}}
 
 # Enter the postgres database
-db:
+enter-db:
     podman exec -it ft_transcendence_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
+
+# Drops the database
+drop-db:
+    podman exec -t ft_transcendence_postgres psql -U $POSTGRES_USER -d postgres -c "DROP DATABASE IF EXISTS ft_transcendence;"
+
+# Reset the database and gives you a fresh slate
+reset-db: drop-db
+    podman exec -t ft_transcendence_postgres psql -U $POSTGRES_USER -d postgres -c "CREATE DATABASE ft_transcendence;"
 
 # ── Cleanup ────────────────────────────────────────────────────
 

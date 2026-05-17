@@ -117,6 +117,14 @@ cd <repo_name>
   just init-env
   ```
 
+3. Seed your database with example values (if you want)
+  - Make sure your postgres container is running
+  ```bash
+  just serve postgres
+  just reset-db
+  just seed-db
+  ```
+
 ## Contributing
 
 To contribute, please create a feature or fix branch from the latest `main` branch and open a pull request.

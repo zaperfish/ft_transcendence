@@ -66,7 +66,7 @@ type Label struct {
 	gorm.Model
 
 	// Core
-	Name string `gorm:"not null;uniqueIndex;check:length(name) >= 2"`
+	Name string `gorm:"not null;uniqueIndex:idx_labels_name,WHERE:deleted_at IS NULL;check:length(name) >= 1"`
 }
 
 type LabelDTO struct {
@@ -84,7 +84,7 @@ type LabelListDTO struct {
 }
 
 type CreateLabelDTO struct {
-	Name string `json:"name" minLenght:"2" maxLength:"15" example:"Go" doc:"Name of the label"`
+	Name string `json:"name" minLenght:"1" maxLength:"15" example:"Go" doc:"Name of the label"`
 }
 
 type CreateLabelInput struct {

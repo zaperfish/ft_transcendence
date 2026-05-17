@@ -186,8 +186,8 @@ type AddLabelInput struct {
 }
 
 type DeleteLabelInput struct {
-	EventID string `path:eventID`
-	LabelID string `path:labelID`
+	EventID string `path:"eventID"`
+	LabelID string `path:"labelID"`
 }
 
 type EventOutput struct {

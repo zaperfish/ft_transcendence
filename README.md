@@ -104,6 +104,13 @@ When developing the frontend:
 
 ## Setup
 
+For this project you need:
+  - `just` the command runner
+  - `podman` as the container runtime.
+  - `go` if you develop on the backend
+  - `nodejs` if you develop on the frontend
+Make sure they are installed on your system.
+
 1. Clone the repository and navigate to the project root:
 ```bash
 git clone <repo_url>

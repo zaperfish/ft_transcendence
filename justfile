@@ -27,6 +27,14 @@ init-env:
 dump-seed:
     podman exec -t ft_transcendence_postgres pg_dump -U ${POSTGRES_USER} --data-only ft_transcendence > seed.sql
 
+# Dump the schemas of the database into a schema.sql file
+dump-schema:
+    podman exec -t ft_transcendence_postgres pg_dump -U ${POSTGRES_USER} --schema-only ft_transcendence > schema.sql
+
+# Seeds the database with example values
+schema-db:
+    podman exec -i ft_transcendence_postgres psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} < db/schema.sql
+
 # Seeds the database with example values
 seed-db:
     podman exec -i ft_transcendence_postgres psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} < db/example_seed.sql

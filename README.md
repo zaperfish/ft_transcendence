@@ -117,11 +117,12 @@ cd <repo_name>
   just init-env
   ```
 
-3. Seed your database with example values (if you want)
+3. Reset your database and seed it with example values (if you want)
   - Make sure your postgres container is running
   ```bash
   just serve postgres
   just reset-db
+  just schema-db
   just seed-db
   ```
 

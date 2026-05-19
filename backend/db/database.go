@@ -10,11 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct {
-    gorm.Model
-    Name string
-}
-
 func ConnectDB() (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
@@ -31,8 +26,6 @@ func ConnectDB() (*gorm.DB, error) {
 	}
 
 	log.Println("Connected to DB:", dsn)
-
-    db.AutoMigrate(&User{})
 
 	return db, nil
 }

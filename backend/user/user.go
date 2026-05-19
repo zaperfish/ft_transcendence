@@ -15,15 +15,17 @@ func RegisterApi(api huma.API, db *gorm.DB) {
     registerCreateUser(api, h);
     registerGetUser(api, h);
     registerGetUsers(api, h);
+    registerLoginUser(api, h);
 }
 
 type user struct {
     gorm.Model
     Name string     `gorm:"unique"`
+    Password string
 }
 
-func (u *user) toResponseDTO() userResponseDTO {
-    return userResponseDTO {
+func (u *user) toResponseDTO() UserResponseDTO {
+    return UserResponseDTO {
         ID:         u.ID,
         Name:       u.Name,
         CreatedAt:  u.CreatedAt,
@@ -36,21 +38,21 @@ type dbHandler struct {
 }
 
 type userOutput struct {
-    Body userResponseDTO
+    Body UserResponseDTO
 }
 
 type usersOutput struct {
-    Body userListResponseDTO
+    Body UserListResponseDTO
 }
 
-type userListResponseDTO struct {
-    Data        []userResponseDTO   `json:"data"`
+type UserListResponseDTO struct {
+    Data        []UserResponseDTO   `json:"data"`
 	Page        int                 `json:"page"`
 	PageSize    int                 `json:"page_size"`
 	Total       int                 `json:"total"`
 }
 
-type userResponseDTO struct {
+type UserResponseDTO struct {
     ID          uint        `json:"id" doc:"user ID"`
     Name        string      `json:"name" doc:"username"`
 	CreatedAt   time.Time   `json:"created_at" doc:"user creation time"`

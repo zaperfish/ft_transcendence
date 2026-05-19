@@ -52,13 +52,13 @@ func (h *dbHandler) handleGetUsers(ctx context.Context, in *getUsersInput) (*use
         return nil, err
     }
     
-    userList := make([]userResponseDTO, 0, len(us))
+    userList := make([]UserResponseDTO, 0, len(us))
     for _, u := range us {
         userList = append(userList, u.toResponseDTO())
     }
 
     out := usersOutput {
-        Body: userListResponseDTO {
+        Body: UserListResponseDTO {
             Data:       userList,
             Page:       in.Page,
             PageSize:   in.PageSize,

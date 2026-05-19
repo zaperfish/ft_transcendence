@@ -21,7 +21,8 @@ func registerCreateUser(api huma.API, h dbHandler) {
 
 func (h *dbHandler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
     u := user {
-        Name:   in.Body.Name,
+        Name:       in.Body.Name,
+        Password:   in.Body.Password,
     }
 
     err := gorm.G[user](h.db).Create(ctx, &u)
@@ -37,5 +38,6 @@ type createInput struct {
 }
 
 type createDTO struct {
-    Name string `json:"name" maxLength:"30" example:"Max" doc:"username"`
+    Name string     `json:"name" maxLength:"30" example:"Max" doc:"username"`
+    Password string `json:"password" example:"secret" doc:"password"`
 }

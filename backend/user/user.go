@@ -17,7 +17,7 @@ func RegisterApi(api huma.API, db *gorm.DB) {
 	registerGetUsers(api, h)
 }
 
-type user struct {
+type User struct {
 	gorm.Model
 	Name string `gorm:"unique"`
 }
@@ -28,6 +28,13 @@ func (u *User) toResponseDTO() userResponseDTO {
 		Name:      u.Name,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
+	}
+}
+
+func (u *User) ToSummaryDTO() UserSummaryDTO {
+	return UserSummaryDTO{
+		ID:   u.ID,
+		Name: u.Name,
 	}
 }
 
@@ -55,4 +62,9 @@ type userResponseDTO struct {
 	Name      string    `json:"name" doc:"username"`
 	CreatedAt time.Time `json:"created_at" doc:"user creation time"`
 	UpdatedAt time.Time `json:"updated_at" doc:"user update time"`
+}
+
+type UserSummaryDTO struct {
+	ID   uint   `json:"id" doc:"user ID"`
+	Name string `json:"name" doc:"username"`
 }

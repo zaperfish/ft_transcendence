@@ -145,7 +145,7 @@ type Event struct {
 
 	// Associations
 	Labels       []Label     `gorm:"many2many:event_labels;"`
-	Participants []user.User `gorm:"many2many:event_users"`
+	Participants []user.User `gorm:"many2many:event_participants"`
 }
 
 type EventDTO struct {
@@ -409,11 +409,17 @@ func (h *EventHandler) HandleDeleteLabel(ctx context.Context, input *DeleteLabel
 type PostParticipantInput struct {
 	EventID int `path:"id"`
 	Body    struct {
-		UserID int
+		UserID int `json:"user_id" doc:"User iD"`
 	}
 }
 
 func (h *EventHandler) HandlePostParticipants(ctx context.Context, input *PostParticipantInput) (*struct{}, error) {
+	var count int64
+	h.db.Table("event_participants").Where("event_id = ? AND user_id = ?", input.EventID, input.Body.UserID).Count(&count)
+	if count > 0 {
+		return nil, huma.Error409Conflict("user is already a participant")
+	}
+
 	event, err := gorm.G[Event](h.db.Debug()).Where("id = ?", input.EventID).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find event: %w", err)
@@ -438,6 +444,12 @@ type DeleteParticipantInput struct {
 }
 
 func (h *EventHandler) HandleDeleteParticipants(ctx context.Context, input *DeleteParticipantInput) (*struct{}, error) {
+	var count int64
+	h.db.Table("event_participants").Where("event_id = ? AND user_id = ?", input.EventID, input.UserID).Count(&count)
+	if count == 0 {
+		return nil, huma.Error409Conflict("user is not a participant")
+	}
+
 	event, err := gorm.G[Event](h.db.Debug()).Where("id = ?", input.EventID).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find event: %w", err)
@@ -463,17 +475,17 @@ type GetParticipantsInput struct {
 }
 
 type ParticipantListDTO struct {
-	Data     []UserSummaryDTO `json:"data"`
-	Page     int              `json:"page"`
-	PageSize int              `json:"page_size"`
-	Total    int              `json:"total"`
+	Data     []user.UserSummaryDTO `json:"data"`
+	Page     int                   `json:"page"`
+	PageSize int                   `json:"page_size"`
+	Total    int                   `json:"total"`
 }
 
 type GetParticipantsOutput struct {
 	Body ParticipantListDTO
 }
 
-func (h *EventHandler) HandleGetParticipants(ctx context.Context, input *GetParticipantsInput) (*struct{}, error) {
+func (h *EventHandler) HandleGetParticipants(ctx context.Context, input *GetParticipantsInput) (*GetParticipantsOutput, error) {
 	base := gorm.G[Event](h.db.Debug()).Where("id = ?", input.EventID)
 	q := base.Preload("Participants", nil)
 	q = q.Limit(input.PageSize)
@@ -487,21 +499,21 @@ func (h *EventHandler) HandleGetParticipants(ctx context.Context, input *GetPart
 
 	participants := event.Participants
 
-	total := len(events)
-	eventsDTO := make([]EventDTO, total)
-	for i, event := range events {
-		eventsDTO[i] = event.toDTO()
+	total := len(participants)
+	participantsDTO := make([]user.UserSummaryDTO, total)
+	for i, user := range participants {
+		participantsDTO[i] = user.ToSummaryDTO()
 	}
 
-	eventsOutput := &EventsOutput{
-		Body: EventListDTO{
-			Data:     eventsDTO,
+	participantsOutput := &GetParticipantsOutput{
+		Body: ParticipantListDTO{
+			Data:     participantsDTO,
 			Page:     input.Page,
 			PageSize: input.PageSize,
 			Total:    total,
 		},
 	}
 
-	return eventsOutput, nil
+	return participantsOutput, nil
 
 }

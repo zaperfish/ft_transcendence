@@ -19,7 +19,7 @@ func RegisterApi(api huma.API, db *gorm.DB) {
 
 type user struct {
     gorm.Model
-    Name string
+    Name string     `gorm:"unique"`
 }
 
 func (u *user) toResponseDTO() userResponseDTO {

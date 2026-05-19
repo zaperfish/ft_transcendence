@@ -24,36 +24,36 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans">
+    <div className="min-h-screen flex flex-col">
 
       {/* Header */}
-      <header className="w-full bg-white border-b border-slate-200 shadow-sm px-8 py-4 flex items-center justify-between">
+      <header className="w-full bg-surface border-b border-border px-xl py-md flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-lg font-semibold text-slate-800 tracking-tight">
+          <span className="text-lg font-semibold text-text-primary tracking-tight">
             ft_transcendence
           </span>
         </div>
       </header>
 
       {/* Main */}
-      <main className="flex flex-col items-center flex-1 px-6 py-16">
+      <main className="flex flex-col items-center flex-1 px-lg py-3xl">
         <div className="w-full max-w-xl">
 
-          <div className="mb-10 text-center">
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">API Test</h1>
-            <p className="text-slate-500 text-sm">Fetch data from the backend and database</p>
+          <div className="mb-xl text-center">
+            <h1 className="text-2xl font-bold text-text-primary mb-sm">API Test</h1>
+            <p className="text-text-secondary text-sm">Fetch data from the backend and database</p>
           </div>
 
           {/* Button */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-xl">
             <button
               onClick={fetchData}
               disabled={loading}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-sm transition-all duration-200"
+              className="inline-flex items-center gap-2 px-lg py-sm bg-primary hover:bg-primary-dim active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed text-surface font-semibold rounded-md transition-all duration-200"
             >
               {loading ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                  <span className="w-3.5 h-3.5 border-2 border-surface/30 border-t-surface rounded-full animate-spin inline-block" />
                   Fetching…
                 </>
               ) : (
@@ -64,20 +64,20 @@ export default function Page() {
 
           {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-5">
-              <p className="text-xs font-bold tracking-widest uppercase text-red-500 mb-2">Error</p>
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="bg-surface border border-error rounded-md p-md mb-md">
+              <p className="text-xs font-bold tracking-widest uppercase text-error mb-sm">Error</p>
+              <p className="text-error text-sm">{error}</p>
             </div>
           )}
 
           {/* Result */}
           {result !== null && (
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <p className="text-xs font-bold tracking-widest uppercase text-indigo-500 mb-1">Response</p>
-              <p className="text-xs text-slate-400 mb-4">
+            <div className="bg-surface border border-border rounded-md p-md">
+              <p className="text-xs font-bold tracking-widest uppercase text-primary mb-sm">Response</p>
+              <p className="text-xs text-text-tertiary mb-md">
                 Served by the backend · queried from the database
               </p>
-              <pre className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap break-words overflow-x-auto bg-slate-50 rounded-lg p-4">
+              <pre className="text-sm leading-relaxed text-text-secondary whitespace-pre-wrap break-words overflow-x-auto bg-surface-container rounded-md p-md">
                 {JSON.stringify(result, null, 2)}
               </pre>
             </div>
@@ -85,9 +85,9 @@ export default function Page() {
 
           {/* Hint */}
           {!loading && result === null && !error && (
-            <p className="text-center text-slate-400 text-sm">
+            <p className="text-center text-text-tertiary text-sm mt-md">
               Press the button to fetch from{" "}
-              <code className="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-500 text-xs font-mono">
+              <code className="bg-surface-container px-xs py-xs rounded text-primary text-xs font-mono">
                 /api/test
               </code>
             </p>

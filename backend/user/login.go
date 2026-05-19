@@ -29,17 +29,8 @@ type loginUserInput struct {
     Body userLoginDTO
 }
 
-// type userLoginResponseDTO struct {
-//     responseDTO userResponseDTO
-//     accessToken string              `json:"access_token"`
-//     tokenType string                `json:"token_type"`
-// }
-//
-// type loginUserOutput struct {
-//     Body userLoginResponseDTO
-// }
-
 type UserLoginResponseDTO struct {
+    ResponseDTO UserResponseDTO
     AccessToken string              `json:"access_token"`
     TokenType string                `json:"token_type"`
 }
@@ -47,6 +38,15 @@ type UserLoginResponseDTO struct {
 type loginUserOutput struct {
     Body UserLoginResponseDTO
 }
+
+// type UserLoginResponseDTO struct {
+//     AccessToken string              `json:"access_token"`
+//     TokenType string                `json:"token_type"`
+// }
+//
+// type loginUserOutput struct {
+//     Body UserLoginResponseDTO
+// }
 
 func (h *dbHandler) handleLoginUser(ctx context.Context, in *loginUserInput) (*loginUserOutput, error) {
     u, err := gorm.G[user](h.db).Where("name = ?", in.Body.Name).First(ctx)
@@ -61,6 +61,7 @@ func (h *dbHandler) handleLoginUser(ctx context.Context, in *loginUserInput) (*l
     
     out := loginUserOutput {
         Body: UserLoginResponseDTO {
+            ResponseDTO:    u.toResponseDTO(),
             AccessToken:    "testToken",
             TokenType:      "Bearer",
         },

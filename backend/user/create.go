@@ -9,17 +9,17 @@ import (
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
-func registerCreate(api huma.API, h dbHandler) {
+func registerCreateUser(api huma.API, h dbHandler) {
     huma.Register(api, huma.Operation{
         OperationID:    "create-user",
         Method:         http.MethodPost,
         Path:           "/api/users",
         Tags:           []string{"Users"},
         DefaultStatus:  http.StatusCreated,
-    }, h.handleCreate)
+    }, h.handleCreateUser)
 }
 
-func (h *dbHandler) handleCreate(ctx context.Context, in *createInput) (*userOutput, error) {
+func (h *dbHandler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
     u := user {
         Name:   in.Body.Name,
     }

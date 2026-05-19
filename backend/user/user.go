@@ -12,13 +12,14 @@ func RegisterApi(api huma.API, db *gorm.DB) {
     db.AutoMigrate(&user{})
 
     h := dbHandler{db: db}
-    registerCreate(api, h);
-    registerGet(api, h);
+    registerCreateUser(api, h);
+    registerGetUser(api, h);
+    registerGetUsers(api, h);
 }
 
 type user struct {
     gorm.Model
-    Name string
+    Name string     `gorm:"unique"`
 }
 
 func (u *user) toResponseDTO() userResponseDTO {
@@ -36,6 +37,17 @@ type dbHandler struct {
 
 type userOutput struct {
     Body userResponseDTO
+}
+
+type usersOutput struct {
+    Body userListResponseDTO
+}
+
+type userListResponseDTO struct {
+    Data        []userResponseDTO   `json:"data"`
+	Page        int                 `json:"page"`
+	PageSize    int                 `json:"page_size"`
+	Total       int                 `json:"total"`
 }
 
 type userResponseDTO struct {

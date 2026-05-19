@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	// Intern
+	"ft_transcendence/backend/user"
+
 	// Extern
 	"github.com/danielgtaylor/huma/v2"
 	"gorm.io/gorm"
@@ -79,7 +82,7 @@ func RegisterEventsApi(api huma.API, db *gorm.DB) {
 		Summary:       "Add a label to an event",
 		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusNoContent,
-	}, event_handler.HandleAddLabel)
+	}, event_handler.HandlePostLabel)
 
 	// Register DELETE /events/{eventID}/labels/{labelID}
 	huma.Register(api, huma.Operation{
@@ -90,6 +93,36 @@ func RegisterEventsApi(api huma.API, db *gorm.DB) {
 		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusNoContent,
 	}, event_handler.HandleDeleteLabel)
+
+	// Register POST /events/{id}/participants
+	huma.Register(api, huma.Operation{
+		OperationID:   "add-participant-to-event",
+		Method:        http.MethodPost,
+		Path:          "/api/events/{id}/participants",
+		Summary:       "Add participant to event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+	}, event_handler.HandlePostParticipants)
+
+	// Register DELETE /events/{id}/participants
+	huma.Register(api, huma.Operation{
+		OperationID:   "delete-participant-from-event",
+		Method:        http.MethodDelete,
+		Path:          "/api/events/{eventID}/participants/{userID}",
+		Summary:       "Delete participant from event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+	}, event_handler.HandleDeleteParticipants)
+
+	// Register GET /events/{id}/participants
+	huma.Register(api, huma.Operation{
+		OperationID:   "get-event-participants",
+		Method:        http.MethodGet,
+		Path:          "/api/events/{id}/participants",
+		Summary:       "Get a list of participants to an event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+	}, event_handler.HandleGetParticipants)
 }
 
 // Database model
@@ -111,7 +144,8 @@ type Event struct {
 	NumRegistered int `gorm:"check:max_capacity >= 0"`
 
 	// Associations
-	Labels []Label `gorm:"many2many:event_labels;"`
+	Labels       []Label     `gorm:"many2many:event_labels;"`
+	Participants []user.User `gorm:"many2many:event_users"`
 }
 
 type EventDTO struct {
@@ -178,7 +212,7 @@ type GetEventsInput struct {
 	PageSize int `query:"page_size" minimum:"1" default:"10" doc:"Page size"`
 }
 
-type AddLabelInput struct {
+type PostLabelInput struct {
 	EventID string `path:"id" doc:"ID"`
 	Body    struct {
 		LabelID int `json:"label_id" doc:"id of the label to add"`
@@ -277,7 +311,7 @@ func (h *EventHandler) HandlePatchEvent(ctx context.Context, input *PatchEventIn
 		updates["max_capacity"] = *input.Body.MaxCapacity
 	}
 
-	_, err := gorm.G[map[string]interface{}](h.db.Debug()).Table("events").Where("id = ?", input.ID).Updates(ctx, updates)
+	_, err := gorm.G[map[string]any](h.db.Debug()).Table("events").Where("id = ?", input.ID).Updates(ctx, updates)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save patched event: %w", err)
 	}
@@ -334,7 +368,7 @@ func (h *EventHandler) HandleDeleteEvent(ctx context.Context, input *DeleteEvent
 	return nil, nil
 }
 
-func (h *EventHandler) HandleAddLabel(ctx context.Context, input *AddLabelInput) (*struct{}, error) {
+func (h *EventHandler) HandlePostLabel(ctx context.Context, input *PostLabelInput) (*struct{}, error) {
 	event, err := gorm.G[Event](h.db.Debug()).Where("id = ?", input.EventID).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find event: %w", err)
@@ -370,4 +404,104 @@ func (h *EventHandler) HandleDeleteLabel(ctx context.Context, input *DeleteLabel
 	}
 
 	return nil, nil
+}
+
+type PostParticipantInput struct {
+	EventID int `path:"id"`
+	Body    struct {
+		UserID int
+	}
+}
+
+func (h *EventHandler) HandlePostParticipants(ctx context.Context, input *PostParticipantInput) (*struct{}, error) {
+	event, err := gorm.G[Event](h.db.Debug()).Where("id = ?", input.EventID).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find event: %w", err)
+	}
+
+	user, err := gorm.G[user.User](h.db.Debug()).Where("id = ?", input.Body.UserID).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	err = h.db.Model(&event).Association("Participants").Append(&user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add user to event: %w", err)
+	}
+
+	return nil, nil
+}
+
+type DeleteParticipantInput struct {
+	EventID int `path:"eventID"`
+	UserID  int `path:"userID"`
+}
+
+func (h *EventHandler) HandleDeleteParticipants(ctx context.Context, input *DeleteParticipantInput) (*struct{}, error) {
+	event, err := gorm.G[Event](h.db.Debug()).Where("id = ?", input.EventID).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find event: %w", err)
+	}
+
+	user, err := gorm.G[user.User](h.db.Debug()).Where("id = ?", input.UserID).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	err = h.db.Model(&event).Association("Participants").Delete(&user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete user from event: %w", err)
+	}
+
+	return nil, nil
+}
+
+type GetParticipantsInput struct {
+	EventID  int `path:"id"`
+	Page     int `query:"page" minimum:"1" default:"1" doc:"Filter by page"`
+	PageSize int `query:"page_size" minimum:"1" default:"10" doc:"Page size"`
+}
+
+type ParticipantListDTO struct {
+	Data     []UserSummaryDTO `json:"data"`
+	Page     int              `json:"page"`
+	PageSize int              `json:"page_size"`
+	Total    int              `json:"total"`
+}
+
+type GetParticipantsOutput struct {
+	Body ParticipantListDTO
+}
+
+func (h *EventHandler) HandleGetParticipants(ctx context.Context, input *GetParticipantsInput) (*struct{}, error) {
+	base := gorm.G[Event](h.db.Debug()).Where("id = ?", input.EventID)
+	q := base.Preload("Participants", nil)
+	q = q.Limit(input.PageSize)
+	offset := (input.Page - 1) * input.PageSize
+	q = q.Offset(offset)
+
+	event, err := q.First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get participants from event: %w", err)
+	}
+
+	participants := event.Participants
+
+	total := len(events)
+	eventsDTO := make([]EventDTO, total)
+	for i, event := range events {
+		eventsDTO[i] = event.toDTO()
+	}
+
+	eventsOutput := &EventsOutput{
+		Body: EventListDTO{
+			Data:     eventsDTO,
+			Page:     input.Page,
+			PageSize: input.PageSize,
+			Total:    total,
+		},
+	}
+
+	return eventsOutput, nil
+
 }

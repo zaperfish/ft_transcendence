@@ -9,14 +9,16 @@ import (
 	// Internal
 	"ft_transcendence/backend/db"
 	"ft_transcendence/backend/event"
+	"ft_transcendence/backend/middleware"
 	"ft_transcendence/backend/user"
 
 	// External
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
+	"golang.org/x/time/rate"
 )
 
 func startServer(r *chi.Mux) {
@@ -45,7 +47,14 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(chiMiddleware.Logger)
+
+	limiterStore := middleware.LimiterStore{
+		IpLimiters:   make(map[string]*rate.Limiter),
+		UserLimiters: make(map[string]*rate.Limiter),
+	}
+
+	r.Use(middleware.RateLimiterMiddleware(&limiterStore))
 
 	config := huma.DefaultConfig("ft_transcendence api", "0.1.0")
 	config.DocsRenderer = huma.DocsRendererScalar

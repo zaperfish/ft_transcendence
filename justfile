@@ -11,17 +11,26 @@ list:
 
 # Removes your old environment and replaces it with an example environment
 init-env:
-    rm .env
-    rm frontend/.env
-    rm backend/.env
+    just remove-envs
     cp .env.example .env
+    just init-frontend-env
+    just init-backend-env
+    
+init-frontend-env:
     echo "LOCAL_API_BASE_URL=http://localhost:{{env_var('BACKEND_HOST_PORT')}}" >> frontend/.env
+
+init-backend-env:
     echo "POSTGRES_USER={{env_var('POSTGRES_USER')}}" >> backend/.env
     echo "POSTGRES_PASSWORD={{env_var('POSTGRES_PASSWORD')}}" >> backend/.env
     echo "POSTGRES_DB={{env_var('POSTGRES_DB')}}" >> backend/.env
     echo "POSTGRES_PORT={{env_var('POSTGRES_HOST_PORT')}}" >> backend/.env
     echo "POSTGRES_HOST=localhost" >> backend/.env
     echo "LOCAL_DEV=true" >> backend/.env
+
+remove-envs:
+    rm -f .env
+    rm -f frontend/.env
+    rm -f backend/.env
 
 # Dump the data of the database into a seed.sql file
 dump-seed:

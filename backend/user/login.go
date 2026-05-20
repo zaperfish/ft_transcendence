@@ -1,13 +1,17 @@
 package user
 
 import (
-	"net/http"
-	"fmt"
+    // Std
 	"context"
+	"fmt"
+	"net/http"
 
-    "gorm.io/gorm"
+    // "github.com/go-chi/jwtauth/v5"
+
+    // External
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
+    "gorm.io/gorm"
 )
 
 type userLoginDTO struct {
@@ -15,7 +19,7 @@ type userLoginDTO struct {
     Password string `json:"password"`
 }
 
-func registerLoginUser(api huma.API, h dbHandler) {
+func registerLoginUser(api huma.API, h Handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "login-user",
         Method:         http.MethodPost,
@@ -32,7 +36,6 @@ type loginUserInput struct {
 type UserLoginResponseDTO struct {
     ResponseDTO UserResponseDTO
     AccessToken string              `json:"access_token"`
-    TokenType string                `json:"token_type"`
 }
 
 type loginUserOutput struct {
@@ -48,8 +51,8 @@ type loginUserOutput struct {
 //     Body UserLoginResponseDTO
 // }
 
-func (h *dbHandler) handleLoginUser(ctx context.Context, in *loginUserInput) (*loginUserOutput, error) {
-    u, err := gorm.G[user](h.db).Where("name = ?", in.Body.Name).First(ctx)
+func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*loginUserOutput, error) {
+    u, err := gorm.G[user](h.app.DB).Where("name = ?", in.Body.Name).First(ctx)
     if err != nil {
         return nil, err
     }
@@ -63,7 +66,6 @@ func (h *dbHandler) handleLoginUser(ctx context.Context, in *loginUserInput) (*l
         Body: UserLoginResponseDTO {
             ResponseDTO:    u.toResponseDTO(),
             AccessToken:    "testToken",
-            TokenType:      "Bearer",
         },
     }
     fmt.Printf("OUT: %v\n", out)

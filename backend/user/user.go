@@ -1,17 +1,26 @@
 package user
 
 import (
+    // Std
 	"time"
 
+    // Internal
+	"ft_transcendence/backend/app"
+
+    // External
     "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
-func RegisterApi(api huma.API, db *gorm.DB) {
-    db.AutoMigrate(&user{})
+type Handler struct {
+    app *app.App
+}
 
-    h := dbHandler{db: db}
+func RegisterApi(api huma.API, app *app.App) {
+    app.DB.AutoMigrate(&user{})
+
+    h := Handler {app: app}
     registerCreateUser(api, h);
     registerGetUser(api, h);
     registerGetUsers(api, h);
@@ -31,10 +40,6 @@ func (u *user) toResponseDTO() UserResponseDTO {
         CreatedAt:  u.CreatedAt,
         UpdatedAt:  u.UpdatedAt,
     }
-}
-
-type dbHandler struct {
-    db *gorm.DB
 }
 
 type userOutput struct {

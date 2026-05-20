@@ -9,7 +9,7 @@ import (
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
-func registerCreateUser(api huma.API, h dbHandler) {
+func registerCreateUser(api huma.API, h Handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "create-user",
         Method:         http.MethodPost,
@@ -19,13 +19,13 @@ func registerCreateUser(api huma.API, h dbHandler) {
     }, h.handleCreateUser)
 }
 
-func (h *dbHandler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
+func (h *Handler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
     u := user {
         Name:       in.Body.Name,
         Password:   in.Body.Password,
     }
 
-    err := gorm.G[user](h.db).Create(ctx, &u)
+    err := gorm.G[user](h.app.DB).Create(ctx, &u)
     if err != nil {
         return nil, err
     }

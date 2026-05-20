@@ -11,7 +11,7 @@ import (
 
 // registerGetUser
 
-func registerGetUser(api huma.API, h dbHandler) {
+func registerGetUser(api huma.API, h Handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "get-user",
         Method:         http.MethodGet,
@@ -21,8 +21,8 @@ func registerGetUser(api huma.API, h dbHandler) {
     }, h.handleGetUser)
 }
 
-func (h *dbHandler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
-    u, err := gorm.G[user](h.db).Where("name = ?", in.Name).First(ctx)
+func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
+    u, err := gorm.G[user](h.app.DB).Where("name = ?", in.Name).First(ctx)
     if err != nil {
         return nil, err
     }
@@ -35,7 +35,7 @@ type getUserInput struct {
 
 // registerGetUsers
 
-func registerGetUsers(api huma.API, h dbHandler) {
+func registerGetUsers(api huma.API, h Handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "get-users",
         Method:         http.MethodGet,
@@ -45,9 +45,9 @@ func registerGetUsers(api huma.API, h dbHandler) {
     }, h.handleGetUsers)
 }
 
-func (h *dbHandler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
+func (h *Handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
     offset := (in.Page - 1) * in.PageSize
-    us, err := gorm.G[user](h.db).Limit(in.PageSize).Offset(offset).Find(ctx)
+    us, err := gorm.G[user](h.app.DB).Limit(in.PageSize).Offset(offset).Find(ctx)
     if err != nil {
         return nil, err
     }

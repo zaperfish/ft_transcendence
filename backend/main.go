@@ -7,7 +7,7 @@ import (
 	"os"
 
 	// Internal
-	"ft_transcendence/backend/db"
+	"ft_transcendence/backend/app"
 	"ft_transcendence/backend/event"
 	"ft_transcendence/backend/user"
 
@@ -52,14 +52,14 @@ func main() {
 
 	api := humachi.New(r, config)
 
-	db, err := db.ConnectDB()
+    app, err := app.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	user.RegisterApi(api, db)
-	event.RegisterEventsApi(api, db)
-	event.RegisterLabelsApi(api, db)
+	user.RegisterApi(api, app)
+	event.RegisterEventsApi(api, app.DB)
+	event.RegisterLabelsApi(api, app.DB)
 
 	startServer(r)
 }

@@ -62,7 +62,10 @@ func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*log
         return nil, gorm.ErrRecordNotFound
     }
 
-    _, t, _ := h.app.TokenAuth.Encode(map[string]any{"user_id": u.ID})
+    _, t, err := h.app.TokenAuth.Encode(map[string]any{"user_id": u.ID})
+    if err != nil {
+        return nil, err
+    }
     
     out := &loginUserOutput {
         Body: UserLoginResponseDTO {

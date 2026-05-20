@@ -12,7 +12,7 @@ export default function Page() {
     setError(null);
     setResult(null);
     try {
-      const res = await fetch("/api/postgres-version");
+      const res = await fetch("/api/events");
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
       setResult(data);
@@ -37,7 +37,7 @@ export default function Page() {
 
       {/* Main */}
       <main className="flex flex-col items-center flex-1 px-lg py-3xl">
-        <div className="w-full max-w-xl">
+        <div className="w-full max-w-[576px]">
 
           <div className="mb-xl text-center">
             <h1 className="text-2xl font-bold text-text-primary mb-sm">API Test</h1>

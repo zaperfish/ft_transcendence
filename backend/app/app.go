@@ -7,7 +7,7 @@ import (
 	"os"
 
 	// External
-    // "github.com/go-chi/jwtauth/v5"
+    "github.com/go-chi/jwtauth/v5"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -16,7 +16,7 @@ const KEY = "secret"
 
 type App struct {
     DB *gorm.DB
-    // TokenAuth *jwtauth.JWTAuth
+    TokenAuth *jwtauth.JWTAuth
 }
 
 func Init() (*App, error) {
@@ -27,7 +27,7 @@ func Init() (*App, error) {
 
     a := &App {
         DB:         db,
-        // TokenAuth:  jwtauth.New("HS256", []byte(KEY), nil),
+        TokenAuth:  jwtauth.New("HS256", []byte(KEY), nil),
     }
 
     return a, nil

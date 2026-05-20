@@ -3,14 +3,15 @@ package user
 import (
     // Std
 	"context"
-	"fmt"
 	"net/http"
 
-    // "github.com/go-chi/jwtauth/v5"
+    // Internal
+	// "ft_transcendence/backend/app"
 
     // External
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
+    // "github.com/go-chi/jwtauth/v5"
     "gorm.io/gorm"
 )
 
@@ -60,14 +61,14 @@ func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*log
     if u.Password != in.Body.Password {
         return nil, gorm.ErrRecordNotFound
     }
-    // create jwt
+
+    _, t, _ := h.app.TokenAuth.Encode(map[string]any{"user_id": u.ID})
     
-    out := loginUserOutput {
+    out := &loginUserOutput {
         Body: UserLoginResponseDTO {
             ResponseDTO:    u.toResponseDTO(),
-            AccessToken:    "testToken",
+            AccessToken:    t,
         },
     }
-    fmt.Printf("OUT: %v\n", out)
-    return &out, nil
+    return out, nil
 }

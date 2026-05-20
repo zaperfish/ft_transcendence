@@ -430,9 +430,20 @@ func (h *EventHandler) HandlePostParticipants(ctx context.Context, input *PostPa
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
 
-	err = h.db.Model(&event).Association("Participants").Append(&user)
+	err = h.db.Transaction(func(tx *gorm.DB) error {
+		err = tx.Model(&event).Association("Participants").Append(&user)
+		if err != nil {
+			return fmt.Errorf("failed to add user to event: %w", err)
+		}
+
+		_, err = gorm.G[Event](tx).Where("id = ?", input.EventID).Update(ctx, "num_registered", gorm.Expr("num_registered + 1"))
+		if err != nil {
+			return fmt.Errorf("failed to update participant count: %w", err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to add user to event: %w", err)
+		return nil, err
 	}
 
 	return nil, nil
@@ -460,9 +471,20 @@ func (h *EventHandler) HandleDeleteParticipants(ctx context.Context, input *Dele
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
 
-	err = h.db.Model(&event).Association("Participants").Delete(&user)
+	err = h.db.Transaction(func(tx *gorm.DB) error {
+		err = tx.Model(&event).Association("Participants").Delete(&user)
+		if err != nil {
+			return fmt.Errorf("failed to delete user from event: %w", err)
+		}
+
+		_, err = gorm.G[Event](tx).Where("id = ?", input.EventID).Update(ctx, "num_registered", gorm.Expr("num_registered - 1"))
+		if err != nil {
+			return fmt.Errorf("failed to update participant count: %w", err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete user from event: %w", err)
+		return nil, err
 	}
 
 	return nil, nil

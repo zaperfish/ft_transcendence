@@ -18,22 +18,22 @@ type Handler struct {
 }
 
 func RegisterApi(api huma.API, app *app.App) {
-    app.DB.AutoMigrate(&user{})
+    app.DB.AutoMigrate(&User{})
 
     h := Handler {app: app}
-    registerCreateUser(api, h);
+    // registerCreateUser(api, h);
     registerGetUser(api, h);
     registerGetUsers(api, h);
-    registerLoginUser(api, h);
+    // registerLoginUser(api, h);
 }
 
-type user struct {
+type User struct {
     gorm.Model
     Name string     `gorm:"unique"`
     Password string
 }
 
-func (u *user) toResponseDTO() UserResponseDTO {
+func (u *User) ToResponseDTO() UserResponseDTO {
     return UserResponseDTO {
         ID:         u.ID,
         Name:       u.Name,

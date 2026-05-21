@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"context"
 
+    "fmt"
+    "github.com/go-chi/jwtauth/v5"
+
     "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
@@ -15,18 +18,28 @@ func registerGetUser(api huma.API, h Handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "get-user",
         Method:         http.MethodGet,
-        Path:           "/api/users/{name}",
+        Path:           "/users/{name}",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUser)
 }
 
 func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
-    u, err := gorm.G[user](h.app.DB).Where("name = ?", in.Name).First(ctx)
+
+    token, claims, err := jwtauth.FromContext(ctx)
+
+    fmt.Println(token)
+    fmt.Println(claims)
+
     if err != nil {
         return nil, err
     }
-    return &userOutput{Body: u.toResponseDTO()}, nil
+
+    u, err := gorm.G[User](h.app.DB).Where("name = ?", in.Name).First(ctx)
+    if err != nil {
+        return nil, err
+    }
+    return &userOutput{Body: u.ToResponseDTO()}, nil
 }
 
 type getUserInput struct {
@@ -39,7 +52,7 @@ func registerGetUsers(api huma.API, h Handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "get-users",
         Method:         http.MethodGet,
-        Path:           "/api/users",
+        Path:           "/users",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUsers)
@@ -47,14 +60,14 @@ func registerGetUsers(api huma.API, h Handler) {
 
 func (h *Handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
     offset := (in.Page - 1) * in.PageSize
-    us, err := gorm.G[user](h.app.DB).Limit(in.PageSize).Offset(offset).Find(ctx)
+    us, err := gorm.G[User](h.app.DB).Limit(in.PageSize).Offset(offset).Find(ctx)
     if err != nil {
         return nil, err
     }
     
     userList := make([]UserResponseDTO, 0, len(us))
     for _, u := range us {
-        userList = append(userList, u.toResponseDTO())
+        userList = append(userList, u.ToResponseDTO())
     }
 
     out := usersOutput {

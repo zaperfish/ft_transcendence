@@ -28,15 +28,7 @@ func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOut
 
 	claims := ctx.Value("claims")
 
-	//    token, claims, err := jwtauth.FromContext(ctx)
-	//
-	// fmt.Println("token:\t", token)
 	fmt.Println("claims:\t", claims)
-	// fmt.Println("err:\t", err)
-
-    // if err != nil {
-    //     return nil, err
-    // }
 
     u, err := gorm.G[User](h.app.DB).Where("name = ?", in.Name).First(ctx)
     if err != nil {

@@ -18,10 +18,6 @@ import (
     "github.com/go-chi/jwtauth/v5"
 )
 
-func MyMiddleware(ctx huma.Context, next func(huma.Context)) {
-	next(ctx)
-}
-
 func Authenticator(ja *jwtauth.JWTAuth, api huma.API) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		token, claims, err := jwtauth.FromContext(ctx.Context())

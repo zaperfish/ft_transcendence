@@ -21,10 +21,9 @@ func RegisterApi(api huma.API, app *app.App) {
     app.DB.AutoMigrate(&User{})
 
     h := Handler {app: app}
-    // registerCreateUser(api, h);
     registerGetUser(api, h);
     registerGetUsers(api, h);
-    // registerLoginUser(api, h);
+    registerPatchUser(api, h);
 }
 
 type User struct {
@@ -40,6 +39,7 @@ func (u *User) ToResponseDTO() UserResponseDTO {
     return UserResponseDTO {
         ID:         u.ID,
         Name:       u.Name,
+        Email:      u.Email,
         CreatedAt:  u.CreatedAt,
         UpdatedAt:  u.UpdatedAt,
     }
@@ -63,6 +63,7 @@ type UserListResponseDTO struct {
 type UserResponseDTO struct {
     ID          uint        `json:"id" doc:"user ID"`
     Name        string      `json:"name" doc:"username"`
+	Email 		string      `json:"email" doc:"email address"`
 	CreatedAt   time.Time   `json:"created_at" doc:"user creation time"`
 	UpdatedAt   time.Time   `json:"updated_at" doc:"user update time"`
 }

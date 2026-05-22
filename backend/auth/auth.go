@@ -3,7 +3,9 @@ package auth
 import (
     // Std
 	"context"
+	"fmt"
 	"net/http"
+	"time"
 
     // Internal
 	"ft_transcendence/backend/app"
@@ -13,6 +15,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
     // "github.com/go-chi/jwtauth/v5"
+    "github.com/go-chi/jwtauth/v5"
     "gorm.io/gorm"
 )
 
@@ -91,11 +94,64 @@ type UserLoginResponseDTO struct {
     AccessToken string              `json:"access_token"`
 }
 
-type loginUserOutput struct {
+type LoginUserOutput struct {
+	SetCookie http.Cookie 		`header:"Set-Cookie"`
     Body UserLoginResponseDTO
 }
 
-func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*loginUserOutput, error) {
+// func refreshJWTCookie(ctx huma.Context, next func(ctx huma.Context)) {
+// 	_, claims, err := jwtauth.FromContext(ctx.Context())
+// 	if err != nil {
+// 		return
+// 	}
+//
+// 	id, ok := claims["user_id"].(uint)
+// 	if !ok {
+// 		return
+// 	}
+//
+// 	iat, ok := claims["iat"].(time.Time)
+// 	if !ok {
+// 		return
+// 	}
+//
+// 	claims = map[string]any {
+// 		"user_id":		id,
+// 		"exp":			time.Now().Add(30 * time.Minute).Unix(),
+// 		"iat":			iat,
+// 	}
+// }
+
+func makeJWT(tokenAuth *jwtauth.JWTAuth, uid uint) (string, error) {
+	claims := map[string]any {
+		"user_id":		uid,
+		"exp":			time.Now().Add(30 * time.Minute).Unix(),
+		"iat":			time.Now().Unix(),
+	}
+    _, t, err := tokenAuth.Encode(claims)
+    if err != nil {
+        return "", err
+    }
+	return t, nil
+}
+
+func makeJWTCookie(tokenAuth *jwtauth.JWTAuth, uid uint) (http.Cookie, error) {
+	t, err := makeJWT(tokenAuth, uid)
+	if err != nil {
+		return http.Cookie{}, err
+	}
+	return http.Cookie {
+		Name:		"auth_token",
+		Value:		t,
+		Path:		"/",
+		Expires:	time.Now().Add(15 * time.Minute),
+		HttpOnly:	true,
+		Secure:		true,
+		SameSite:	http.SameSiteNoneMode,
+	}, nil
+}
+
+func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*LoginUserOutput, error) {
     u, err := gorm.G[user.User](h.app.DB).Where("name = ?", in.Body.Name).First(ctx)
     if err != nil {
         return nil, err
@@ -105,16 +161,18 @@ func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*log
         return nil, gorm.ErrRecordNotFound
     }
 
-    _, t, err := h.app.TokenAuth.Encode(map[string]any{"user_id": u.ID})
+	cookie, err := makeJWTCookie(h.app.TokenAuth, u.ID)
     if err != nil {
         return nil, err
     }
-    
-    out := &loginUserOutput {
+
+    out := &LoginUserOutput {
+		SetCookie: cookie,
         Body: UserLoginResponseDTO {
             ResponseDTO:    u.ToResponseDTO(),
-            AccessToken:    t,
         },
     }
+	fmt.Println(out)
+
     return out, nil
 }

@@ -21,19 +21,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func startServer(r *chi.Mux) {
-	port, ok := os.LookupEnv("PORT")
-	if !ok || port == "" {
-		port = "4000"
-	}
-
-	log.Println("Listening on :" + port + "...")
-	err := http.ListenAndServe(":"+port, r)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func main() {
 	if os.Getenv("CONTAINER_RUNTIME") != "true" {
 		err := godotenv.Load()
@@ -53,7 +40,7 @@ func main() {
 
     r := chi.NewRouter()
     
-	config := huma.DefaultConfig("ft_transcendence public api", "0.1.0")
+	config := huma.DefaultConfig("ft_transcendence api", "0.1.0")
 	config.DocsRenderer = huma.DocsRendererScalar
 	api := humachi.New(r, config)
 	api.UseMiddleware(ChiMiddlewareToHuma(middleware.Logger))
@@ -78,5 +65,18 @@ func ChiMiddlewareToHuma(chiMiddleware func(http.Handler) http.Handler) func(hum
 		chiMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			next(humachi.NewContext(&huma.Operation{}, r, w))
 		})).ServeHTTP(w, r)
+	}
+}
+
+func startServer(r *chi.Mux) {
+	port, ok := os.LookupEnv("PORT")
+	if !ok || port == "" {
+		port = "4000"
+	}
+
+	log.Println("Listening on :" + port + "...")
+	err := http.ListenAndServe(":"+port, r)
+	if err != nil {
+		log.Fatal(err)
 	}
 }

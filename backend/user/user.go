@@ -30,7 +30,10 @@ func RegisterApi(api huma.API, app *app.App) {
 type User struct {
     gorm.Model
     Name string     `gorm:"unique"`
+    Email string    `gorm:"unique"`
     Password string
+    PasswordHash string
+	FailedAttempts uint
 }
 
 func (u *User) ToResponseDTO() UserResponseDTO {

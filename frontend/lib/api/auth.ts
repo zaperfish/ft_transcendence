@@ -8,11 +8,12 @@ export interface LoginCredentials {
 }
 
 // Backend -> Frontend
+// token sent to browser with 'Set-Cookie'
 export interface AuthResponse {
-	token: string;
 	user: User;
 }
 
+// Wrap request and response into 1 Login api
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
 	const res = await request<AuthResponse>('/api/user/login', {
 		method: 'POST',
@@ -20,4 +21,11 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
 		body: JSON.stringify(credentials),
 	});
 	return res;
+}
+
+// Backend in responsible to clean cookie
+export async function logout(): Promise<void> {
+	await request('/api/user/logout', {
+		method: 'POST',
+	});
 }

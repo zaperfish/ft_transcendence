@@ -5,7 +5,7 @@ import (
 	"context"
 
     "fmt"
-    "github.com/go-chi/jwtauth/v5"
+    // "github.com/go-chi/jwtauth/v5"
 
     "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
@@ -26,14 +26,17 @@ func registerGetUser(api huma.API, h Handler) {
 
 func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
 
-    token, claims, err := jwtauth.FromContext(ctx)
+	claims := ctx.Value("claims")
 
-    fmt.Println(token)
-    fmt.Println(claims)
+	//    token, claims, err := jwtauth.FromContext(ctx)
+	//
+	// fmt.Println("token:\t", token)
+	fmt.Println("claims:\t", claims)
+	// fmt.Println("err:\t", err)
 
-    if err != nil {
-        return nil, err
-    }
+    // if err != nil {
+    //     return nil, err
+    // }
 
     u, err := gorm.G[User](h.app.DB).Where("name = ?", in.Name).First(ctx)
     if err != nil {

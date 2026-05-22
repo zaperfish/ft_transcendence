@@ -52,7 +52,7 @@ func main() {
     // Protected Routes
 	protected := huma.NewGroup(api, "")
 	protected.UseMiddleware(ChiMiddlewareToHuma(jwtauth.Verifier(app.TokenAuth)))
-	protected.UseMiddleware(ChiMiddlewareToHuma(jwtauth.Authenticator(app.TokenAuth)))
+	protected.UseMiddleware(auth.Authenticator(app.TokenAuth, api))
 	user.RegisterApi(protected, app)
 
 	startServer(r)

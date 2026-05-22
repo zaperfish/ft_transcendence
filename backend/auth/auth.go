@@ -3,7 +3,6 @@ package auth
 import (
     // Std
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -100,29 +99,6 @@ type LoginUserOutput struct {
     Body UserLoginResponseDTO
 }
 
-// func refreshJWTCookie(ctx huma.Context, next func(ctx huma.Context)) {
-// 	_, claims, err := jwtauth.FromContext(ctx.Context())
-// 	if err != nil {
-// 		return
-// 	}
-//
-// 	id, ok := claims["user_id"].(uint)
-// 	if !ok {
-// 		return
-// 	}
-//
-// 	iat, ok := claims["iat"].(time.Time)
-// 	if !ok {
-// 		return
-// 	}
-//
-// 	claims = map[string]any {
-// 		"user_id":		id,
-// 		"exp":			time.Now().Add(30 * time.Minute).Unix(),
-// 		"iat":			iat,
-// 	}
-// }
-
 func makeJWT(tokenAuth *jwtauth.JWTAuth, uid uint) (string, error) {
 	claims := map[string]any {
 		"user_id":		uid,
@@ -173,7 +149,6 @@ func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*Log
             ResponseDTO:    u.ToResponseDTO(),
         },
     }
-	fmt.Println(out)
 
     return out, nil
 }

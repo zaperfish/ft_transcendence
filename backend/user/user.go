@@ -5,7 +5,6 @@ import (
 	"time"
 
     // External
-    "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 	"gorm.io/gorm"
@@ -33,8 +32,8 @@ type User struct {
 	FailedAttempts uint
 }
 
-func (u *User) ToResponseDTO() UserResponseDTO {
-    return UserResponseDTO {
+func (u *User) ToSummaryDTO() UserSummaryDTO {
+    return UserSummaryDTO {
         ID:         u.ID,
         Name:       u.Name,
         Email:      u.Email,
@@ -44,21 +43,21 @@ func (u *User) ToResponseDTO() UserResponseDTO {
 }
 
 type userOutput struct {
-    Body UserResponseDTO
+    Body UserSummaryDTO
 }
 
 type usersOutput struct {
-    Body UserListResponseDTO
+    Body UserListSummaryDTO
 }
 
-type UserListResponseDTO struct {
-    Data        []UserResponseDTO   `json:"data"`
+type UserListSummaryDTO struct {
+    Data        []UserSummaryDTO   `json:"data"`
 	Page        int                 `json:"page"`
 	PageSize    int                 `json:"page_size"`
 	Total       int                 `json:"total"`
 }
 
-type UserResponseDTO struct {
+type UserSummaryDTO struct {
     ID          uint        `json:"id" doc:"user ID"`
     Name        string      `json:"name" doc:"username"`
 	Email 		string      `json:"email" doc:"email address"`

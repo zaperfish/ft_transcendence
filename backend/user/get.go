@@ -7,7 +7,6 @@ import (
     "fmt"
     // "github.com/go-chi/jwtauth/v5"
 
-    "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 	"gorm.io/gorm"
@@ -35,7 +34,7 @@ func (h *handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOut
     if err != nil {
         return nil, err
     }
-    return &userOutput{Body: u.ToResponseDTO()}, nil
+    return &userOutput{Body: u.ToSummaryDTO()}, nil
 }
 
 type getUserInput struct {
@@ -61,13 +60,13 @@ func (h *handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*users
         return nil, err
     }
     
-    userList := make([]UserResponseDTO, 0, len(us))
+    userList := make([]UserSummaryDTO, 0, len(us))
     for _, u := range us {
-        userList = append(userList, u.ToResponseDTO())
+        userList = append(userList, u.ToSummaryDTO())
     }
 
     out := usersOutput {
-        Body: UserListResponseDTO {
+        Body: UserListSummaryDTO {
             Data:       userList,
             Page:       in.Page,
             PageSize:   in.PageSize,

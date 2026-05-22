@@ -62,5 +62,5 @@ func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*use
 		return nil, fmt.Errorf("failed to fetch updated user: %w", err)
 	}
 
-	return &userOutput{Body: updated.ToResponseDTO()}, nil
+	return &userOutput{Body: updated.ToSummaryDTO()}, nil
 }

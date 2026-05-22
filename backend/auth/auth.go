@@ -59,7 +59,7 @@ func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userO
         return nil, err
     }
 
-    return &userOutput{Body: u.ToResponseDTO()}, nil
+    return &userOutput{Body: u.ToSummaryDTO()}, nil
 }
 
 type createInput struct {
@@ -73,7 +73,7 @@ type CreateDTO struct {
 }
 
 type userOutput struct {
-    Body user.UserResponseDTO
+    Body user.UserSummaryDTO
 }
 
 // login user
@@ -96,14 +96,14 @@ type loginUserInput struct {
     Body userLoginDTO
 }
 
-type UserLoginResponseDTO struct {
-    ResponseDTO user.UserResponseDTO
+type UserLoginSummaryDTO struct {
+    SummaryDTO user.UserSummaryDTO
     AccessToken string              `json:"access_token"`
 }
 
 type LoginUserOutput struct {
 	SetCookie http.Cookie 		`header:"Set-Cookie"`
-    Body UserLoginResponseDTO
+    Body UserLoginSummaryDTO
 }
 
 func makeJWT(tokenAuth *jwtauth.JWTAuth, uid uint) (string, error) {
@@ -152,8 +152,8 @@ func (h *handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*Log
 
     out := &LoginUserOutput {
 		SetCookie: cookie,
-        Body: UserLoginResponseDTO {
-            ResponseDTO:    u.ToResponseDTO(),
+        Body: UserLoginSummaryDTO {
+            SummaryDTO:    u.ToSummaryDTO(),
         },
     }
 

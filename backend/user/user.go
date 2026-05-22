@@ -5,7 +5,6 @@ import (
 	"time"
 
     // Internal
-	"ft_transcendence/backend/app"
 
     // External
     "gorm.io/gorm"
@@ -13,14 +12,14 @@ import (
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
-type Handler struct {
-    app *app.App
+type handler struct {
+    db *gorm.DB
 }
 
-func RegisterApi(api huma.API, app *app.App) {
-    app.DB.AutoMigrate(&User{})
+func RegisterApi(api huma.API, db *gorm.DB ) {
+    db.AutoMigrate(&User{})
 
-    h := Handler {app: app}
+	h := handler{db: db}
     registerGetUser(api, h);
     registerGetUsers(api, h);
     registerPatchUser(api, h);

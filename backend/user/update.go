@@ -10,7 +10,7 @@ import (
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
-func registerPatchUser(api huma.API, h Handler) {
+func registerPatchUser(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "patch-user",
         Method:         http.MethodPatch,
@@ -32,7 +32,7 @@ type PatchUserInput struct {
 	Body PatchUserDTO
 }
 
-func (h *Handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
+func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
 	claims := ctx.Value("claims").(map[string]any)
 
 	// this still looks dodgey, change later
@@ -52,12 +52,12 @@ func (h *Handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*use
 		updates["password"] = *in.Body.Password
 	}
 
-	_, err := gorm.G[map[string]any](h.app.DB.Debug()).Table("users").Where("id = ?", in.ID).Updates(ctx, updates)
+	_, err := gorm.G[map[string]any](h.db.Debug()).Table("users").Where("id = ?", in.ID).Updates(ctx, updates)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save patched user: %w", err)
 	}
 
-	updated, err := gorm.G[User](h.app.DB.Debug()).Where("id = ?", in.ID).First(ctx)
+	updated, err := gorm.G[User](h.db.Debug()).Where("id = ?", in.ID).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch updated user: %w", err)
 	}

@@ -7,7 +7,6 @@ import (
 	"time"
 
     // Internal
-	"ft_transcendence/backend/app"
 	"ft_transcendence/backend/user"
 
     // External
@@ -18,20 +17,28 @@ import (
     "gorm.io/gorm"
 )
 
-func RegisterApi(api huma.API, app *app.App) {
-    app.DB.AutoMigrate(&user.User{})
+const KEY = "secret"
 
-    h := Handler {app: app}
+var tokenAuth *jwtauth.JWTAuth
+
+func init() {
+	tokenAuth = jwtauth.New("HS256", []byte(KEY), nil)
+}
+
+func RegisterApi(api huma.API, db *gorm.DB ) {
+    db.AutoMigrate(&user.User{})
+
+	h := handler{db: db}
     registerRegisterUser(api, h);
     registerLoginUser(api, h);
 }
 
-type Handler struct {
-    app *app.App
+type handler struct {
+    db *gorm.DB
 }
 
 // login user
-func registerRegisterUser(api huma.API, h Handler) {
+func registerRegisterUser(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "register-user",
         Method:         http.MethodPost,
@@ -41,13 +48,13 @@ func registerRegisterUser(api huma.API, h Handler) {
     }, h.handleCreateUser)
 }
 
-func (h *Handler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
+func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
     u := user.User {
         Name:       in.Body.Name,
         Password:   in.Body.Password,
     }
 
-    err := gorm.G[user.User](h.app.DB).Create(ctx, &u)
+    err := gorm.G[user.User](h.db).Create(ctx, &u)
     if err != nil {
         return nil, err
     }
@@ -70,7 +77,7 @@ type userOutput struct {
 }
 
 // login user
-func registerLoginUser(api huma.API, h Handler) {
+func registerLoginUser(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "login-user",
         Method:         http.MethodPost,
@@ -128,8 +135,8 @@ func makeJWTCookie(tokenAuth *jwtauth.JWTAuth, uid uint) (http.Cookie, error) {
 	}, nil
 }
 
-func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*LoginUserOutput, error) {
-    u, err := gorm.G[user.User](h.app.DB).Where("name = ?", in.Body.Name).First(ctx)
+func (h *handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*LoginUserOutput, error) {
+    u, err := gorm.G[user.User](h.db).Where("name = ?", in.Body.Name).First(ctx)
     if err != nil {
         return nil, err
     }
@@ -138,7 +145,7 @@ func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*Log
         return nil, gorm.ErrRecordNotFound
     }
 
-	cookie, err := makeJWTCookie(h.app.TokenAuth, u.ID)
+	cookie, err := makeJWTCookie(tokenAuth, u.ID)
     if err != nil {
         return nil, err
     }

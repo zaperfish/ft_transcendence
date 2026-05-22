@@ -7,17 +7,17 @@ import (
 	"os"
 
 	// Internal
-	"ft_transcendence/backend/app"
-	// "ft_transcendence/backend/event"
+	"ft_transcendence/backend/db"
+	"ft_transcendence/backend/event"
 	"ft_transcendence/backend/user"
 	"ft_transcendence/backend/auth"
+	"ft_transcendence/backend/util"
 
 	// External
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-    "github.com/go-chi/jwtauth/v5"
 	"github.com/joho/godotenv"
 )
 
@@ -33,7 +33,7 @@ func main() {
 		log.Println("Backend is in container")
 	}
 
-    app, err := app.Init()
+	db, err := db.ConnectDB()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,29 +43,20 @@ func main() {
 	config := huma.DefaultConfig("ft_transcendence api", "0.1.0")
 	config.DocsRenderer = huma.DocsRendererScalar
 	api := humachi.New(r, config)
-	api.UseMiddleware(ChiMiddlewareToHuma(middleware.Logger))
+	api.UseMiddleware(util.ChiMiddlewareToHuma(middleware.Logger))
 
     // Public Routes
 	public := huma.NewGroup(api, "")
-	auth.RegisterApi(public, app)
+	auth.RegisterApi(public, db)
 
     // Protected Routes
 	protected := huma.NewGroup(api, "")
-	protected.UseMiddleware(ChiMiddlewareToHuma(jwtauth.Verifier(app.TokenAuth)))
-	protected.UseMiddleware(auth.Authenticator(app.TokenAuth, api))
-	user.RegisterApi(protected, app)
+	protected.UseMiddleware(auth.Verifier)
+	protected.UseMiddleware(auth.Authenticator(api))
+	user.RegisterApi(protected, db)
+	event.RegisterEventsApi(protected, db)
 
 	startServer(r)
-}
-
-func ChiMiddlewareToHuma(chiMiddleware func(http.Handler) http.Handler) func(huma.Context, func(huma.Context)) {
-	return func(ctx huma.Context, next func(huma.Context)) {
-		r, w := humachi.Unwrap(ctx)
-
-		chiMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next(humachi.NewContext(&huma.Operation{}, r, w))
-		})).ServeHTTP(w, r)
-	}
 }
 
 func startServer(r *chi.Mux) {

@@ -1,4 +1,4 @@
-package app
+package db
 
 import (
 	// Std
@@ -7,31 +7,9 @@ import (
 	"os"
 
 	// External
-    "github.com/go-chi/jwtauth/v5"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-const KEY = "secret"
-
-type App struct {
-    DB *gorm.DB
-    TokenAuth *jwtauth.JWTAuth
-}
-
-func Init() (*App, error) {
-    db, err := ConnectDB()
-    if err != nil {
-        return nil, err
-    }
-
-    a := &App {
-        DB:         db,
-        TokenAuth:  jwtauth.New("HS256", []byte(KEY), nil),
-    }
-
-    return a, nil
-}
 
 func ConnectDB() (*gorm.DB, error) {
 	dsn := fmt.Sprintf(

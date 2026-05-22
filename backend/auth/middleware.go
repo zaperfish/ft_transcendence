@@ -3,13 +3,10 @@ package auth
 import (
     // Std
 	"context"
-	// "fmt"
 	"net/http"
-	// "time"
 
-    // Internal
-	// "ft_transcendence/backend/app"
-	// "ft_transcendence/backend/user"
+	// Internal
+	"ft_transcendence/backend/util"
 
     // External
 	"github.com/danielgtaylor/huma/v2"
@@ -18,7 +15,7 @@ import (
     "github.com/go-chi/jwtauth/v5"
 )
 
-func Authenticator(ja *jwtauth.JWTAuth, api huma.API) func(ctx huma.Context, next func(huma.Context)) {
+func Authenticator(api huma.API) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
 		token, claims, err := jwtauth.FromContext(ctx.Context())
 		if err != nil {
@@ -30,7 +27,7 @@ func Authenticator(ja *jwtauth.JWTAuth, api huma.API) func(ctx huma.Context, nex
 			return
 		}
 		// this is dodgy
-		cookie, err := makeJWTCookie(ja, uint(claims["user_id"].(float64)))
+		cookie, err := makeJWTCookie(tokenAuth, uint(claims["user_id"].(float64)))
 		if err != nil {
 			huma.WriteErr(api, ctx, http.StatusInternalServerError, "error")
 			return
@@ -40,4 +37,8 @@ func Authenticator(ja *jwtauth.JWTAuth, api huma.API) func(ctx huma.Context, nex
 		newCtx := context.WithValue(ctx.Context(), "claims", claims)
 		next(huma.WithContext(ctx, newCtx))
 	}
+}
+
+func Verifier(ctx huma.Context, next func(huma.Context)) {
+	util.ChiMiddlewareToHuma(jwtauth.Verifier(tokenAuth))(ctx, next)
 }

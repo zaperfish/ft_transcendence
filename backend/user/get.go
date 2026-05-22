@@ -1,8 +1,8 @@
 package user
 
 import (
-	"net/http"
 	"context"
+	"net/http"
 
     "fmt"
     // "github.com/go-chi/jwtauth/v5"
@@ -10,6 +10,7 @@ import (
     "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
+	"gorm.io/gorm"
 )
 
 // registerGetUser
@@ -38,7 +39,7 @@ func (h *handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOut
 }
 
 type getUserInput struct {
-    Name string `path:"name" maxLength:"30" example:"Max" doc:"get user by name"`
+	Name string `path:"name" maxLength:"30" example:"Max" doc:"get user by name"`
 }
 
 // registerGetUsers
@@ -73,8 +74,7 @@ func (h *handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*users
             Total:      len(us),
         },
     }
-
-    return &out, nil
+	return &out, nil
 }
 
 type getUsersInput struct {

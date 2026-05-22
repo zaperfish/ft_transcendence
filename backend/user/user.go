@@ -4,12 +4,11 @@ import (
     // Std
 	"time"
 
-    // Internal
-
     // External
     "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
+	"gorm.io/gorm"
 )
 
 type handler struct {

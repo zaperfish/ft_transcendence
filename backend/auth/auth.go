@@ -12,7 +12,6 @@ import (
     // External
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
-    // "github.com/go-chi/jwtauth/v5"
     "github.com/go-chi/jwtauth/v5"
     "gorm.io/gorm"
 )
@@ -51,6 +50,7 @@ func registerRegisterUser(api huma.API, h handler) {
 func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
     u := user.User {
         Name:       in.Body.Name,
+        Email:      in.Body.Email,
         Password:   in.Body.Password,
     }
 

@@ -127,7 +127,7 @@ func makeJWTCookie(tokenAuth *jwtauth.JWTAuth, uid uint) (http.Cookie, error) {
 		Expires:	time.Now().Add(15 * time.Minute),
 		HttpOnly:	true,
 		Secure:		true,
-		SameSite:	http.SameSiteNoneMode,
+		SameSite:	http.SameSiteLaxMode,
 	}, nil
 }
 

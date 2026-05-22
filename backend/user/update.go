@@ -35,7 +35,7 @@ type PatchUserInput struct {
 func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
 	claims := ctx.Value("claims").(map[string]any)
 
-	// this still looks dodgey, change later
+	// this still looks dodgy, change later
 	if uint(claims["user_id"].(float64)) != in.ID {
 		return nil, huma.Error401Unauthorized("wrong permissions")
 	}

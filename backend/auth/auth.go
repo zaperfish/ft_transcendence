@@ -30,6 +30,7 @@ func RegisterApi(api huma.API, db *gorm.DB ) {
 	h := handler{db: db}
     registerRegisterUser(api, h);
     registerLoginUser(api, h);
+    registerLogoutUser(api, h);
 }
 
 type handler struct {
@@ -148,6 +149,43 @@ func (h *handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*Log
     out := &LoginUserOutput {
 		SetCookie: cookie,
         Body: 	   u.ToSummaryDTO(),
+    }
+
+    return out, nil
+}
+
+// logout user
+
+func registerLogoutUser(api huma.API, h handler) {
+    huma.Register(api, huma.Operation{
+        OperationID:    "logout-user",
+        Method:         http.MethodPost,
+        Path:           "/auth/logout",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Authentification"},
+    }, h.handleLogoutUser)
+}
+
+func makeJWTDeleteCookie() (http.Cookie, error) {
+	return http.Cookie {
+	}, nil
+}
+
+type LogoutUserOutput struct {
+	SetCookie http.Cookie 		`header:"Set-Cookie"`
+}
+
+func (h *handler) handleLogoutUser(ctx context.Context, in *struct{}) (*LogoutUserOutput, error) {
+
+    out := &LogoutUserOutput {
+		SetCookie: http.Cookie {
+			Name:		"auth_token",
+			Value:		"",
+			Path:		"/",
+			HttpOnly:	true,
+			Secure:		true,
+			MaxAge:		-1,
+		},
     }
 
     return out, nil

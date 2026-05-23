@@ -26,8 +26,8 @@ func RegisterApi(api huma.API, db *gorm.DB ) {
 type User struct {
     gorm.Model
     Name string     `gorm:"unique"`
-    Email string    `gorm:"unique"`
-    Password string
+	Email string    `gorm:"unique"`
+	Password string `gorm:"not null"`
     PasswordHash string
 	FailedAttempts uint
 }

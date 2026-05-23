@@ -43,12 +43,21 @@ func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*use
 	updates := map[string]any{}
 
 	if in.Body.Name != nil {
+		if err := validUserName(*in.Body.Name); err != nil {
+			return nil, err
+		}
 		updates["name"] = *in.Body.Name
 	}
 	if in.Body.Email != nil {
+		if err := validUserEmail(*in.Body.Email); err != nil {
+			return nil, err
+		}
 		updates["email"] = *in.Body.Email
 	}
 	if in.Body.Password != nil {
+		if err := validUserPassword(*in.Body.Password); err != nil {
+			return nil, err
+		}
 		updates["password"] = *in.Body.Password
 	}
 

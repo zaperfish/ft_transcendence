@@ -3,6 +3,7 @@ package auth
 import (
     // Std
 	"context"
+	"errors"
 	"net/http"
 	"time"
 	"os"
@@ -19,8 +20,19 @@ import (
 
 var tokenAuth *jwtauth.JWTAuth
 
-func Init() {
-	tokenAuth = jwtauth.New(os.Getenv("JWT_ALGORITHM"), []byte(os.Getenv("JWT_KEY")), nil)
+func Init() error {
+	algorithm, ok := os.LookupEnv("JWT_ALGORITHM")
+	if !ok {
+		return errors.New("JWT_ALGORITHM not set")
+	}
+
+	key, ok := os.LookupEnv("JWT_KEY")
+	if !ok {
+		return errors.New("JWT_KEY not set")
+	}
+
+	tokenAuth = jwtauth.New(algorithm, []byte(key), nil)
+	return nil
 }
 
 func RegisterApi(api huma.API, db *gorm.DB ) {

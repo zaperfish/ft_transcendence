@@ -1,11 +1,8 @@
-package auth
+package user
 
 import (
     // Std
 	"regexp"
-
-    // Internal
-	"ft_transcendence/backend/user"
 
     // External
 	"github.com/go-ozzo/ozzo-validation/v4"
@@ -19,7 +16,7 @@ const (
 	maxPasswordLength = 128
 )
 
-func validateUser(u user.User) error {
+func ValidateUser(u User) error {
 	return validation.ValidateStruct(&u,
 			validation.Field(&u.Name, makeRule(validUserName)),
 			validation.Field(&u.Email, makeRule(validUserEmail)),
@@ -29,24 +26,24 @@ func validateUser(u user.User) error {
 
 func validUserName(name string) error {
 	return validation.Validate(name, 
-		validation.Required,
-		validation.Length(minUsernameLength, maxUsernameLength),
-		validation.Match(regexp.MustCompile(`^\S+$`)).Error("must not contain spaces"),
-	)
+			validation.Required,
+			validation.Length(minUsernameLength, maxUsernameLength),
+			validation.Match(regexp.MustCompile(`^\S+$`)).Error("must not contain spaces"),
+		)
 }
 
 func validUserEmail(email string) error {
 	return validation.Validate(email, 
-		validation.Required,
-		is.Email,
-	)
+			validation.Required,
+			is.Email,
+		)
 }
 
 func validUserPassword(password string) error {
 	return validation.Validate(password, 
-		validation.Required,
-		validation.Length(minPasswordLength, maxPasswordLength),
-	)
+			validation.Required,
+			validation.Length(minPasswordLength, maxPasswordLength),
+		)
 }
 
 func makeRule(test func(s string) error) validation.Rule {

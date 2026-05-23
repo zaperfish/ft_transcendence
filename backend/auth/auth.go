@@ -47,7 +47,7 @@ func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userO
         Password:   in.Body.Password,
     }
 
-	err := validateUser(u)
+	err := user.ValidateUser(u)
 	if err != nil {
 		return nil, err
 	}

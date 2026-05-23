@@ -32,6 +32,17 @@ func Init() error {
 	}
 
 	tokenAuth = jwtauth.New(algorithm, []byte(key), nil)
+
+	_, ts, err := tokenAuth.Encode(map[string]any{"test": true})
+	if err != nil {
+		return errors.New("failed to initialize jwt authenticator")
+	}
+
+	_, err = jwtauth.VerifyToken(tokenAuth, ts)
+	if err != nil {
+		return errors.New("failed to initialize jwt authenticator")
+	}
+
 	return nil
 }
 
@@ -119,11 +130,11 @@ func makeJWT(tokenAuth *jwtauth.JWTAuth, uid uint) (string, error) {
 		"exp":			time.Now().Add(30 * time.Minute).Unix(),
 		"iat":			time.Now().Unix(),
 	}
-    _, t, err := tokenAuth.Encode(claims)
+    _, ts, err := tokenAuth.Encode(claims)
     if err != nil {
         return "", err
     }
-	return t, nil
+	return ts, nil
 }
 
 func makeJWTCookie(tokenAuth *jwtauth.JWTAuth, uid uint) (http.Cookie, error) {

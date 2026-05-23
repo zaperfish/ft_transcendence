@@ -35,7 +35,7 @@ func registerRegisterUser(api huma.API, h handler) {
         OperationID:    "register-user",
         Method:         http.MethodPost,
         Path:           "/api/auth/register",
-        DefaultStatus:  http.StatusOK,
+        DefaultStatus:  http.StatusCreated,
         Tags:           []string{"Authentification"},
     }, h.handleCreateUser)
 }

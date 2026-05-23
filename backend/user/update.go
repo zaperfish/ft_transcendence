@@ -30,7 +30,8 @@ func registerPatchUser(api huma.API, h handler) {
 type PatchUserDTO struct {
     Name *string     `json:"name,omitempty" maxLength:"30" example:"Max" doc:"username"`
     Email *string    `json:"email,omitempty" example:"max@email.com" doc:"email address"`
-    Password *string `json:"password,omitempty" example:"secret" doc:"password"`
+    Password *string `json:"password,omitempty" example:"newsecret" doc:"password"`
+    OldPassword *string `json:"old_password,omitempty" example:"secret" doc:"old password"`
 }
 
 type PatchUserInput struct {
@@ -60,6 +61,20 @@ func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*use
 		updates["email"] = *in.Body.Email
 	}
 	if in.Body.Password != nil {
+		if in.Body.OldPassword == nil {
+			return nil, gorm.ErrRecordNotFound
+		}
+		u, err := gorm.G[User](h.db).Where("id = ?", in.ID).First(ctx)
+		if err != nil {
+			return nil, err
+		}
+		match, err := argon2id.ComparePasswordAndHash(*in.Body.OldPassword, u.PasswordHash)
+		if err != nil {
+			return nil, huma.Error500InternalServerError("")
+		}
+		if !match {
+			return nil, gorm.ErrRecordNotFound
+		}
 		if err := ValidUserPassword(*in.Body.Password); err != nil {
 			return nil, err
 		}

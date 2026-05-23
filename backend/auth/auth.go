@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"time"
+	"os"
 
     // Internal
 	"ft_transcendence/backend/user"
@@ -16,9 +17,11 @@ import (
     "gorm.io/gorm"
 )
 
-const KEY = "secret"
+var tokenAuth *jwtauth.JWTAuth
 
-var tokenAuth = jwtauth.New("HS256", []byte(KEY), nil)
+func Init() {
+	tokenAuth = jwtauth.New(os.Getenv("JWT_ALGORITHM"), []byte(os.Getenv("JWT_KEY")), nil)
+}
 
 func RegisterApi(api huma.API, db *gorm.DB ) {
     db.AutoMigrate(&user.User{})

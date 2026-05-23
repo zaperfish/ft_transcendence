@@ -35,6 +35,8 @@ func main() {
 		log.Println("Backend is in container")
 	}
 
+	auth.Init()
+
 	db, err := db.ConnectDB()
 	if err != nil {
 		log.Fatal(err)

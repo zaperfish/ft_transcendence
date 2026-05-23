@@ -27,8 +27,7 @@ func Authenticator(api huma.API) func(ctx huma.Context, next func(huma.Context))
 			return
 		}
 
-		// this is dodgy
-		cookie, err := makeJWTCookie(tokenAuth, uint(claims["sub"].(float64)))
+		cookie, err := makeJWTCookie(claims["sub"].(string))
 		if err != nil {
 			huma.WriteErr(api, ctx, http.StatusInternalServerError, "error")
 			return

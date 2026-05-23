@@ -13,7 +13,6 @@ import (
     // External
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
-    "github.com/go-chi/jwtauth/v5"
     "gorm.io/gorm"
 )
 
@@ -95,9 +94,9 @@ type LoginUserOutput struct {
     Body user.UserSummaryDTO
 }
 
-func makeJWT(tokenAuth *jwtauth.JWTAuth, uid uint) (string, error) {
+func makeJWT(sub string) (string, error) {
 	claims := map[string]any {
-		"sub":		strconv.FormatUint(uint64(uid), 10),
+		"sub":		sub,
 		"exp":		time.Now().Add(jwtExpirationTime).Unix(),
 		"iat":		time.Now().Unix(),
 	}
@@ -108,8 +107,8 @@ func makeJWT(tokenAuth *jwtauth.JWTAuth, uid uint) (string, error) {
 	return ts, nil
 }
 
-func makeJWTCookie(tokenAuth *jwtauth.JWTAuth, uid uint) (http.Cookie, error) {
-	t, err := makeJWT(tokenAuth, uid)
+func makeJWTCookie(sub string) (http.Cookie, error) {
+	t, err := makeJWT(sub)
 	if err != nil {
 		return http.Cookie{}, err
 	}
@@ -134,7 +133,7 @@ func (h *handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*Log
         return nil, gorm.ErrRecordNotFound
     }
 
-	cookie, err := makeJWTCookie(tokenAuth, u.ID)
+	cookie, err := makeJWTCookie(strconv.FormatUint(uint64(u.ID), 10))
     if err != nil {
         return nil, err
     }

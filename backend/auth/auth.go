@@ -4,6 +4,7 @@ import (
     // Std
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
     // Internal
@@ -96,7 +97,7 @@ type LoginUserOutput struct {
 
 func makeJWT(tokenAuth *jwtauth.JWTAuth, uid uint) (string, error) {
 	claims := map[string]any {
-		"sub":		uid,
+		"sub":		strconv.FormatUint(uint64(uid), 10),
 		"exp":		time.Now().Add(jwtExpirationTime).Unix(),
 		"iat":		time.Now().Unix(),
 	}

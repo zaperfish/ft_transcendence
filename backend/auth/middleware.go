@@ -26,12 +26,14 @@ func Authenticator(api huma.API) func(ctx huma.Context, next func(huma.Context))
 			huma.WriteErr(api, ctx, http.StatusUnauthorized, "invalid access token")
 			return
 		}
+
 		// this is dodgy
 		cookie, err := makeJWTCookie(tokenAuth, uint(claims["sub"].(float64)))
 		if err != nil {
 			huma.WriteErr(api, ctx, http.StatusInternalServerError, "error")
 			return
 		}
+
 		_, w := humachi.Unwrap(ctx)
 		http.SetCookie(w, &cookie)
 		newCtx := context.WithValue(ctx.Context(), "claims", claims)

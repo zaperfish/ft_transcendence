@@ -34,7 +34,7 @@ func registerRegisterUser(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "register-user",
         Method:         http.MethodPost,
-        Path:           "/auth/register",
+        Path:           "/api/auth/register",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Authentification"},
     }, h.handleCreateUser)
@@ -74,7 +74,7 @@ func registerLoginUser(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "login-user",
         Method:         http.MethodPost,
-        Path:           "/auth/login",
+        Path:           "/api/auth/login",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Authentification"},
     }, h.handleLoginUser)
@@ -152,7 +152,7 @@ func registerLogoutUser(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "logout-user",
         Method:         http.MethodPost,
-        Path:           "/auth/logout",
+        Path:           "/api/auth/logout",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Authentification"},
     }, h.handleLogoutUser)

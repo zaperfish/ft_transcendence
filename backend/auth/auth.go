@@ -18,11 +18,7 @@ import (
 
 const KEY = "secret"
 
-var tokenAuth *jwtauth.JWTAuth
-
-func init() {
-	tokenAuth = jwtauth.New("HS256", []byte(KEY), nil)
-}
+var tokenAuth = jwtauth.New("HS256", []byte(KEY), nil)
 
 func RegisterApi(api huma.API, db *gorm.DB ) {
     db.AutoMigrate(&user.User{})

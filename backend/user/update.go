@@ -36,7 +36,7 @@ func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*use
 	claims := ctx.Value("claims").(map[string]any)
 
 	// this still looks dodgy, change later
-	if uint(claims["user_id"].(float64)) != in.ID {
+	if uint(claims["sub"].(float64)) != in.ID {
 		return nil, huma.Error401Unauthorized("wrong permissions")
 	}
 

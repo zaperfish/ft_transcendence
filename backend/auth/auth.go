@@ -126,9 +126,9 @@ type LoginUserOutput struct {
 
 func makeJWT(tokenAuth *jwtauth.JWTAuth, uid uint) (string, error) {
 	claims := map[string]any {
-		"user_id":		uid,
-		"exp":			time.Now().Add(30 * time.Minute).Unix(),
-		"iat":			time.Now().Unix(),
+		"sub":		uid,
+		"exp":		time.Now().Add(30 * time.Minute).Unix(),
+		"iat":		time.Now().Unix(),
 	}
     _, ts, err := tokenAuth.Encode(claims)
     if err != nil {

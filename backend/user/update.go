@@ -4,6 +4,7 @@ import (
 	"context"
     "fmt"
 	"net/http"
+	"strconv"
 
     "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
@@ -35,8 +36,7 @@ type PatchUserInput struct {
 func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
 	claims := ctx.Value("claims").(map[string]any)
 
-	// this still looks dodgy, change later
-	if uint(claims["sub"].(float64)) != in.ID {
+	if claims["sub"].(string) != strconv.FormatUint(uint64(in.ID), 10) {
 		return nil, huma.Error401Unauthorized("wrong permissions")
 	}
 

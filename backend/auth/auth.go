@@ -3,10 +3,8 @@ package auth
 import (
     // Std
 	"context"
-	"errors"
 	"net/http"
 	"time"
-	"os"
 
     // Internal
 	"ft_transcendence/backend/user"
@@ -17,34 +15,6 @@ import (
     "github.com/go-chi/jwtauth/v5"
     "gorm.io/gorm"
 )
-
-var tokenAuth *jwtauth.JWTAuth
-
-func Init() error {
-	algorithm, ok := os.LookupEnv("JWT_ALGORITHM")
-	if !ok {
-		return errors.New("JWT_ALGORITHM not set")
-	}
-
-	key, ok := os.LookupEnv("JWT_KEY")
-	if !ok {
-		return errors.New("JWT_KEY not set")
-	}
-
-	tokenAuth = jwtauth.New(algorithm, []byte(key), nil)
-
-	_, ts, err := tokenAuth.Encode(map[string]any{"test": true})
-	if err != nil {
-		return errors.New("failed to initialize jwt authenticator")
-	}
-
-	_, err = jwtauth.VerifyToken(tokenAuth, ts)
-	if err != nil {
-		return errors.New("failed to initialize jwt authenticator")
-	}
-
-	return nil
-}
 
 func RegisterApi(api huma.API, db *gorm.DB ) {
     db.AutoMigrate(&user.User{})
@@ -127,7 +97,7 @@ type LoginUserOutput struct {
 func makeJWT(tokenAuth *jwtauth.JWTAuth, uid uint) (string, error) {
 	claims := map[string]any {
 		"sub":		uid,
-		"exp":		time.Now().Add(30 * time.Minute).Unix(),
+		"exp":		time.Now().Add(jwtExpirationTime).Unix(),
 		"iat":		time.Now().Unix(),
 	}
     _, ts, err := tokenAuth.Encode(claims)
@@ -146,7 +116,7 @@ func makeJWTCookie(tokenAuth *jwtauth.JWTAuth, uid uint) (http.Cookie, error) {
 		Name:		"auth_token",
 		Value:		t,
 		Path:		"/",
-		Expires:	time.Now().Add(15 * time.Minute),
+		Expires:	time.Now().Add(jwtExpirationTime),
 		HttpOnly:	true,
 		Secure:		true,
 		SameSite:	http.SameSiteLaxMode,

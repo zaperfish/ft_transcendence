@@ -1,11 +1,16 @@
 package user
 
 import (
+    // Std
 	"context"
     "fmt"
 	"net/http"
 	"strconv"
 
+	"ft_transcendence/backend/defaults"
+
+    // External
+	"github.com/alexedwards/argon2id"
     "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
@@ -43,22 +48,26 @@ func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*use
 	updates := map[string]any{}
 
 	if in.Body.Name != nil {
-		if err := validUserName(*in.Body.Name); err != nil {
+		if err := ValidUserName(*in.Body.Name); err != nil {
 			return nil, err
 		}
 		updates["name"] = *in.Body.Name
 	}
 	if in.Body.Email != nil {
-		if err := validUserEmail(*in.Body.Email); err != nil {
+		if err := ValidUserEmail(*in.Body.Email); err != nil {
 			return nil, err
 		}
 		updates["email"] = *in.Body.Email
 	}
 	if in.Body.Password != nil {
-		if err := validUserPassword(*in.Body.Password); err != nil {
+		if err := ValidUserPassword(*in.Body.Password); err != nil {
 			return nil, err
 		}
-		updates["password"] = *in.Body.Password
+		hash, err := argon2id.CreateHash(*in.Body.Password, defaults.ArgonParams)
+		if err != nil {
+			return nil, huma.Error500InternalServerError("")
+		}
+		updates["password_hash"] = hash
 	}
 
 	_, err := gorm.G[map[string]any](h.db.Debug()).Table("users").Where("id = ?", in.ID).Updates(ctx, updates)

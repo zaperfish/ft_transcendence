@@ -9,8 +9,10 @@ import (
 
     // Internal
 	"ft_transcendence/backend/user"
+	"ft_transcendence/backend/defaults"
 
     // External
+	"github.com/alexedwards/argon2id"
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
     "gorm.io/gorm"
@@ -41,16 +43,27 @@ func registerRegisterUser(api huma.API, h handler) {
 }
 
 func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
-    u := user.User {
-        Name:       in.Body.Name,
-        Email:      in.Body.Email,
-        Password:   in.Body.Password,
-    }
 
-	err := user.ValidateUser(u)
-	if err != nil {
+	if err := user.ValidUserName(in.Body.Name); err != nil {
 		return nil, err
 	}
+	if err := user.ValidUserEmail(in.Body.Email); err != nil {
+		return nil, err
+	}
+	if err := user.ValidUserPassword(in.Body.Password); err != nil {
+		return nil, err
+	}
+
+	hash, err := argon2id.CreateHash(in.Body.Password, defaults.ArgonParams)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("")
+	}
+
+    u := user.User {
+        Name:       	in.Body.Name,
+        Email:      	in.Body.Email,
+        PasswordHash:   hash,
+    }
 
     err = gorm.G[user.User](h.db).Create(ctx, &u)
     if err != nil {
@@ -134,9 +147,13 @@ func (h *handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*Log
         return nil, err
     }
 
-    if u.Password != in.Body.Password {
-        return nil, gorm.ErrRecordNotFound
+	match, err := argon2id.ComparePasswordAndHash(in.Body.Password, u.PasswordHash)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("")
     }
+	if !match {
+        return nil, gorm.ErrRecordNotFound
+	}
 
 	cookie, err := makeJWTCookie(strconv.FormatUint(uint64(u.ID), 10))
     if err != nil {

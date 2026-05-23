@@ -16,15 +16,15 @@ const (
 	maxPasswordLength = 128
 )
 
-func ValidateUser(u User) error {
-	return validation.ValidateStruct(&u,
-			validation.Field(&u.Name, makeRule(validUserName)),
-			validation.Field(&u.Email, makeRule(validUserEmail)),
-			validation.Field(&u.Password, makeRule(validUserPassword)),
-		)
-}
+// func ValidateUser(u User) error {
+// 	return validation.ValidateStruct(&u,
+// 			validation.Field(&u.Name, makeRule(validUserName)),
+// 			validation.Field(&u.Email, makeRule(validUserEmail)),
+// 			validation.Field(&u.Password, makeRule(validUserPassword)),
+// 		)
+// }
 
-func validUserName(name string) error {
+func ValidUserName(name string) error {
 	return validation.Validate(name, 
 			validation.Required,
 			validation.Length(minUsernameLength, maxUsernameLength),
@@ -32,14 +32,14 @@ func validUserName(name string) error {
 		)
 }
 
-func validUserEmail(email string) error {
+func ValidUserEmail(email string) error {
 	return validation.Validate(email, 
 			validation.Required,
 			is.Email,
 		)
 }
 
-func validUserPassword(password string) error {
+func ValidUserPassword(password string) error {
 	return validation.Validate(password, 
 			validation.Required,
 			validation.Length(minPasswordLength, maxPasswordLength),

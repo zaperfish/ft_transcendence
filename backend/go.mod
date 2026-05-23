@@ -3,6 +3,7 @@ module ft_transcendence/backend
 go 1.25.8
 
 require (
+	github.com/alexedwards/argon2id v1.0.0
 	github.com/danielgtaylor/huma/v2 v2.37.3
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/jwtauth/v5 v5.4.0

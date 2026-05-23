@@ -47,7 +47,12 @@ func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userO
         Password:   in.Body.Password,
     }
 
-    err := gorm.G[user.User](h.db).Create(ctx, &u)
+	err := validateUser(u)
+	if err != nil {
+		return nil, err
+	}
+
+    err = gorm.G[user.User](h.db).Create(ctx, &u)
     if err != nil {
         return nil, err
     }

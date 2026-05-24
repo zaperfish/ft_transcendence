@@ -39,19 +39,17 @@ type PatchUserInput struct {
 }
 
 func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
-	claims := ctx.Value("claims").(map[string]any)
-
-	if claims["sub"].(string) != strconv.FormatUint(uint64(in.ID), 10) {
+	sub, err := auth.GetSubClaim(ctx)
+	if err != nil || sub != strconv.FormatUint(uint64(in.ID), 10) {
 		return nil, huma.Error401Unauthorized("wrong permissions")
 	}
 
 	updates := map[string]any{}
-
  	if err := populateUpdates(&updates, *in, h.db, ctx); err != nil {
 		return nil, err
 	}
 
-	_, err := gorm.G[map[string]any](h.db.Debug()).Table("users").Where("id = ?", in.ID).Updates(ctx, updates)
+	_, err = gorm.G[map[string]any](h.db.Debug()).Table("users").Where("id = ?", in.ID).Updates(ctx, updates)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save patched user: %w", err)
 	}

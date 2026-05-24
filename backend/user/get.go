@@ -4,9 +4,6 @@ import (
 	"context"
 	"net/http"
 
-    "fmt"
-    // "github.com/go-chi/jwtauth/v5"
-
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 	"gorm.io/gorm"
@@ -25,11 +22,6 @@ func registerGetUser(api huma.API, h handler) {
 }
 
 func (h *handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
-
-	claims := ctx.Value("claims")
-
-	fmt.Println("claims:\t", claims)
-
     u, err := gorm.G[User](h.db).Where("name = ?", in.Name).First(ctx)
     if err != nil {
         return nil, err

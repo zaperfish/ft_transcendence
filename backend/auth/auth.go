@@ -2,13 +2,14 @@ package auth
 
 import (
     // Std
+	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
     // External
 	"github.com/alexedwards/argon2id"
-	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
 var LogoutCookie = http.Cookie {
@@ -59,4 +60,18 @@ func MatchPassword(pw string, hash string) (bool, error) {
 
 func CreateHash(pw string) (string, error) {
 	return argon2id.CreateHash(pw, argonParams)
+}
+
+func GetSubClaim(ctx context.Context) (string, error) {
+	claims, ok := ctx.Value("claims").(map[string]any)
+	if !ok {
+		return "", errors.New("no claims in context")
+	}
+
+	sub, ok := claims["sub"].(string)
+	if !ok {
+		return "", errors.New("sub not in claims")
+	}
+
+	return sub, nil
 }

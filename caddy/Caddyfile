@@ -6,10 +6,6 @@
         reverse_proxy backend:{$BACKEND_PORT}    
     }
 
-    handle /auth/* {
-        reverse_proxy backend:{$BACKEND_PORT}    
-    }
-
     handle /openapi.json {
         reverse_proxy backend:{$BACKEND_PORT}
     }

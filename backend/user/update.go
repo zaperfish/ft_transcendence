@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	// Internal
 	"ft_transcendence/backend/auth"
 
     // External

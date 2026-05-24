@@ -12,7 +12,6 @@ import (
 	"ft_transcendence/backend/middleware"
 	"ft_transcendence/backend/user"
 	"ft_transcendence/backend/auth"
-	"ft_transcendence/backend/util"
 
 	// External
 	"github.com/danielgtaylor/huma/v2"
@@ -54,21 +53,21 @@ func main() {
 	}
 
 	r.Use(middleware.RateLimiterMiddleware(&limiterStore))
+	r.Use(chiMiddleware.Logger)
     
 	config := huma.DefaultConfig("ft_transcendence api", "0.1.0")
 	config.DocsRenderer = huma.DocsRendererScalar
 	api := humachi.New(r, config)
-	api.UseMiddleware(util.ChiMiddlewareToHuma(chiMiddleware.Logger))
 
     // Public Routes
 	public := huma.NewGroup(api, "")
-	auth.RegisterApi(public, db)
+	user.RegisterPublicApi(public, db)
 
     // Protected Routes
 	protected := huma.NewGroup(api, "")
 	protected.UseMiddleware(auth.Verifier)
 	protected.UseMiddleware(auth.Authenticator(api))
-	user.RegisterApi(protected, db)
+	user.RegisterProtectedApi(protected, db)
 	event.RegisterEventsApi(protected, db)
 
 	startServer(r)

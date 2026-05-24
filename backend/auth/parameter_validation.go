@@ -1,4 +1,4 @@
-package user
+package auth
 
 import (
     // Std
@@ -15,14 +15,6 @@ const (
 	minPasswordLength = 4
 	maxPasswordLength = 128
 )
-
-// func ValidateUser(u User) error {
-// 	return validation.ValidateStruct(&u,
-// 			validation.Field(&u.Name, makeRule(validUserName)),
-// 			validation.Field(&u.Email, makeRule(validUserEmail)),
-// 			validation.Field(&u.Password, makeRule(validUserPassword)),
-// 		)
-// }
 
 func ValidUserName(name string) error {
 	return validation.Validate(name, 
@@ -52,3 +44,11 @@ func makeRule(test func(s string) error) validation.Rule {
 		return test(s)
 	})
 }
+
+// func ValidateUser(u User) error {
+// 	return validation.ValidateStruct(&u,
+// 			validation.Field(&u.Name, makeRule(validUserName)),
+// 			validation.Field(&u.Email, makeRule(validUserEmail)),
+// 			validation.Field(&u.Password, makeRule(validUserPassword)),
+// 		)
+// }

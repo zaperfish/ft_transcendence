@@ -2,115 +2,23 @@ package auth
 
 import (
     // Std
-	"context"
 	"net/http"
 	"strconv"
 	"time"
 
-    // Internal
-	"ft_transcendence/backend/user"
-	"ft_transcendence/backend/defaults"
-
     // External
 	"github.com/alexedwards/argon2id"
-	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
-    "gorm.io/gorm"
 )
 
-func RegisterApi(api huma.API, db *gorm.DB ) {
-    db.AutoMigrate(&user.User{})
-
-	h := handler{db: db}
-    registerRegisterUser(api, h);
-    registerLoginUser(api, h);
-    registerLogoutUser(api, h);
-}
-
-type handler struct {
-    db *gorm.DB
-}
-
-// login user
-func registerRegisterUser(api huma.API, h handler) {
-    huma.Register(api, huma.Operation{
-        OperationID:    "register-user",
-        Method:         http.MethodPost,
-        Path:           "/api/auth/register",
-        DefaultStatus:  http.StatusCreated,
-        Tags:           []string{"Authentification"},
-    }, h.handleCreateUser)
-}
-
-func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
-
-	if err := user.ValidUserName(in.Body.Name); err != nil {
-		return nil, err
-	}
-	if err := user.ValidUserEmail(in.Body.Email); err != nil {
-		return nil, err
-	}
-	if err := user.ValidUserPassword(in.Body.Password); err != nil {
-		return nil, err
-	}
-
-	hash, err := argon2id.CreateHash(in.Body.Password, defaults.ArgonParams)
-	if err != nil {
-		return nil, huma.Error500InternalServerError("")
-	}
-
-    u := user.User {
-        Name:       	in.Body.Name,
-        Email:      	in.Body.Email,
-        PasswordHash:   hash,
-    }
-
-    err = gorm.G[user.User](h.db).Create(ctx, &u)
-    if err != nil {
-        return nil, err
-    }
-
-    return &userOutput{Body: u.ToSummaryDTO()}, nil
-}
-
-type createInput struct {
-    Body CreateDTO
-}
-
-type CreateDTO struct {
-    Name string     `json:"name" maxLength:"30" example:"Max" doc:"username"`
-    Email string    `json:"email" example:"max@email.com" doc:"email address"`
-    Password string `json:"password" example:"secret" doc:"password"`
-}
-
-type userOutput struct {
-    Body user.UserSummaryDTO
-}
-
-// login user
-func registerLoginUser(api huma.API, h handler) {
-    huma.Register(api, huma.Operation{
-        OperationID:    "login-user",
-        Method:         http.MethodPost,
-        Path:           "/api/auth/login",
-        DefaultStatus:  http.StatusOK,
-        Tags:           []string{"Authentification"},
-    }, h.handleLoginUser)
-}
-
-type userLoginDTO struct {
-    Name string     `json:"name" example:"Max"`
-    Password string `json:"password" example:"secret"`
-}
-
-type loginUserInput struct {
-    Body userLoginDTO
-}
-
-type LoginUserOutput struct {
-	SetCookie http.Cookie 		`header:"Set-Cookie"`
-    Body user.UserSummaryDTO
-}
+var LogoutCookie = http.Cookie {
+		Name:		"auth_token",
+		Value:		"",
+		Path:		"/",
+		HttpOnly:	true,
+		Secure:		true,
+		MaxAge:		-1,
+}	
 
 func makeJWT(sub string) (string, error) {
 	claims := map[string]any {
@@ -123,6 +31,10 @@ func makeJWT(sub string) (string, error) {
         return "", err
     }
 	return ts, nil
+}
+
+func MakeJWTCookieFromID(id uint) (http.Cookie, error) {
+	return makeJWTCookie(strconv.FormatUint(uint64(id), 10))
 }
 
 func makeJWTCookie(sub string) (http.Cookie, error) {
@@ -141,66 +53,10 @@ func makeJWTCookie(sub string) (http.Cookie, error) {
 	}, nil
 }
 
-func (h *handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*LoginUserOutput, error) {
-    u, err := gorm.G[user.User](h.db).Where("name = ?", in.Body.Name).First(ctx)
-    if err != nil {
-        return nil, err
-    }
-
-	match, err := argon2id.ComparePasswordAndHash(in.Body.Password, u.PasswordHash)
-	if err != nil {
-		return nil, huma.Error500InternalServerError("")
-    }
-	if !match {
-        return nil, gorm.ErrRecordNotFound
-	}
-
-	cookie, err := makeJWTCookie(strconv.FormatUint(uint64(u.ID), 10))
-    if err != nil {
-        return nil, err
-    }
-
-    out := &LoginUserOutput {
-		SetCookie: cookie,
-        Body: 	   u.ToSummaryDTO(),
-    }
-
-    return out, nil
+func MatchPassword(pw string, hash string) (bool, error) {
+	return argon2id.ComparePasswordAndHash(pw, hash)
 }
 
-// logout user
-
-func registerLogoutUser(api huma.API, h handler) {
-    huma.Register(api, huma.Operation{
-        OperationID:    "logout-user",
-        Method:         http.MethodPost,
-        Path:           "/api/auth/logout",
-        DefaultStatus:  http.StatusOK,
-        Tags:           []string{"Authentification"},
-    }, h.handleLogoutUser)
-}
-
-func makeJWTDeleteCookie() (http.Cookie, error) {
-	return http.Cookie {
-	}, nil
-}
-
-type LogoutUserOutput struct {
-	SetCookie http.Cookie 		`header:"Set-Cookie"`
-}
-
-func (h *handler) handleLogoutUser(ctx context.Context, in *struct{}) (*LogoutUserOutput, error) {
-
-    out := &LogoutUserOutput {
-		SetCookie: http.Cookie {
-			Name:		"auth_token",
-			Value:		"",
-			Path:		"/",
-			HttpOnly:	true,
-			Secure:		true,
-			MaxAge:		-1,
-		},
-    }
-
-    return out, nil
+func CreateHash(pw string) (string, error) {
+	return argon2id.CreateHash(pw, argonParams)
 }

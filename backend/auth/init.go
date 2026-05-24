@@ -4,15 +4,25 @@ import (
 	// Std
 	"errors"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 
 	// External
+	"github.com/alexedwards/argon2id"
 	"github.com/go-chi/jwtauth/v5"
 )
 
 var tokenAuth *jwtauth.JWTAuth
 var jwtExpirationTime time.Duration
+
+var argonParams = &argon2id.Params{
+	Memory:      128 * 1024,
+	Iterations:  4,
+	Parallelism: uint8(runtime.NumCPU()),
+	SaltLength:  16,
+	KeyLength:   32,
+}
 
 func Init() error {
 	err := initGlobals()

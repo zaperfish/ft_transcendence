@@ -5,9 +5,6 @@ import (
 	"context"
 	"net/http"
 
-	// Internal
-	"ft_transcendence/backend/util"
-
     // External
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
@@ -41,5 +38,14 @@ func Authenticator(api huma.API) func(ctx huma.Context, next func(huma.Context))
 }
 
 func Verifier(ctx huma.Context, next func(huma.Context)) {
-	util.ChiMiddlewareToHuma(jwtauth.Verifier(tokenAuth))(ctx, next)
+	chiMiddlewareToHuma(jwtauth.Verifier(tokenAuth))(ctx, next)
+}
+
+func chiMiddlewareToHuma(chiMiddleware func(http.Handler) http.Handler) func(huma.Context, func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		r, w := humachi.Unwrap(ctx)
+		chiMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next(humachi.NewContext(&huma.Operation{}, r, w))
+		})).ServeHTTP(w, r)
+	}
 }

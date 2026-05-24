@@ -20,6 +20,8 @@ func registerLoginUser(api huma.API, h handler) {
         OperationID:    "login-user",
         Method:         http.MethodPost,
         Path:           "/api/auth/login",
+		Summary:		"Login",
+		Description:	"Acquire a JWT cookie",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Authentification"},
     }, h.handleLoginUser)

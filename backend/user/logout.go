@@ -20,6 +20,8 @@ func registerLogoutUser(api huma.API, h handler) {
         OperationID:    "logout-user",
         Method:         http.MethodPost,
         Path:           "/api/auth/logout",
+		Summary:		"Logout",
+		Description:	"Instructs browser to delete JWT cookie",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Authentification"},
     }, h.handleLogoutUser)

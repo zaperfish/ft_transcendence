@@ -13,9 +13,10 @@ import (
 
 func registerGetUser(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
-        OperationID:    "get-user",
+        OperationID:    "get-user-by-name",
         Method:         http.MethodGet,
         Path:           "/api/users/{name}",
+		Summary:		"Get a user by name",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUser)
@@ -40,6 +41,7 @@ func registerGetUsers(api huma.API, h handler) {
         OperationID:    "get-users",
         Method:         http.MethodGet,
         Path:           "/api/users",
+		Summary:		"Get list of users",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUsers)

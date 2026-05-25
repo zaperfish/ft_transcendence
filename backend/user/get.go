@@ -1,72 +1,73 @@
 package user
 
 import (
-	"net/http"
 	"context"
+	"net/http"
 
-    "gorm.io/gorm"
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
+	"gorm.io/gorm"
 )
 
 // registerGetUser
 
-func registerGetUser(api huma.API, h dbHandler) {
+func registerGetUser(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
-        OperationID:    "get-user",
+        OperationID:    "get-user-by-name",
         Method:         http.MethodGet,
         Path:           "/api/users/{name}",
+		Summary:		"Get a user by name",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUser)
 }
 
-func (h *dbHandler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
-    u, err := gorm.G[user](h.db).Where("name = ?", in.Name).First(ctx)
+func (h *handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
+    u, err := gorm.G[User](h.db).Where("name = ?", in.Name).First(ctx)
     if err != nil {
         return nil, err
     }
-    return &userOutput{Body: u.toResponseDTO()}, nil
+    return &userOutput{Body: u.ToSummaryDTO()}, nil
 }
 
 type getUserInput struct {
-    Name string `path:"name" maxLength:"30" example:"Max" doc:"get user by name"`
+	Name string `path:"name" maxLength:"30" example:"Max" doc:"get user by name"`
 }
 
 // registerGetUsers
 
-func registerGetUsers(api huma.API, h dbHandler) {
+func registerGetUsers(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
         OperationID:    "get-users",
         Method:         http.MethodGet,
         Path:           "/api/users",
+		Summary:		"Get list of users",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUsers)
 }
 
-func (h *dbHandler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
+func (h *handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
     offset := (in.Page - 1) * in.PageSize
-    us, err := gorm.G[user](h.db).Limit(in.PageSize).Offset(offset).Find(ctx)
+    us, err := gorm.G[User](h.db).Limit(in.PageSize).Offset(offset).Find(ctx)
     if err != nil {
         return nil, err
     }
     
-    userList := make([]userResponseDTO, 0, len(us))
+    userList := make([]UserSummaryDTO, 0, len(us))
     for _, u := range us {
-        userList = append(userList, u.toResponseDTO())
+        userList = append(userList, u.ToSummaryDTO())
     }
 
     out := usersOutput {
-        Body: userListResponseDTO {
+        Body: UserListSummaryDTO {
             Data:       userList,
             Page:       in.Page,
             PageSize:   in.PageSize,
             Total:      len(us),
         },
     }
-
-    return &out, nil
+	return &out, nil
 }
 
 type getUsersInput struct {

@@ -1,58 +1,73 @@
 package user
 
 import (
+    // Std
 	"time"
 
-    "gorm.io/gorm"
+    // External
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
+	"gorm.io/gorm"
 )
 
-func RegisterApi(api huma.API, db *gorm.DB) {
-    db.AutoMigrate(&user{})
+type handler struct {
+    db *gorm.DB
+}
 
-    h := dbHandler{db: db}
-    registerCreateUser(api, h);
+func RegisterPublicApi(api huma.API, db *gorm.DB ) {
+    db.AutoMigrate(&User{})
+
+	h := handler{db: db}
+    registerRegisterUser(api, h);
+    registerLoginUser(api, h);
+    registerLogoutUser(api, h);
+}
+
+func RegisterProtectedApi(api huma.API, db *gorm.DB ) {
+    db.AutoMigrate(&User{})
+
+	h := handler{db: db}
     registerGetUser(api, h);
     registerGetUsers(api, h);
+    registerPatchUser(api, h);
 }
 
-type user struct {
+type User struct {
     gorm.Model
     Name string     `gorm:"unique"`
+	Email string    `gorm:"unique"`
+    PasswordHash string
 }
 
-func (u *user) toResponseDTO() userResponseDTO {
-    return userResponseDTO {
+func (u *User) ToSummaryDTO() UserSummaryDTO {
+    return UserSummaryDTO {
         ID:         u.ID,
         Name:       u.Name,
+        Email:      u.Email,
         CreatedAt:  u.CreatedAt,
         UpdatedAt:  u.UpdatedAt,
     }
 }
 
-type dbHandler struct {
-    db *gorm.DB
-}
-
 type userOutput struct {
-    Body userResponseDTO
+    Body UserSummaryDTO
 }
 
 type usersOutput struct {
-    Body userListResponseDTO
+    Body UserListSummaryDTO
 }
 
-type userListResponseDTO struct {
-    Data        []userResponseDTO   `json:"data"`
+type UserListSummaryDTO struct {
+    Data        []UserSummaryDTO   `json:"data"`
 	Page        int                 `json:"page"`
 	PageSize    int                 `json:"page_size"`
 	Total       int                 `json:"total"`
 }
 
-type userResponseDTO struct {
+type UserSummaryDTO struct {
     ID          uint        `json:"id" doc:"user ID"`
     Name        string      `json:"name" doc:"username"`
+	Email 		string      `json:"email" doc:"email address"`
 	CreatedAt   time.Time   `json:"created_at" doc:"user creation time"`
 	UpdatedAt   time.Time   `json:"updated_at" doc:"user update time"`
 }

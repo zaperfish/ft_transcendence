@@ -44,16 +44,19 @@ type LoginUserOutput struct {
 
 func (h *handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*LoginUserOutput, error) {
     u, err := gorm.G[User](h.db).Where("name = ?", in.Body.Name).First(ctx)
-    if err != nil {
-        return nil, err
+    if err == gorm.ErrRecordNotFound {
+        return nil, huma.Error401Unauthorized(gorm.ErrRecordNotFound.Error())
     }
+	if err != nil {
+        return nil, err
+	}
 	
 	match, err := auth.MatchPassword(in.Body.Password, u.PasswordHash)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("")
     }
 	if !match {
-        return nil, gorm.ErrRecordNotFound
+        return nil, huma.Error401Unauthorized(gorm.ErrRecordNotFound.Error())
 	}
 
 	cookie, err := auth.MakeJWTCookieFromID(u.ID)

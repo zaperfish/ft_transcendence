@@ -12,10 +12,15 @@ import (
 	"github.com/alexedwards/argon2id"
 )
 
+// LogoutCookie
+//
+// MaxAge: -1
+// instructs browser to delete matching cookie
+//
 var LogoutCookie = http.Cookie {
 		Name:		"auth_token",
 		Value:		"",
-		Path:		"/",
+		Path:		"/api",
 		HttpOnly:	true,
 		Secure:		true,
 		MaxAge:		-1,
@@ -38,6 +43,20 @@ func MakeJWTCookieFromID(id uint) (http.Cookie, error) {
 	return makeJWTCookie(strconv.FormatUint(uint64(id), 10))
 }
 
+// makeJWTCookie()
+//
+// Path: "/api"
+// browser sends cookie when accessing this path
+//
+// HttpOnly: true
+// prevents JavaScript from accessing the Set-Cookie header
+//
+// Secure: true
+// browser will only send this cookie with HTTPS not HTTP
+//
+// SameSite: http.SameSiteStrictMode
+// browser only sends cookie when accessing from the same site
+//
 func makeJWTCookie(sub string) (http.Cookie, error) {
 	t, err := makeJWT(sub)
 	if err != nil {
@@ -46,11 +65,11 @@ func makeJWTCookie(sub string) (http.Cookie, error) {
 	return http.Cookie {
 		Name:		"auth_token",
 		Value:		t,
-		Path:		"/",
+		Path:		"/api",
 		Expires:	time.Now().Add(jwtExpirationTime),
 		HttpOnly:	true,
 		Secure:		true,
-		SameSite:	http.SameSiteLaxMode,
+		SameSite:	http.SameSiteStrictMode,
 	}, nil
 }
 

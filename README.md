@@ -8,6 +8,8 @@ ft_transcendence is the final group project of the 42 Common Core curriculum. It
 - [Architecture](#architecture)
 - [Setup](#setup)
 - [Contributing](#contributing)
+- [Implementation](#implementation)
+    - [Authentification](#authentification)
 <br><br>
 
 ## About This Project
@@ -177,3 +179,47 @@ gh pr create
 - Keep branches focused on a single change  
 - Use meaningful commit messages (`feat:`, `fix:`, `docs:`, etc.)  
 - Rebase or pull latest `main` if your branch gets outdated
+
+## Implementation
+
+### Authentification
+
+#### General Principle
+
+- We are using JSON Web Tokens (JWTs) and sliding sessions for session management.
+- When a user successfully logs in the server will respond by sending a JWT saved within a cookie
+- The JWT encodes information about the user (claims), a creation time and an expiration time
+- The token is encrypted with a key that is only known by the server
+- When a client requests a protected part or functionality of the website the request has to contain this encrypted token
+- The server then ensures the following:
+    1. If the token is invalid, i.e. not present, not decryptable with the server's key or expired the request gets rejected.
+    2. If the token is valid the request gets forwarded to a request handler and an updated token with extended expiration time gets created.
+    3. The request handler checks if the token contained the correct user information for accessing the rquested feature, the request gets accepted or rejected accordingly. The response contains the updated token.
+
+#### JWT Format
+
+A JWT consists of three '.' separated Base64url-encoded JSON strings
+1. Header: contains metadate (token type, cryptographic algorithm etc.)
+2. Payload: claims
+3. Signature: used for validation
+
+#### The Cookie
+
+- The server transmits the JWT by instructing the client (browser) to save it within a cookie.
+- For this the HTTP response is send with the "Set-Cookie" header set.
+- The following fields are set:
+    - auth_token=<the acutual JWT>
+    - Path=/api                     -> tells the browser for which requested resources it needs to send the cookie
+    - Expires=<time>                -> tells the browser till when the cookie is valid
+    - HttpOnly                      -> tells the browser to prevent JavaScript from accessing the cookie
+    - Secure                        -> tells the browser to only send the cookie when communicating over HTTPS
+    - SameSite=Strict               -> tells the browser to only send the cookie when sending a request from the same website
+
+**example header:**
+Set-Cookie: auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Nzk3MDEyOTMsImlhdCI6MTc3OTY5OTQ5Mywic3ViIjoiMSJ9.HEOudYQUwWYyZEy5cQOzFSmd0zioRYn-8LQR37hyiqI; Path=/api; Expires=Mon, 25 May 2026 09:28:13 GMT; HttpOnly; Secure; SameSite=Strict
+
+#### Resources
+
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies
+https://www.newline.co/@kchan/integrating-jwt-authentication-with-go-and-chi-jwtauth-middleware--ff9a6cec
+https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-token-structure

@@ -1,11 +1,12 @@
 package db
 
 import (
-	// "encoding/json"
+	// Std
 	"fmt"
 	"log"
 	"os"
 
+	// External
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -29,4 +30,3 @@ func ConnectDB() (*gorm.DB, error) {
 
 	return db, nil
 }
-

@@ -11,9 +11,6 @@ services:
       HTTPS_DOMAINS: ${CADDY_HTTPS_DOMAINS}
       FRONTEND_PORT: ${FRONTEND_INTERNAL_PORT}
       BACKEND_PORT: ${BACKEND_INTERNAL_PORT}
-      JWT_ALGORITHM: ${JWT_ALGORITHM}
-      JWT_KEY: ${JWT_KEY}
-      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - ./caddy/scalar.html:/srv/index.html
@@ -40,6 +37,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_INTERNAL_PORT}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      JWT_KEY: ${JWT_KEY}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES}
       CONTAINER_RUNTIME: true
 
   postgres:

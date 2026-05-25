@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { register } from '@/lib/api/auth';
+import { useRouter } from 'next/navigation';
 
 interface LoginFormProps {
 	onSuccess?: () => void;

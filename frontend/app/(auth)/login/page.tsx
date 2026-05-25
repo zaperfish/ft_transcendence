@@ -7,7 +7,7 @@ export default function LoginPage() {
 	const router = useRouter();
 
 	return (
-		<div className="mx-auto mt-xl max-w-md rounded-lg bg-surface p-xl">
+		<div className="rounded-lg bg-surface p-xl shadow-sm">
 			<h1 className="mb-sm text-2xl font-bold text-text-primary">Login to Meetup</h1>
 			<p className="mb-lg text-text-secondary">Welcome back, please login your account</p>
 			<LoginForm onSuccess={() => router.push('/home')} />

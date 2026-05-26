@@ -57,6 +57,7 @@ func main() {
     
 	config := huma.DefaultConfig("ft_transcendence api", "0.1.0")
 	config.DocsRenderer = huma.DocsRendererScalar
+	config.CreateHooks = nil
 	api := humachi.New(r, config)
 
     // Public Routes

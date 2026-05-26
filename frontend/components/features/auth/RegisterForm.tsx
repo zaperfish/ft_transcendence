@@ -10,7 +10,7 @@ export function RegisterForm() {
 	const [username, setUsername] = useState('');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [errors, setErrors] = useState< { [key: string]: string }>({});
+	const [errors, setErrors] = useState< { username?: string; email?: string; password?: string; general?: string }>({});
 	const [loading, setLoading] = useState(false);
 	const router = useRouter();
 
@@ -18,6 +18,10 @@ export function RegisterForm() {
 		const newErrors: typeof errors = {};
 		if (!username.trim())
 			newErrors.username = "Please enter your username";
+		if (!email.trim())
+			newErrors.email = 'Please enter your email';
+		else if (!/\S+@\S+\.\S+/.test(email))
+			newErrors.email = 'Invalid email address';
 		if (!password.trim())
 			newErrors.password = "Please enter your password";
 		setErrors(newErrors);
@@ -30,11 +34,11 @@ export function RegisterForm() {
 		setLoading(true);
 		setErrors({});
 		try {
-			await login({ username, password });
-			onSuccess?.();
+			await register({ name: username, email, password });
+			router.push('/login?registered=true');
 		} catch (err: any) {
-			if (err.status === 401) {
-				setErrors({ general: 'Invalid username or password'});
+			if (err.status === 409) {
+				setErrors({ general: 'Occupied username or email'});
 			} else {
 				setErrors({ general: 'Network error'});
 			}
@@ -46,9 +50,10 @@ export function RegisterForm() {
 	return (
 		<div className="flex flex-col gap-6">
 			<Input value={username} onChange={e => setUsername(e.target.value)} placeholder='Username' error={errors.username} />
+			<Input value={email} onChange={e => setPassword(e.target.value)} placeholder='Email' error={errors.email} />
 			<Input value={password} onChange={e => setPassword(e.target.value)} placeholder='Password' error={errors.password} />
 			{errors.general && <div className="text-sm text-error mt-xs">{errors.general}</div>}
-			<Button loading={loading} onClick={handleSubmit}>login</Button>
+			<Button loading={loading} onClick={handleSubmit}>register</Button>
 		</div>
 	);
 }

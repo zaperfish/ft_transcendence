@@ -3,12 +3,12 @@ package user
 import (
     // Std
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
     // Internal
 	"ft_transcendence/backend/auth"
+	"ft_transcendence/backend/db"
 
     // External
 	"github.com/danielgtaylor/huma/v2"
@@ -45,9 +45,10 @@ func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userO
         PasswordHash:   hash,
     }
 
-    if err = gorm.G[User](h.db).Create(ctx, &u); errors.Is(err, gorm.ErrDuplicatedKey) {
-        return nil, huma.Error409Conflict("already exists")
-    }
+    err = gorm.G[User](h.db).Create(ctx, &u)
+	if errNew, ok := db.PostgresError(err); ok {
+		return nil, errNew
+	}
     if err != nil {
         return nil, huma.Error500InternalServerError(err.Error())
     }

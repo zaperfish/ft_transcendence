@@ -12,19 +12,21 @@ import (
 	"github.com/alexedwards/argon2id"
 )
 
-// LogoutCookie
+// makeLogoutCookie()
 //
 // MaxAge: -1
 // instructs browser to delete matching cookie
 //
-var LogoutCookie = http.Cookie {
-		Name:		"auth_token",
-		Value:		"",
-		Path:		"/api",
-		HttpOnly:	true,
-		Secure:		true,
-		MaxAge:		-1,
-}	
+func MakeLogoutCookie() http.Cookie {
+	return http.Cookie {
+			Name:		"auth_token",
+			Value:		"",
+			Path:		"/api",
+			HttpOnly:	true,
+			Secure:		true,
+			MaxAge:		-1,
+	}	
+}
 
 func makeJWT(sub string) (string, error) {
 	claims := map[string]any {

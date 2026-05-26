@@ -19,7 +19,7 @@ import (
 //
 func MakeLogoutCookie() http.Cookie {
 	return http.Cookie {
-			Name:		"auth_token",
+			Name:		"jwt",
 			Value:		"",
 			Path:		"/api",
 			HttpOnly:	true,
@@ -65,7 +65,7 @@ func makeJWTCookie(sub string) (http.Cookie, error) {
 		return http.Cookie{}, err
 	}
 	return http.Cookie {
-		Name:		"auth_token",
+		Name:		"jwt",
 		Value:		t,
 		Path:		"/api",
 		Expires:	time.Now().Add(jwtExpirationTime),

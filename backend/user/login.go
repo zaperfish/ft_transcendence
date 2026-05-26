@@ -3,6 +3,7 @@ package user
 import (
     // Std
 	"context"
+	"errors"
 	"net/http"
 
     // Internal
@@ -44,16 +45,16 @@ type LoginUserOutput struct {
 
 func (h *handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*LoginUserOutput, error) {
     u, err := gorm.G[User](h.db).Where("name = ?", in.Body.Name).First(ctx)
-    if err == gorm.ErrRecordNotFound {
+    if errors.Is(err, gorm.ErrRecordNotFound) {
         return nil, huma.Error401Unauthorized(gorm.ErrRecordNotFound.Error())
     }
 	if err != nil {
-        return nil, err
+        return nil, huma.Error500InternalServerError(err.Error())
 	}
 	
 	match, err := auth.MatchPassword(in.Body.Password, u.PasswordHash)
 	if err != nil {
-		return nil, huma.Error500InternalServerError("")
+        return nil, huma.Error500InternalServerError(err.Error())
     }
 	if !match {
         return nil, huma.Error401Unauthorized(gorm.ErrRecordNotFound.Error())
@@ -61,7 +62,7 @@ func (h *handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*Log
 
 	cookie, err := auth.MakeJWTCookieFromID(u.ID)
     if err != nil {
-        return nil, err
+        return nil, huma.Error500InternalServerError(err.Error())
     }
 
     out := &LoginUserOutput {

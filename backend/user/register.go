@@ -3,10 +3,12 @@ package user
 import (
     // Std
 	"context"
+	"fmt"
 	"net/http"
 
     // Internal
 	"ft_transcendence/backend/auth"
+	"ft_transcendence/backend/db"
 
     // External
 	"github.com/danielgtaylor/huma/v2"
@@ -29,12 +31,12 @@ func registerRegisterUser(api huma.API, h handler) {
 func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
 
 	if err := validateParameters(&in.Body); err != nil {
-		return nil, err
+		return nil, huma.Error400BadRequest(err.Error())
 	}
 
 	hash, err := auth.CreateHash(in.Body.Password)
 	if err != nil {
-		return nil, huma.Error500InternalServerError("")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
     u := User {
@@ -44,8 +46,11 @@ func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userO
     }
 
     err = gorm.G[User](h.db).Create(ctx, &u)
+	if errNew, ok := db.PostgresError(err); ok {
+		return nil, errNew
+	}
     if err != nil {
-        return nil, err
+        return nil, huma.Error500InternalServerError(err.Error())
     }
 
     return &userOutput{Body: u.ToSummaryDTO()}, nil

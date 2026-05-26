@@ -34,7 +34,7 @@ type LogoutUserOutput struct {
 func (h *handler) handleLogoutUser(ctx context.Context, in *struct{}) (*LogoutUserOutput, error) {
 
     out := &LogoutUserOutput {
-		SetCookie: auth.LogoutCookie,
+		SetCookie: auth.MakeLogoutCookie(),
     }
 
     return out, nil

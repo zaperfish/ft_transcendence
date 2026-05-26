@@ -7,6 +7,7 @@ ft_transcendence is the final group project of the 42 Common Core curriculum. It
 - [Team Roles](#team-roles)
 - [Architecture](#architecture)
 - [Setup](#setup)
+    - [Container tooling](#container-tooling)
 - [Contributing](#contributing)
 - [Implementation](#implementation)
     - [Authentification](#authentification)
@@ -106,9 +107,44 @@ When developing the frontend:
 
 ## Setup
 
+### Container tooling
+
+This project uses Compose files to describe the container stack, and those files can be run with either Docker or Podman.
+
+- `Docker` and `Podman` are container runtimes. They build images and run containers.
+- `docker-compose` / `docker compose` and `podman compose` are Compose-compatible orchestration commands. They start the full stack from `compose.yml`.
+- `compose.yml` is the shared service definition. It is not Docker-specific.
+- `compose.override.yml` is used during development to expose frontend, backend, and Postgres ports on the host.
+
+We do not run Docker and Podman together for the same environment. Use one runtime per machine.
+
+The current project convention is:
+
+- Local development defaults to Docker Compose through `.env.example`:
+  ```env
+  CONTAINER_TOOL=docker
+  CONTAINER_ORCHESTRATION_TOOL=docker-compose
+  ```
+- Production deployment uses Podman Compose. The GitHub Actions deploy workflow runs:
+  ```bash
+  podman compose down --remove-orphans
+  podman compose up -d --build --force-recreate
+  ```
+
+If you want to use Podman locally, change your local `.env` to:
+
+```env
+CONTAINER_TOOL=podman
+CONTAINER_ORCHESTRATION_TOOL="podman compose"
+```
+
+The `justfile` reads these variables, so commands like `just up`, `just down`, `just logs backend`, and `just serve postgres` work with whichever runtime you configured.
+
 For this project you need:
   - `just` the command runner
-  - `podman` as the container runtime.
+  - A Compose-compatible container setup:
+    - Docker + `docker-compose` / `docker compose`, or
+    - Podman + `podman compose`
   - `go` if you develop on the backend
   - `nodejs` if you develop on the frontend
 Make sure they are installed on your system.

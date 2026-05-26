@@ -32,7 +32,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 		setLoading(true);
 		setErrors({});
 		try {
-			await login({ username, password });
+			await login({ name: username, password });
 			onSuccess?.();
 		} catch (err: any) {
 			if (err.status === 401) {

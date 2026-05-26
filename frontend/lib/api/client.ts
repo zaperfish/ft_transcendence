@@ -17,7 +17,7 @@ export async function request<T>(url: string, options?: RequestInit): Promise<T>
 
 	if (!response.ok) {
 		// Hard redirect to login when 401 Unauthorized
-		if (response.status === 401) {
+		if (response.status === 401 && typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
 			window.location.href = '/login';
 		}
 		throw new ApiError(response.status, 'Request failed');

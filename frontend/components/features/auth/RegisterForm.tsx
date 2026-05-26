@@ -6,16 +6,13 @@ import { Button } from '@/components/ui/Button';
 import { register } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
 
-interface LoginFormProps {
-	onSuccess?: () => void;
-}
-
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function RegisterForm() {
 	const [username, setUsername] = useState('');
+	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [errors, setErrors] = useState< {username?: string; password?: string; general?: string}>({});
+	const [errors, setErrors] = useState< { [key: string]: string }>({});
 	const [loading, setLoading] = useState(false);
-	const { login } = useAuth();
+	const router = useRouter();
 
 	const validate = () => {
 		const newErrors: typeof errors = {};

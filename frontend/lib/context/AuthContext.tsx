@@ -11,7 +11,7 @@ interface AuthContextType {
 	user: User | null;
 	isAuthenticated: boolean;
 	isLoading: boolean;
-	login: (credentials: { username: string; password: string }) => Promise<void>;
+	login: (credentials: { name: string; password: string }) => Promise<void>;
 	logout: () => Promise<void>;
 }
 
@@ -37,7 +37,8 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 				const currentUser = await getCurrentUser();
 				setUser(currentUser);
 			} catch (error) {
-				console.error('Failed login automatically', error);
+				// Avoid triggering Next.js error overlay with console.error
+				console.log('User not logged in or session expired');
 				setUser(null);
 			}
 			setIsLoading(false);
@@ -45,7 +46,7 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 		initAuth();
 	}, []);
 
-	const login = async (credentials: { username: string; password: string }) => {
+	const login = async (credentials: { name: string; password: string }) => {
 		const { user } = await apiLogin(credentials);
 		setUser(user);
 	};

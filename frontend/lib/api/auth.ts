@@ -3,7 +3,7 @@ import { request } from '@/lib/api/client';
 
 // Frontend -> Backend
 export interface LoginCredentials {
-	username: string;
+	name: string;
 	password: string;
 }
 
@@ -14,14 +14,14 @@ export interface AuthResponse {
 }
 
 export interface RegisterCredentials {
-	username: string;
+	name: string;
 	email: string;
 	password: string;
 }
 
 // Wrap request and response into 1 Login api
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
-	const res = await request<AuthResponse>('/api/user/login', {
+	const res = await request<AuthResponse>('/api/auth/login', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json'},
 		body: JSON.stringify(credentials),
@@ -31,7 +31,7 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
 
 // Backend in responsible to clean cookie
 export async function logout(): Promise<void> {
-	await request('/api/user/logout', {
+	await request('/api/auth/logout', {
 		method: 'POST',
 	});
 }

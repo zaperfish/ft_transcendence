@@ -57,7 +57,7 @@ func main() {
     
 	config := huma.DefaultConfig("ft_transcendence api", "0.1.0")
 	config.DocsRenderer = huma.DocsRendererScalar
-	config.CreateHooks = nil
+	config.CreateHooks = nil	// disables schema injection into request json payloads
 	api := humachi.New(r, config)
 
     // Public Routes

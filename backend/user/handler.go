@@ -7,20 +7,18 @@ import (
 
     // Internal
 	"ft_transcendence/backend/auth"
-	"ft_transcendence/backend/db"
+	"ft_transcendence/backend/errs"
 
     // External
 	"github.com/danielgtaylor/huma/v2"
-	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
-    "gorm.io/gorm"
 )
 
 // login
 
 func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*LoginUserOutput, error) {
     u, err := h.getUserByName(ctx, in.Body.Name)
-    if errors.Is(err, gorm.ErrRecordNotFound) {
-        return nil, huma.Error401Unauthorized(gorm.ErrRecordNotFound.Error())
+    if errors.Is(err, errs.ErrNotFound) {
+        return nil, huma.Error401Unauthorized(err.Error())
     }
 	if err != nil {
         return nil, huma.Error500InternalServerError(err.Error())
@@ -31,7 +29,7 @@ func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*Log
         return nil, huma.Error500InternalServerError(err.Error())
     }
 	if !match {
-        return nil, huma.Error401Unauthorized(gorm.ErrRecordNotFound.Error())
+        return nil, huma.Error401Unauthorized(errs.ErrNotFound.Error())
 	}
 
 	cookie, err := auth.MakeJWTCookieFromID(u.ID)
@@ -67,12 +65,12 @@ func (h *Handler) handleRegisterUser(ctx context.Context, in *createInput) (*use
     }
 
     err = h.creatUser(ctx, &u)
-	if errNew, ok := db.PostgresError(err); ok {
-		return nil, errNew
-	}
-    if err != nil {
-        return nil, huma.Error500InternalServerError(err.Error())
+    if errors.Is(err, errs.ErrConflict) {
+        return nil, huma.Error409Conflict(err.Error())
     }
+	if err != nil {
+        return nil, huma.Error500InternalServerError(err.Error())
+	}
 
     return &userOutput{Body: u.ToSummaryDTO()}, nil
 }
@@ -105,9 +103,13 @@ func (h *Handler) handleLogoutUser(ctx context.Context, in *struct{}) (*LogoutUs
 
 func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
 	u, err := h.getUserByID(ctx, in.ID)
-    if err != nil {
-        return nil, err
+    if errors.Is(err, errs.ErrNotFound) {
+        return nil, huma.Error404NotFound(err.Error())
     }
+	if err != nil {
+        return nil, huma.Error500InternalServerError(err.Error())
+	}
+
     return &userOutput{Body: u.ToSummaryDTO()}, nil
 }
 
@@ -117,7 +119,7 @@ func (h *Handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*users
 
 	us, err := h.getUsersList(ctx, UserFilter(*in))
 	if err != nil {
-		return nil, err
+        return nil, huma.Error500InternalServerError(err.Error())
 	}
     
     userList := make([]UserSummaryDTO, 0, len(us))
@@ -141,12 +143,15 @@ func (h *Handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*users
 func (h *Handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
 	updates := map[string]any{}
  	if err := populateUpdates(&updates, *in); err != nil {
-		return nil, err
+		return nil, huma.Error400BadRequest(err.Error())
 	}
 
 	u, err := h.updateUserFieldsByID(ctx, in.ID, updates)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
-		return nil, err
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &userOutput{Body: u.ToSummaryDTO()}, nil
@@ -176,34 +181,40 @@ func (h *Handler) handlePatchPassword(ctx context.Context, in *PatchPasswordInpu
 
 func (h *Handler) patchPassword(ctx context.Context, in *PatchPasswordInput) (*userOutput, error) {
 	u, err := h.getUserByID(ctx, in.ID)
+    if errors.Is(err, errs.ErrNotFound) {
+        return nil, huma.Error404NotFound(err.Error())
+    }
 	if err != nil {
-		return nil, err
+        return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	match, err := auth.MatchPassword(in.Body.CurrentPassword, u.PasswordHash)
 	if err != nil {
-		return nil, err
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 	if !match {
-		return nil, errors.New("old password does not match")
+		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
 
 	if in.Body.NewPassword != in.Body.ConfirmPassword {
-		return nil, errors.New("new passwords do not match")
+		return nil, huma.Error400BadRequest("new passwords do not match")
 	}
 
 	if err := auth.ValidUserPassword(in.Body.NewPassword); err != nil {
-		return nil, err
+		return nil, huma.Error400BadRequest(err.Error())
 	}
 
 	hash, err := auth.CreateHash(in.Body.NewPassword)
 	if err != nil {
-		return nil, huma.Error500InternalServerError("")
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	u, err = h.updateUserFieldsByID(ctx, in.ID, map[string]any{"password_hash": hash})
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
-		return nil, err
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &userOutput{Body: u.ToSummaryDTO()}, nil
@@ -213,7 +224,13 @@ func (h *Handler) patchPassword(ctx context.Context, in *PatchPasswordInput) (*u
 
 func (h *Handler) handleDeleteUser(ctx context.Context, in *deleteUserInput) (*userOutput, error) {
 	err := h.deleteUserByID(ctx, in.ID)
-    return nil, err
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+    return nil, nil
 }
 
 // get me
@@ -221,12 +238,16 @@ func (h *Handler) handleDeleteUser(ctx context.Context, in *deleteUserInput) (*u
 func (h *Handler) handleGetMe(ctx context.Context, in *struct{}) (*userOutput, error) {
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
+
 	u, err := h.getUserByID(ctx, id)
-    if err != nil {
-        return nil, err
+    if errors.Is(err, errs.ErrNotFound) {
+        return nil, huma.Error404NotFound(err.Error())
     }
+	if err != nil {
+        return nil, huma.Error500InternalServerError(err.Error())
+	}
     return &userOutput{Body: u.ToSummaryDTO()}, nil
 }
 
@@ -235,17 +256,20 @@ func (h *Handler) handleGetMe(ctx context.Context, in *struct{}) (*userOutput, e
 func (h *Handler) handlePatchMe(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
 
 	updates := map[string]any{}
  	if err := populateUpdates(&updates, *in); err != nil {
-		return nil, err
+		return nil, huma.Error400BadRequest(err.Error())
 	}
 
 	u, err := h.updateUserFieldsByID(ctx, id, updates)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
-		return nil, err
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &userOutput{Body: u.ToSummaryDTO()}, nil
@@ -257,7 +281,7 @@ func (h *Handler) handlePatchPasswordMe(ctx context.Context, in *PatchPasswordIn
 
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
 
 	in.ID = id;
@@ -269,16 +293,15 @@ func (h *Handler) handlePatchPasswordMe(ctx context.Context, in *PatchPasswordIn
 func (h *Handler) handleDeleteMe(ctx context.Context, in *deleteUserInput) (*userOutput, error) {
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
 
-    rows, err := gorm.G[User](h.DB).Where("id = ?", id).Delete(ctx)
-    if err != nil {
-        return nil, err
-    }
-
-	if rows == 0 {
-		return nil, errors.New("no user deleted")
+	err = h.deleteUserByID(ctx, id)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
     return nil, nil
 }

@@ -83,7 +83,7 @@ func CreateHash(pw string) (string, error) {
 	return argon2id.CreateHash(pw, argonParams)
 }
 
-func GetSubClaim(ctx context.Context) (string, error) {
+func ClaimFromCtx(ctx context.Context) (string, error) {
 	claims, ok := ctx.Value("claims").(map[string]any)
 	if !ok {
 		return "", errors.New("no claims in context")
@@ -95,4 +95,17 @@ func GetSubClaim(ctx context.Context) (string, error) {
 	}
 
 	return sub, nil
+}
+
+func UidFromCtx(ctx context.Context) (uint, error) {
+	sub, err := ClaimFromCtx(ctx)
+	if err != nil {
+		return 0, err
+	}
+	u64, err := strconv.ParseUint(sub, 10, strconv.IntSize)
+	if err != nil {
+		return 0, err
+	}
+	// next line is safe because we used strconv.IntSize above
+	return uint(u64), nil
 }

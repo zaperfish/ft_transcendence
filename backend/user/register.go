@@ -56,16 +56,16 @@ func (h *handler) handleRegisterUser(ctx context.Context, in *createInput) (*use
 }
 
 type createInput struct {
-    Body CreateDTO
+    Body CreateUserDTO
 }
 
-type CreateDTO struct {
+type CreateUserDTO struct {
     Name string     `json:"name" maxLength:"30" example:"Max" doc:"username"`
     Email string    `json:"email" example:"max@email.com" doc:"email address"`
     Password string `json:"password" example:"secret" doc:"password"`
 }
 
-func validateParameters(u *CreateDTO) error {
+func validateParameters(u *CreateUserDTO) error {
 	if err := auth.ValidUserName(u.Name); err != nil {
 		return err
 	}

@@ -101,6 +101,41 @@ func (h *Handler) handleLogoutUser(ctx context.Context, in *struct{}) (*LogoutUs
     return out, nil
 }
 
+// get
+
+func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
+	u, err := h.getByID(ctx, in.ID)
+    if err != nil {
+        return nil, err
+    }
+    return &userOutput{Body: u.ToSummaryDTO()}, nil
+}
+
+// get list
+
+func (h *Handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
+
+	us, err := h.listUsers(ctx, UserFilter(*in))
+	if err != nil {
+		return nil, err
+	}
+    
+    userList := make([]UserSummaryDTO, 0, len(us))
+    for _, u := range us {
+        userList = append(userList, u.ToSummaryDTO())
+    }
+
+    out := usersOutput {
+        Body: UserListSummaryDTO {
+            Data:       userList,
+            Page:       in.Page,
+            PageSize:   in.PageSize,
+            Total:      len(us),
+        },
+    }
+	return &out, nil
+}
+
 // patch
 
 func (h *Handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
@@ -188,37 +223,101 @@ func (h *Handler) handleDeleteUser(ctx context.Context, in *deleteUserInput) (*u
     return nil, nil
 }
 
-// get
 
-func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
-	u, err := h.getByID(ctx, in.ID)
+//// me
+
+// get me
+
+func (h *Handler) handleGetMe(ctx context.Context, in *struct{}) (*userOutput, error) {
+	id, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	u, err := h.getByID(ctx, id)
     if err != nil {
         return nil, err
     }
     return &userOutput{Body: u.ToSummaryDTO()}, nil
 }
 
-// get list
+// patch me
 
-func (h *Handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
-
-	us, err := h.listUsers(ctx, UserFilter(*in))
+func (h *Handler) handlePatchMe(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
+	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
-    
-    userList := make([]UserSummaryDTO, 0, len(us))
-    for _, u := range us {
-        userList = append(userList, u.ToSummaryDTO())
+
+	updates := map[string]any{}
+ 	if err := populateUpdates(&updates, *in); err != nil {
+		return nil, err
+	}
+
+	u, err := h.updateFieldsByID(ctx, id, updates)
+	if err != nil {
+		return nil, err
+	}
+
+	return &userOutput{Body: u.ToSummaryDTO()}, nil
+}
+
+// patch password
+
+func (h *Handler) handlePatchPasswordMe(ctx context.Context, in *PatchPasswordInput) (*userOutput, error) {
+	id, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := h.getByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	match, err := auth.MatchPassword(in.Body.CurrentPassword, u.PasswordHash)
+	if err != nil {
+		return nil, err
+	}
+	if !match {
+		return nil, errors.New("old password does not match")
+	}
+
+	if in.Body.NewPassword != in.Body.ConfirmPassword {
+		return nil, errors.New("new passwords do not match")
+	}
+
+	if err := auth.ValidUserPassword(in.Body.NewPassword); err != nil {
+		return nil, err
+	}
+
+	hash, err := auth.CreateHash(in.Body.NewPassword)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("")
+	}
+
+	u, err = h.updateFieldsByID(ctx, id, map[string]any{"password_hash": hash})
+	if err != nil {
+		return nil, err
+	}
+
+	return &userOutput{Body: u.ToSummaryDTO()}, nil
+}
+
+// delete
+
+func (h *Handler) handleDeleteMe(ctx context.Context, in *deleteUserInput) (*userOutput, error) {
+	id, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+    rows, err := gorm.G[User](h.DB).Where("id = ?", id).Delete(ctx)
+    if err != nil {
+        return nil, err
     }
 
-    out := usersOutput {
-        Body: UserListSummaryDTO {
-            Data:       userList,
-            Page:       in.Page,
-            PageSize:   in.PageSize,
-            Total:      len(us),
-        },
-    }
-	return &out, nil
+	if rows == 0 {
+		return nil, errors.New("no user deleted")
+	}
+    return nil, nil
 }

@@ -13,17 +13,17 @@ import (
 
 func registerGetUser(api huma.API, h handler) {
     huma.Register(api, huma.Operation{
-        OperationID:    "get-user-by-name",
+        OperationID:    "get-user-by-id",
         Method:         http.MethodGet,
-        Path:           "/api/users/{name}",
-		Summary:		"Get a user by name",
+        Path:           "/api/users/{id}",
+		Summary:		"Get a user by ID",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUser)
 }
 
 func (h *handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
-    u, err := gorm.G[User](h.db).Where("name = ?", in.Name).First(ctx)
+    u, err := gorm.G[User](h.db).Where("id = ?", in.ID).First(ctx)
     if err != nil {
         return nil, err
     }
@@ -31,7 +31,7 @@ func (h *handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOut
 }
 
 type getUserInput struct {
-	Name string `path:"name" maxLength:"30" example:"Max" doc:"get user by name"`
+	ID uint	`path:"id" doc:"User ID" example:"1"`
 }
 
 // registerGetUsers

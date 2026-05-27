@@ -3,7 +3,6 @@ package user
 import (
     // Std
 	"context"
-	"fmt"
 	"net/http"
 
     // Internal
@@ -25,10 +24,10 @@ func registerRegisterUser(api huma.API, h handler) {
 		Summary:		"Register a new user",
         DefaultStatus:  http.StatusCreated,
         Tags:           []string{"Authentification"},
-    }, h.handleCreateUser)
+    }, h.handleRegisterUser)
 }
 
-func (h *handler) handleCreateUser(ctx context.Context, in *createInput) (*userOutput, error) {
+func (h *handler) handleRegisterUser(ctx context.Context, in *createInput) (*userOutput, error) {
 
 	if err := validateParameters(&in.Body); err != nil {
 		return nil, huma.Error400BadRequest(err.Error())

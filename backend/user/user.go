@@ -30,6 +30,7 @@ func RegisterProtectedApi(api huma.API, db *gorm.DB ) {
     registerGetUser(api, h);
     registerGetUsers(api, h);
     registerPatchUser(api, h);
+    registerDeleteUser(api, h);
 }
 
 type User struct {

@@ -44,6 +44,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+    db.AutoMigrate(&user.User{})
+
     r := chi.NewRouter()
 	r.Use(chiMiddleware.Logger)
 
@@ -62,13 +64,13 @@ func main() {
 
     // Public Routes
 	public := huma.NewGroup(api, "")
-	user.RegisterPublicApi(public, db)
+	user.RegisterPublicRoutes(public, user.Handler{DB: db})
 
     // Protected Routes
 	protected := huma.NewGroup(api, "")
 	protected.UseMiddleware(auth.Verifier)
 	protected.UseMiddleware(auth.Authenticator(api))
-	user.RegisterProtectedApi(protected, db)
+	user.RegisterProtectedRoutes(protected, user.Handler{DB: db})
 	event.RegisterEventsApi(protected, db)
 
 	startServer(r)

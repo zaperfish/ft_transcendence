@@ -44,37 +44,10 @@ func RegisterPublicRoutes(api huma.API, h Handler) {
 func RegisterProtectedRoutes(api huma.API, h Handler) {
 
     huma.Register(api, huma.Operation{
-        OperationID:    "patch-user",
-        Method:         http.MethodPatch,
-        Path:           "/api/users/{id}",
-        Summary:        "Update user by ID",
-        DefaultStatus:  http.StatusOK,
-        Tags:           []string{"Users"},
-    }, h.handlePatchUser)
-
-    huma.Register(api, huma.Operation{
-        OperationID:    "patch-user-password",
-        Method:         http.MethodPatch,
-        Path:           "/api/users/{id}/password",
-        Summary:        "Update a user's password by ID",
-        DefaultStatus:  http.StatusOK,
-        Tags:           []string{"Users"},
-    }, h.handlePatchPassword)
-
-    huma.Register(api, huma.Operation{
-        OperationID:    "delete-user-by-id",
-        Method:         http.MethodDelete,
-        Path:           "/api/users/{id}",
-		Summary:		"Delete a user by ID",
-        DefaultStatus:  http.StatusOK,
-        Tags:           []string{"Users"},
-    }, h.handleDeleteUser)
-
-    huma.Register(api, huma.Operation{
         OperationID:    "get-user-by-id",
         Method:         http.MethodGet,
         Path:           "/api/users/{id}",
-		Summary:		"Get a user by ID",
+		Summary:		"Get a user",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUser)
@@ -83,8 +56,72 @@ func RegisterProtectedRoutes(api huma.API, h Handler) {
         OperationID:    "get-users",
         Method:         http.MethodGet,
         Path:           "/api/users",
-		Summary:		"Get list of users",
+		Summary:		"Get a list of user",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUsers)
+
+    huma.Register(api, huma.Operation{
+        OperationID:    "patch-user",
+        Method:         http.MethodPatch,
+        Path:           "/api/users/{id}",
+        Summary:        "Update a user",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Users"},
+    }, h.handlePatchUser)
+
+    huma.Register(api, huma.Operation{
+        OperationID:    "patch-user-password",
+        Method:         http.MethodPatch,
+        Path:           "/api/users/{id}/password",
+        Summary:        "Update a user's password",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Users"},
+    }, h.handlePatchPassword)
+
+    huma.Register(api, huma.Operation{
+        OperationID:    "delete-user-by-id",
+        Method:         http.MethodDelete,
+        Path:           "/api/users/{id}",
+		Summary:		"Delete a user",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Users"},
+    }, h.handleDeleteUser)
+
+	// me
+    huma.Register(api, huma.Operation{
+        OperationID:    "get-me",
+        Method:         http.MethodGet,
+        Path:           "/api/me",
+		Summary:		"Get logged in user",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Me"},
+    }, h.handleGetMe)
+
+    huma.Register(api, huma.Operation{
+        OperationID:    "patch-me",
+        Method:         http.MethodPatch,
+        Path:           "/api/me",
+        Summary:        "Update logged in user",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Me"},
+    }, h.handlePatchMe)
+
+    huma.Register(api, huma.Operation{
+        OperationID:    "patch-me-password",
+        Method:         http.MethodPatch,
+        Path:           "/api/me/password",
+        Summary:        "Update logged in user's password",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Me"},
+    }, h.handlePatchPasswordMe)
+
+    huma.Register(api, huma.Operation{
+        OperationID:    "delete-me",
+        Method:         http.MethodDelete,
+        Path:           "/api/me",
+		Summary:		"Delete logged in user",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Me"},
+    }, h.handleDeleteMe)
 }

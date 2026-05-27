@@ -18,7 +18,7 @@ import (
 // login
 
 func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*LoginUserOutput, error) {
-    u, err := gorm.G[User](h.DB).Where("name = ?", in.Body.Name).First(ctx)
+    u, err := h.getUserByName(ctx, in.Body.Name)
     if errors.Is(err, gorm.ErrRecordNotFound) {
         return nil, huma.Error401Unauthorized(gorm.ErrRecordNotFound.Error())
     }
@@ -66,7 +66,7 @@ func (h *Handler) handleRegisterUser(ctx context.Context, in *createInput) (*use
         PasswordHash:   hash,
     }
 
-    err = gorm.G[User](h.DB).Create(ctx, &u)
+    err = h.creatUser(ctx, &u)
 	if errNew, ok := db.PostgresError(err); ok {
 		return nil, errNew
 	}
@@ -109,7 +109,7 @@ func (h *Handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*use
 		return nil, err
 	}
 
-	u, err := h.updateFieldsByID(ctx, in.ID, updates)
+	u, err := h.updateUserFieldsByID(ctx, in.ID, updates)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (h *Handler) handlePatchPassword(ctx context.Context, in *PatchPasswordInpu
 	// 	return nil, huma.Error401Unauthorized("wrong permissions")
 	// }
 
-	u, err := h.getByID(ctx, in.ID)
+	u, err := h.getUserByID(ctx, in.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (h *Handler) handlePatchPassword(ctx context.Context, in *PatchPasswordInpu
 		return nil, huma.Error500InternalServerError("")
 	}
 
-	u, err = h.updateFieldsByID(ctx, in.ID, map[string]any{"password_hash": hash})
+	u, err = h.updateUserFieldsByID(ctx, in.ID, map[string]any{"password_hash": hash})
 	if err != nil {
 		return nil, err
 	}
@@ -178,20 +178,14 @@ func (h *Handler) handlePatchPassword(ctx context.Context, in *PatchPasswordInpu
 // delete
 
 func (h *Handler) handleDeleteUser(ctx context.Context, in *deleteUserInput) (*userOutput, error) {
-    rows, err := gorm.G[User](h.DB).Where("id = ?", in.ID).Delete(ctx)
-    if err != nil {
-        return nil, err
-    }
-	if rows == 0 {
-		return nil, errors.New("no user deleted")
-	}
-    return nil, nil
+	err := h.deleteUserByID(ctx, in.ID)
+    return nil, err
 }
 
 // get
 
 func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
-	u, err := h.getByID(ctx, in.ID)
+	u, err := h.getUserByID(ctx, in.ID)
     if err != nil {
         return nil, err
     }
@@ -202,7 +196,7 @@ func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOut
 
 func (h *Handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
 
-	us, err := h.listUsers(ctx, UserFilter(*in))
+	us, err := h.getUsersList(ctx, UserFilter(*in))
 	if err != nil {
 		return nil, err
 	}

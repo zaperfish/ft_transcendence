@@ -3,9 +3,8 @@ package user
 import (
     // Std
 	"context"
-    "fmt"
+    "errors"
 	"net/http"
-	"strconv"
 
 	// Internal
 	"ft_transcendence/backend/auth"
@@ -21,46 +20,96 @@ func registerPatchUser(api huma.API, h handler) {
         OperationID:    "patch-user",
         Method:         http.MethodPatch,
         Path:           "/api/users/{id}",
-        Summary:        "Update user",
+        Summary:        "Update user by ID",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handlePatchUser)
 }
 
+func registerPatchPassword(api huma.API, h handler) {
+    huma.Register(api, huma.Operation{
+        OperationID:    "patch-user-password",
+        Method:         http.MethodPatch,
+        Path:           "/api/users/{id}/password",
+        Summary:        "Update a user's password by ID",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Users"},
+    }, h.handlePatchPassword)
+}
+
 type PatchUserDTO struct {
     Name *string     `json:"name,omitempty" maxLength:"30" example:"Max" doc:"username"`
     Email *string    `json:"email,omitempty" example:"max@email.com" doc:"email address"`
-    Password *string `json:"password,omitempty" example:"newsecret" doc:"password"`
-    OldPassword *string `json:"old_password,omitempty" example:"secret" doc:"old password"`
+}
+
+type PatchPasswordDTO struct {
+    NewPassword string `json:"newpassword" example:"newsecret" doc:"new password"`
+    ConfirmPassword string `json:"confirm_password" example:"newsecret" doc:"confirm password"`
+    CurrentPassword string `json:"current_password" example:"secret" doc:"current password"`
+}
+
+type PatchPasswordInput struct {
+	ID uint	`path:"id" doc:"User ID" example:"1"`
+	Body PatchPasswordDTO
 }
 
 type PatchUserInput struct {
-	ID uint	`path:"id" doc:"User ID"`
+	ID uint	`path:"id" doc:"User ID" example:"1"`
 	Body PatchUserDTO
 }
 
-func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
-	sub, err := auth.GetSubClaim(ctx)
-	if err != nil || sub != strconv.FormatUint(uint64(in.ID), 10) {
-		return nil, huma.Error401Unauthorized("wrong permissions")
+func (h *handler) handlePatchPassword(ctx context.Context, in *PatchPasswordInput) (*userOutput, error) {
+	// sub, err := auth.GetSubClaim(ctx)
+	// if err != nil || sub != strconv.FormatUint(uint64(in.ID), 10) {
+	// 	return nil, huma.Error401Unauthorized("wrong permissions")
+	// }
+
+	u, err := h.getByID(ctx, in.ID)
+	if err != nil {
+		return nil, err
 	}
 
+	match, err := auth.MatchPassword(in.Body.CurrentPassword, u.PasswordHash)
+	if err != nil {
+		return nil, err
+	}
+	if !match {
+		return nil, errors.New("old password does not match")
+	}
+
+	if in.Body.NewPassword != in.Body.ConfirmPassword {
+		return nil, errors.New("new passwords do not match")
+	}
+
+	if err := auth.ValidUserPassword(in.Body.NewPassword); err != nil {
+		return nil, err
+	}
+
+	hash, err := auth.CreateHash(in.Body.NewPassword)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("")
+	}
+
+	u, err = h.updateFieldsByID(ctx, in.ID, map[string]any{"password_hash": hash})
+	if err != nil {
+		return nil, err
+	}
+
+	return &userOutput{Body: u.ToSummaryDTO()}, nil
+}
+
+func (h *handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
 	updates := map[string]any{}
  	if err := populateUpdates(&updates, *in, h.db, ctx); err != nil {
 		return nil, err
 	}
 
-	_, err = gorm.G[map[string]any](h.db.Debug()).Table("users").Where("id = ?", in.ID).Updates(ctx, updates)
+	u, err := h.updateFieldsByID(ctx, in.ID, updates)
 	if err != nil {
-		return nil, fmt.Errorf("failed to save patched user: %w", err)
+		return nil, err
 	}
 
-	updated, err := gorm.G[User](h.db.Debug()).Where("id = ?", in.ID).First(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch updated user: %w", err)
-	}
-
-	return &userOutput{Body: updated.ToSummaryDTO()}, nil
+	return &userOutput{Body: u.ToSummaryDTO()}, nil
 }
 
 func populateUpdates(updates *map[string]any, in PatchUserInput, db *gorm.DB, ctx context.Context) error {
@@ -75,37 +124,6 @@ func populateUpdates(updates *map[string]any, in PatchUserInput, db *gorm.DB, ct
 			return err
 		}
 		(*updates)["email"] = *in.Body.Email
-	}
- 	if err := populatePasswordUpdate(updates, in, db, ctx); err != nil {
-		return err
-	}
-	return nil
-}
-
-func populatePasswordUpdate(updates *map[string]any, in PatchUserInput, db *gorm.DB, ctx context.Context) error {
-	if in.Body.Password != nil {
-		if in.Body.OldPassword == nil {
-			return gorm.ErrRecordNotFound
-		}
-		u, err := gorm.G[User](db).Where("id = ?", in.ID).First(ctx)
-		if err != nil {
-			return err
-		}
-		match, err := auth.MatchPassword(*in.Body.OldPassword, u.PasswordHash)
-		if err != nil {
-			return huma.Error500InternalServerError("")
-		}
-		if !match {
-			return gorm.ErrRecordNotFound
-		}
-		if err := auth.ValidUserPassword(*in.Body.Password); err != nil {
-			return err
-		}
-		hash, err := auth.CreateHash(*in.Body.Password)
-		if err != nil {
-			return huma.Error500InternalServerError("")
-		}
-		(*updates)["password_hash"] = hash
 	}
 	return nil
 }

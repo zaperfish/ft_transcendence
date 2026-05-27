@@ -6,7 +6,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
-	"gorm.io/gorm"
 )
 
 // registerGetUser
@@ -23,7 +22,7 @@ func registerGetUser(api huma.API, h handler) {
 }
 
 func (h *handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
-    u, err := gorm.G[User](h.db).Where("id = ?", in.ID).First(ctx)
+	u, err := h.getByID(ctx, in.ID)
     if err != nil {
         return nil, err
     }
@@ -47,12 +46,17 @@ func registerGetUsers(api huma.API, h handler) {
     }, h.handleGetUsers)
 }
 
+type UserFilter struct {
+	Page     int
+	PageSize int
+}
+
 func (h *handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
-    offset := (in.Page - 1) * in.PageSize
-    us, err := gorm.G[User](h.db).Limit(in.PageSize).Offset(offset).Find(ctx)
-    if err != nil {
-        return nil, err
-    }
+
+	us, err := h.listUsers(ctx, UserFilter(*in))
+	if err != nil {
+		return nil, err
+	}
     
     userList := make([]UserSummaryDTO, 0, len(us))
     for _, u := range us {

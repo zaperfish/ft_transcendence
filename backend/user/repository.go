@@ -22,7 +22,7 @@ func (h handler) getByID(ctx context.Context, id uint) (*User, error) {
 	return &u, err
 }
 
-func (h handler) list(ctx context.Context, filter UserFilter) ([]User, error) {
+func (h handler) listUsers(ctx context.Context, filter UserFilter) ([]User, error) {
 	offset := (filter.Page - 1) * filter.PageSize
 
     us, err := gorm.G[User](h.db).Limit(filter.PageSize).Offset(offset).Find(ctx)

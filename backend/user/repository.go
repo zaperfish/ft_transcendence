@@ -11,18 +11,23 @@ import (
 
 // type UserRepository interface {
 //     create(ctx context.Context, user *User) error
-//     getByID(ctx context.Context, id uint) (*User, error)
+//     getUserByID(ctx context.Context, id uint) (*User, error)
 //     list(ctx context.Context, filter UserFilter) ([]User, error)
-// 	updateFieldsByID(ctx context.Context, id uint, fields map[string]any) (*User, error)
+// 	updateUserFieldsByID(ctx context.Context, id uint, fields map[string]any) (*User, error)
 //     delete(ctx context.Context, id uint) error
 // }
 
-func (h Handler) getByID(ctx context.Context, id uint) (*User, error) {
+func (h Handler) getUserByID(ctx context.Context, id uint) (*User, error) {
 	u, err := gorm.G[User](h.DB).Where("id = ?", id).First(ctx)
 	return &u, err
 }
 
-func (h Handler) listUsers(ctx context.Context, filter UserFilter) ([]User, error) {
+func (h Handler) getUserByName(ctx context.Context, name string) (*User, error) {
+    u, err := gorm.G[User](h.DB).Where("name = ?", name).First(ctx)
+	return &u, err
+}
+
+func (h Handler) getUsersList(ctx context.Context, filter UserFilter) ([]User, error) {
 	offset := (filter.Page - 1) * filter.PageSize
 
     us, err := gorm.G[User](h.DB).Limit(filter.PageSize).Offset(offset).Find(ctx)
@@ -33,7 +38,7 @@ func (h Handler) listUsers(ctx context.Context, filter UserFilter) ([]User, erro
 	return us, nil
 }
 
-func (h Handler) create(ctx context.Context, input *User) error {
+func (h Handler) creatUser(ctx context.Context, input *User) error {
 
 	err := gorm.G[User](h.DB).Create(ctx, input)
 	if err != nil {
@@ -43,7 +48,7 @@ func (h Handler) create(ctx context.Context, input *User) error {
 	return nil
 }
 
-func (h Handler) updateFieldsByID(ctx context.Context, id uint, fields map[string]any) (*User, error) {
+func (h Handler) updateUserFieldsByID(ctx context.Context, id uint, fields map[string]any) (*User, error) {
 
 	_, err := gorm.G[map[string]any](h.DB.Debug()).Table("users").Where("id = ?", id).Updates(ctx, fields)
 	if err != nil {
@@ -58,7 +63,7 @@ func (h Handler) updateFieldsByID(ctx context.Context, id uint, fields map[strin
 	return &updated, nil
 }
 
-func (h Handler) deleteByID(ctx context.Context, id uint) error {
+func (h Handler) deleteUserByID(ctx context.Context, id uint) error {
 	rows, err := gorm.G[User](h.DB).Where("id = ?", id).Delete(ctx)
 	if err != nil {
 		return err

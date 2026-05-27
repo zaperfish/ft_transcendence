@@ -171,7 +171,10 @@ func populateUpdates(updates *map[string]any, in PatchUserInput) error {
 // patch password
 
 func (h *Handler) handlePatchPassword(ctx context.Context, in *PatchPasswordInput) (*userOutput, error) {
+	return h.patchPassword(ctx, in)
+}
 
+func (h *Handler) patchPassword(ctx context.Context, in *PatchPasswordInput) (*userOutput, error) {
 	u, err := h.getUserByID(ctx, in.ID)
 	if err != nil {
 		return nil, err
@@ -251,43 +254,14 @@ func (h *Handler) handlePatchMe(ctx context.Context, in *PatchUserInput) (*userO
 // patch password me
 
 func (h *Handler) handlePatchPasswordMe(ctx context.Context, in *PatchPasswordInput) (*userOutput, error) {
+
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	u, err := h.getUserByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	match, err := auth.MatchPassword(in.Body.CurrentPassword, u.PasswordHash)
-	if err != nil {
-		return nil, err
-	}
-	if !match {
-		return nil, errors.New("old password does not match")
-	}
-
-	if in.Body.NewPassword != in.Body.ConfirmPassword {
-		return nil, errors.New("new passwords do not match")
-	}
-
-	if err := auth.ValidUserPassword(in.Body.NewPassword); err != nil {
-		return nil, err
-	}
-
-	hash, err := auth.CreateHash(in.Body.NewPassword)
-	if err != nil {
-		return nil, huma.Error500InternalServerError("")
-	}
-
-	u, err = h.updateUserFieldsByID(ctx, id, map[string]any{"password_hash": hash})
-	if err != nil {
-		return nil, err
-	}
-
-	return &userOutput{Body: u.ToSummaryDTO()}, nil
+	in.ID = id;
+	return h.patchPassword(ctx, in)
 }
 
 // delete me

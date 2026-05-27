@@ -3,6 +3,15 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { LoginForm } from "@/components/features/auth/LoginForm";
 
+/**
+ * The login page component.
+ *
+ * Renders the login form along with a welcome message. If the `registered`
+ * query parameter is present, it displays a success notification for newly
+ * registered users. On successful login, redirects to the home page.
+ *
+ * @returns The login page layout with a heading, optional notification, login form, and registration link.
+ */
 export default function LoginPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();

@@ -4,9 +4,19 @@ export class ApiError extends Error {
 	}
 }
 
-// Wrap fetch() with error handling (status, message) and auth headers
+/**
+ * Wrap fetch() with error handling (status, message) and auth headers
+ *
+ * Add 'credentials' header to use Set-Cookie automatically
+ *
+ * Hard redirect to login when 401 Unauthorized
+ * (before check client-side and not loop redirection in login and register page)
+ * 
+ * @param url
+ * @param options
+ * @returns Promise with certain type
+ */
 export async function request<T>(url: string, options?: RequestInit): Promise<T> {
-	// Add 'credentials' header to use Set-Cookie automatically
 	const response = await fetch(url, {
 		...options,
 		credentials: 'include',
@@ -16,7 +26,6 @@ export async function request<T>(url: string, options?: RequestInit): Promise<T>
 	});
 
 	if (!response.ok) {
-		// Hard redirect to login when 401 Unauthorized
 		if (response.status === 401 && typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
 			window.location.href = '/login';
 		}

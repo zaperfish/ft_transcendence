@@ -6,6 +6,16 @@ import { Button } from '@/components/ui/Button';
 import { register } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
 
+/**
+ * A registration form component with client-side validation and error handling.
+ *
+ * Collects username, email, and password, validates inputs, and submits
+ * the data to the registration API. On success, redirects to the login page
+ * with a query parameter indicating successful registration. Displays
+ * field-level errors and general API errors (e.g., duplicate user or network issues).
+ *
+ * @returns A styled form containing input fields and a submit button.
+ */
 export function RegisterForm() {
 	const [username, setUsername] = useState('');
 	const [email, setEmail] = useState('');

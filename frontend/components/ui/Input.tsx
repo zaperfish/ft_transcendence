@@ -7,6 +7,17 @@ interface InputProps {
 	disabled?: boolean;
 }
 
+/**
+ * A reusable input component with built-in error handling.
+ *
+ * Extends native `<input>` attributes and adds an `error` prop.
+ * When `error` is provided, the input is styled as invalid and can display
+ * the error message below it.
+ *
+ * @param props - All standard input attributes plus the custom error prop.
+ * @param props.error - An optional error message that triggers error styling.
+ * @returns A styled input element that shows visual feedback for errors.
+ */
 export function Input({ error, ...props }: InputProps) {
 	return (
 		<div className="flex flex-col gap-xs">

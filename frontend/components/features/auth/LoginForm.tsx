@@ -9,6 +9,17 @@ interface LoginFormProps {
 	onSuccess?: () => void;
 }
 
+/**
+ * A login form component with client-side validation and authentication.
+ *
+ * Collects username and password, validates inputs, and calls the login method
+ * from the auth context. On success, invokes the optional `onSuccess` callback.
+ * Displays field-level and general API errors (invalid credentials or network issues).
+ *
+ * @param props - The component props.
+ * @param props.onSuccess - Optional callback executed after successful login.
+ * @returns A styled form containing input fields and a submit button.
+ */
 export function LoginForm({ onSuccess }: LoginFormProps) {
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');

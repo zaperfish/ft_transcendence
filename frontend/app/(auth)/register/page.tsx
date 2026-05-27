@@ -2,6 +2,15 @@
 
 import { RegisterForm } from "@/components/features/auth/RegisterForm";
 
+
+/**
+ * The registration page component.
+ *
+ * Renders the registration form with a welcome message and a link to
+ * the login page for users who already have an account.
+ *
+ * @returns The registration page layout with a heading, description, registration form, and login link.
+ */
 export default function RegisterPage() {
 
 	return (

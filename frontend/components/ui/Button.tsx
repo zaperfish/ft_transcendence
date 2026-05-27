@@ -5,6 +5,19 @@ interface ButtonProps {
 	onClick?: () => void;
 }
 
+/**
+ * A generic button component that supports loading and disabled states.
+ *
+ * When `loading` is true, the button is automatically disabled and typically
+ * shows a loading indicator, preventing duplicate clicks.
+ *
+ * @param props - The button properties.
+ * @param props.loading - Whether the button is in a loading state; disables the button when true.
+ * @param props.disabled - Whether the button is disabled (stacks with loading).
+ * @param props.children - The content displayed inside the button (text, icons, etc.).
+ * @param props.onClick - Callback fired when the button is clicked.
+ * @returns A rendered button element.
+ */
 export function Button({ loading, disabled, children, onClick }: ButtonProps) {
 	return (
 		<button onClick={onClick} disabled={disabled || loading} className={`

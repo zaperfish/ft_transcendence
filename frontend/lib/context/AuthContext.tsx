@@ -6,7 +6,9 @@ import { login as apiLogin, logout as apiLogout } from '@/lib/api/auth';
 import { getCurrentUser } from "../api/user";
 import { useRouter } from 'next/navigation';
 
-// Define Auth context interface
+/**
+ * Define Auth context interface
+ */
 interface AuthContextType {
 	user: User | null;
 	isAuthenticated: boolean;
@@ -15,7 +17,9 @@ interface AuthContextType {
 	logout: () => Promise<void>;
 }
 
-// Create Auth context with default value and method
+/**
+ * Create Auth context with default value and method
+ */
 export const AuthContext = createContext<AuthContextType>({
 	user: null,
 	isAuthenticated: false,
@@ -24,8 +28,12 @@ export const AuthContext = createContext<AuthContextType>({
 	logout: async () => {},
 });
 
-// Initiate Auth context with real data from api
-// And keep it updatable with methods
+/**
+ * Initializes auth state by fetching real user data from the API,
+ * and exposes methods (login, logout, etc.) to keep it updatable.
+ * @param children - React subtree that will have access to the auth context.
+ * @returns A React element that provides authentication context to its children.
+ */
 export function AuthProvider({ children } : { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +66,6 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 			console.error("Failed to logout", error);
 		}
 		setUser(null);
-		// Soft redirect to '/login'
 		router.push('/login');
 	};
 

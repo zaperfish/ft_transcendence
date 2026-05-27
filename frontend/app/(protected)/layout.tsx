@@ -4,6 +4,19 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+/**
+ * Layout wrapper for protected (authenticated) pages.
+ *
+ * Manages authentication state:
+ * - Displays a loading indicator while auth status is resolving.
+ * - Redirects to `/login` if the user is not authenticated.
+ *
+ * When authenticated, renders the child content.
+ *
+ * @param props - The component props.
+ * @param props.children - The protected page content to render after authentication is confirmed.
+ * @returns A layout with navigation and children, or a loading/redirect state.
+ */
 export default function ProtectedLayout({  children }: Readonly<{
   children: React.ReactNode;
 }>) {

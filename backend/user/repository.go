@@ -3,7 +3,9 @@ package user
 import (
 	// Std
 	"context"
-	"errors"
+
+	// Internal
+	"ft_transcendence/backend/errs"
 
 	// External
 	"gorm.io/gorm"
@@ -19,12 +21,12 @@ import (
 
 func (h Handler) getUserByID(ctx context.Context, id uint) (*User, error) {
 	u, err := gorm.G[User](h.DB).Where("id = ?", id).First(ctx)
-	return &u, err
+	return &u, errs.ErrorDB(err)
 }
 
 func (h Handler) getUserByName(ctx context.Context, name string) (*User, error) {
     u, err := gorm.G[User](h.DB).Where("name = ?", name).First(ctx)
-	return &u, err
+	return &u, errs.ErrorDB(err)
 }
 
 func (h Handler) getUsersList(ctx context.Context, filter UserFilter) ([]User, error) {
@@ -32,7 +34,7 @@ func (h Handler) getUsersList(ctx context.Context, filter UserFilter) ([]User, e
 
     us, err := gorm.G[User](h.DB).Limit(filter.PageSize).Offset(offset).Find(ctx)
     if err != nil {
-        return nil, err
+        return nil, errs.ErrorDB(err)
     }
 
 	return us, nil
@@ -42,7 +44,7 @@ func (h Handler) creatUser(ctx context.Context, input *User) error {
 
 	err := gorm.G[User](h.DB).Create(ctx, input)
 	if err != nil {
-		return err
+		return errs.ErrorDB(err)
 	}
 
 	return nil
@@ -52,12 +54,12 @@ func (h Handler) updateUserFieldsByID(ctx context.Context, id uint, fields map[s
 
 	_, err := gorm.G[map[string]any](h.DB.Debug()).Table("users").Where("id = ?", id).Updates(ctx, fields)
 	if err != nil {
-		return nil, err
+		return nil, errs.ErrorDB(err)
 	}
 
 	updated, err := gorm.G[User](h.DB.Debug()).Where("id = ?", id).First(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errs.ErrorDB(err)
 	}
 
 	return &updated, nil
@@ -66,10 +68,10 @@ func (h Handler) updateUserFieldsByID(ctx context.Context, id uint, fields map[s
 func (h Handler) deleteUserByID(ctx context.Context, id uint) error {
 	rows, err := gorm.G[User](h.DB).Where("id = ?", id).Delete(ctx)
 	if err != nil {
-		return err
+		return errs.ErrorDB(err)
 	}
 	if rows == 0 {
-		return errors.New("no user deleted")
+		return errs.ErrNotFound
 	}
 	return nil
 }

@@ -5,31 +5,12 @@ import (
 	"time"
 
     // External
-	"github.com/danielgtaylor/huma/v2"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 	"gorm.io/gorm"
 )
 
-type handler struct {
-    db *gorm.DB
-}
-
-func RegisterPublicApi(api huma.API, db *gorm.DB ) {
-    db.AutoMigrate(&User{})
-
-	h := handler{db: db}
-    registerRegisterUser(api, h);
-    registerLoginUser(api, h);
-    registerLogoutUser(api, h);
-}
-
-func RegisterProtectedApi(api huma.API, db *gorm.DB ) {
-    db.AutoMigrate(&User{})
-
-	h := handler{db: db}
-    registerGetUser(api, h);
-    registerGetUsers(api, h);
-    registerPatchUser(api, h);
+type Handler struct {
+    DB *gorm.DB
 }
 
 type User struct {

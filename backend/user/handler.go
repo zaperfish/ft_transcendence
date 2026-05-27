@@ -109,7 +109,6 @@ func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOut
 	if err != nil {
         return nil, huma.Error500InternalServerError(err.Error())
 	}
-
     return &userOutput{Body: u.ToSummaryDTO()}, nil
 }
 

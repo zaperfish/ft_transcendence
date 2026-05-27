@@ -25,7 +25,7 @@ func MakeLogoutCookie() http.Cookie {
 			HttpOnly:	true,
 			Secure:		true,
 			MaxAge:		-1,
-	}	
+	}
 }
 
 func makeJWT(sub string) (string, error) {

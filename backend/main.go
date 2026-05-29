@@ -68,8 +68,8 @@ func main() {
 
     // Protected Routes
 	protected := huma.NewGroup(api, "")
-	protected.UseMiddleware(auth.Verifier)
-	protected.UseMiddleware(auth.Authenticator(api))
+	protected.UseMiddleware(auth.Verifier(api))
+	protected.UseMiddleware(auth.Refresher(api))
 	user.RegisterProtectedRoutes(protected, user.Handler{DB: db})
 	event.RegisterEventsApi(protected, db)
 

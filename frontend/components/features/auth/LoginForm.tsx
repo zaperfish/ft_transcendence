@@ -61,7 +61,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 			<Input value={username} onChange={e => setUsername(e.target.value)} placeholder='Username' error={errors.username} />
 			<Input value={password} onChange={e => setPassword(e.target.value)} placeholder='Password' error={errors.password} />
 			{errors.general && <div className="text-sm text-error mt-xs">{errors.general}</div>}
-			<Button loading={loading} onClick={handleSubmit}>login</Button>
+			<Button disabled={loading} onClick={handleSubmit}>{loading ? "loading..." : "login"}</Button>
 		</div>
 	);
 }

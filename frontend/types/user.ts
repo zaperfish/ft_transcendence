@@ -2,5 +2,5 @@ export interface User {
 	id: string;
 	username: string;
 	email: string;
-	// Add more attributes later
+	avatar?: string; // Remain undefined, will use first alphabet of username instead
 }

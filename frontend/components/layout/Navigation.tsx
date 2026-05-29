@@ -17,34 +17,53 @@ export default function navigation() {
 	const { user, logout } = useAuth();
 	const router = useRouter();
 
-	const apiLogout = async () => {
+	const handleLogout = async () => {
 		await logout();
 		router.push('/login');
 	};
 
 	return (
-		<header className=''>
-			<div className=''>
+		<header className='bg-surface border-b border-border px-lg py-md'>
+			<div className='flex items-center justify-between w-full'>
 				{/* left: logo + navigation links */}
-				<div className=''>
-					<Link href='/' className=''>
+				<div className='flex items-center gap-lg'>
+					<Link href='/' className='text-text-primary font-heading text-xl font-bold'>
 					Meetup
 					</Link>
-					<nav className=''>
-						<Link href='/home' className=''>
+					<nav className='flex items-center gap-md'>
+						<Link href='/home' className='text-text-secondary hover:text-text-primary transition-colors'>
 						Discover
 						</Link>
-						<Link href='/events' className=''>
+						<Link href='/events' className='text-text-secondary hover:text-text-primary transition-colors'>
 						My Events
 						</Link>
 					</nav>
 				</div>
 				{/* right: notification + user avatar */}
-				<div className=''>
+				<div className='flex items-center gap-md'>
 					<Button variant='ghost' size='icon' aria-label='Notification'>
-						<Bell className=''/>
+						<Bell className='h-5 w-5 text-text-secondary'/>
 					</Button>
-					
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Avatar className='h-9 w-9 cursor-pointer'>
+								<AvatarImage src={user?.avatar} alt={user?.username} />
+								<AvatarFallback className='bg-primary text-primary-foreground'>
+									 {user?.username?.charAt(0)?.toUpperCase() || "U"}
+								</AvatarFallback>
+							</Avatar>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align='end' className='min-w-45'>
+							<DropdownMenuItem asChild>
+								<Link href='/settings' className='cursor-pointer w-full'>
+								Settings
+								</Link>
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={handleLogout} className='cursor-pointer text-error hover:text-error/80!'>
+							Logout
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			</div>
 		</header>

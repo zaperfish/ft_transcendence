@@ -36,10 +36,13 @@ export async function login(credentials: LoginCredentials): Promise<User> {
  * logout api request
  *
  * Backend in responsible to clean cookie
+ *
+ * Not use request() because no need response.json() when response is empty
  */
 export async function logout(): Promise<void> {
-	await request('/api/auth/logout', {
+	await fetch('/api/auth/logout', {
 		method: 'POST',
+		credentials: 'include',
 	});
 }
 

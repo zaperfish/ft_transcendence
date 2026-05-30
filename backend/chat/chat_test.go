@@ -1,6 +1,13 @@
 package chat
 
-import "testing"
+import (
+	// Std
+	"testing"
+	"time"
+
+	// Extern
+	"gorm.io/gorm"
+)
 
 // These tests cover the initial chat package skeleton.
 // They intentionally verify constructor initialization rather than chat behavior:
@@ -58,3 +65,34 @@ func TestNewHandlerInitializesHubAndDB(t *testing.T) {
 	}
 }
 
+func TestMessageToDTO(t *testing.T) {
+	createdAt := time.Date(2026, 5, 31, 10, 30, 0, 0, time.UTC)
+
+	message := Message{
+		Model: gorm.Model{
+			ID:        7,
+			CreatedAt: createdAt,
+		},
+		EventID: 42,
+		UserID:  3,
+		Content: "hello chat",
+	}
+
+	dto := message.toDTO()
+
+	if dto.ID != message.ID {
+		t.Fatalf("expected ID %d, got %d", message.ID, dto.ID)
+	}
+	if dto.EventID != message.EventID {
+		t.Fatalf("expected eventID %d, got %d", message.EventID, dto.EventID)
+	}
+	if dto.UserID != message.UserID {
+		t.Fatalf("expected userID %d, got %d", message.UserID, dto.UserID)
+	}
+	if dto.Content != message.Content {
+		t.Fatalf("expected content %q, got %q", message.Content, dto.Content)
+	}
+	if !dto.CreatedAt.Equal(message.CreatedAt) {
+		t.Fatalf("expected createdAt %s, got %s", message.CreatedAt, dto.CreatedAt)
+	}
+}

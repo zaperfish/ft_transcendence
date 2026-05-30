@@ -7,11 +7,12 @@ import (
 	"os"
 
 	// Internal
+	"ft_transcendence/backend/auth"
+	"ft_transcendence/backend/chat"
 	"ft_transcendence/backend/db"
 	"ft_transcendence/backend/event"
 	"ft_transcendence/backend/middleware"
 	"ft_transcendence/backend/user"
-	"ft_transcendence/backend/auth"
 
 	// External
 	"github.com/danielgtaylor/huma/v2"
@@ -44,9 +45,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-    db.AutoMigrate(&user.User{})
+	db.AutoMigrate(&user.User{})
+	db.AutoMigrate(&chat.Message{})
 
-    r := chi.NewRouter()
+	r := chi.NewRouter()
 	r.Use(chiMiddleware.Logger)
 
 	limiterStore := middleware.LimiterStore{
@@ -56,17 +58,17 @@ func main() {
 
 	r.Use(middleware.RateLimiterMiddleware(&limiterStore))
 	r.Use(chiMiddleware.Logger)
-    
+
 	config := huma.DefaultConfig("ft_transcendence api", "0.1.0")
 	config.DocsRenderer = huma.DocsRendererScalar
-	config.CreateHooks = nil	// disables schema injection into request json payloads
+	config.CreateHooks = nil // disables schema injection into request json payloads
 	api := humachi.New(r, config)
 
-    // Public Routes
+	// Public Routes
 	public := huma.NewGroup(api, "")
 	user.RegisterPublicRoutes(public, user.Handler{DB: db})
 
-    // Protected Routes
+	// Protected Routes
 	protected := huma.NewGroup(api, "")
 	protected.UseMiddleware(auth.Verifier(api))
 	protected.UseMiddleware(auth.Refresher(api))

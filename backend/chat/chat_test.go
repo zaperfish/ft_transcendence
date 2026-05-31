@@ -2,10 +2,14 @@ package chat
 
 import (
 	// Std
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	// Extern
+	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 )
 
@@ -139,4 +143,36 @@ func TestNormalizeMessageLimit(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHandleEventChatWebSocketRejectsInvalidEventID(t *testing.T) {
+	handler := NewHandler(nil)
+	req := newChatWebSocketRequest("invalid")
+	recorder := httptest.NewRecorder()
+
+	handler.handleEventChatWebSocket(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, recorder.Code)
+	}
+}
+
+func TestHandleEventChatWebSocketRejectsMissingAuthCookie(t *testing.T) {
+	handler := NewHandler(nil)
+	req := newChatWebSocketRequest("42")
+	recorder := httptest.NewRecorder()
+
+	handler.handleEventChatWebSocket(recorder, req)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, recorder.Code)
+	}
+}
+
+func newChatWebSocketRequest(eventID string) *http.Request {
+	req := httptest.NewRequest(http.MethodGet, "/api/events/"+eventID+"/chat/ws", nil)
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", eventID)
+
+	return req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 }

@@ -71,7 +71,7 @@ func (h *Handler) handleGetEventMessages(ctx context.Context, input *getMessages
 func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Request) {
 	eventIDParam := chi.URLParam(r, "id")
 
-	eventID64, err := strconv.ParseUint(eventIDParam, 10, 0)
+	eventID64, err := strconv.ParseUint(eventIDParam, 10, strconv.IntSize)
 	if err != nil {
 		http.Error(w, "invalid event id", http.StatusBadRequest)
 		return
@@ -79,6 +79,12 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 
 	eventID := uint(eventID64)
 
-	// auth.UidFromRequest(r) comes next
+	userID, err := auth.UidFromRequest(r)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	_ = eventID
+	_ = userID
 }

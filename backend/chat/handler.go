@@ -117,9 +117,16 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 	client := &Client{
 		userID: userID,
 		conn:   conn,
-		send:   make(chan Message),
+		send:   make(chan Message, clientSendBuffer),
 	}
 
-	_ = eventID
-	_ = client
+	room := h.Hub.GetOrCreateRoom(eventID)
+	room.join <- client
+	defer func() {
+		room.leave <- client
+	}()
+
+	// Temporary lifecycle wait until the message read loop owns the connection.
+	ctx := conn.CloseRead(r.Context())
+	<-ctx.Done()
 }

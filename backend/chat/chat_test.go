@@ -32,6 +32,48 @@ func TestNewHubInitializesRooms(t *testing.T) {
 	}
 }
 
+func TestHubGetOrCreateRoomReusesRoom(t *testing.T) {
+	hub := NewHub()
+
+	firstRoom := hub.GetOrCreateRoom(42)
+	secondRoom := hub.GetOrCreateRoom(42)
+	otherRoom := hub.GetOrCreateRoom(43)
+
+	if firstRoom != secondRoom {
+		t.Fatal("expected same event ID to reuse the existing room")
+	}
+	if firstRoom == otherRoom {
+		t.Fatal("expected different event IDs to use different rooms")
+	}
+}
+
+func TestHubGetOrCreateRoomStartsRoomRunLoop(t *testing.T) {
+	hub := NewHub()
+	room := hub.GetOrCreateRoom(42)
+	client := &Client{send: make(chan Message)}
+
+	select {
+	case room.join <- client:
+	case <-time.After(time.Second):
+		t.Fatal("expected room run loop to receive joined client")
+	}
+
+	select {
+	case room.leave <- client:
+	case <-time.After(time.Second):
+		t.Fatal("expected room run loop to receive leaving client")
+	}
+
+	select {
+	case _, ok := <-client.send:
+		if ok {
+			t.Fatal("expected client send channel to be closed after leaving")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected leaving client send channel to be closed")
+	}
+}
+
 func TestNewRoomInitializesState(t *testing.T) {
 	room := NewRoom(42)
 
@@ -52,6 +94,45 @@ func TestNewRoomInitializesState(t *testing.T) {
 	}
 	if room.broadcast == nil {
 		t.Fatal("expected broadcast channel to be initialized")
+	}
+}
+
+func TestRoomRunBroadcastsToJoinedClients(t *testing.T) {
+	room := NewRoom(42)
+	client := &Client{send: make(chan Message, 1)}
+	message := Message{
+		EventID: 42,
+		UserID:  3,
+		Content: "hello",
+	}
+
+	go room.run()
+
+	select {
+	case room.join <- client:
+	case <-time.After(time.Second):
+		t.Fatal("expected room run loop to receive joined client")
+	}
+
+	select {
+	case room.broadcast <- message:
+	case <-time.After(time.Second):
+		t.Fatal("expected room run loop to receive broadcast message")
+	}
+
+	select {
+	case got := <-client.send:
+		if got.Content != message.Content {
+			t.Fatalf("expected message content %q, got %q", message.Content, got.Content)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected joined client to receive broadcast message")
+	}
+
+	select {
+	case room.leave <- client:
+	case <-time.After(time.Second):
+		t.Fatal("expected room run loop to receive leaving client")
 	}
 }
 

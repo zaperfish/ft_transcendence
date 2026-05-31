@@ -19,3 +19,27 @@ func NewRoom(eventID uint) *Room {
 		broadcast: make(chan Message),
 	}
 }
+
+func (r *Room) run() {
+	for {
+		select {
+		case client := <-r.join:
+			r.clients[client] = true
+		case client := <-r.leave:
+			if _, ok := r.clients[client]; ok {
+				delete(r.clients, client)
+				close(client.send)
+			}
+		case message := <-r.broadcast:
+			for client := range r.clients {
+				select {
+				case client.send <- message:
+				default:
+					// prioritizes server stability
+					delete(r.clients, client)
+					close(client.send)
+				}
+			}
+		}
+	}
+}

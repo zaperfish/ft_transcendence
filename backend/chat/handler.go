@@ -85,6 +85,25 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	_ = eventID
-	_ = userID
+	eventExists, err := event.EventExists(r.Context(), h.DB, eventID)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	if !eventExists {
+		http.Error(w, "event not found", http.StatusNotFound)
+		return
+	}
+
+	isParticipant, err := event.IsParticipant(r.Context(), h.DB, eventID, userID)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	if !isParticipant {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

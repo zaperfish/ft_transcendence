@@ -10,10 +10,10 @@ import (
 )
 
 var (
-    ErrNotFound      = errors.New("not found")
-    ErrConflict      = errors.New("conflict")
-    ErrInvalidInput  = errors.New("invalid input")
-    ErrInternal      = errors.New("internal error")
+	ErrNotFound     = errors.New("not found")
+	ErrConflict     = errors.New("conflict")
+	ErrInvalidInput = errors.New("invalid input")
+	ErrInternal     = errors.New("internal error")
 )
 
 func ErrorDB(err error) error {
@@ -27,7 +27,7 @@ func ErrorDB(err error) error {
 		switch pgErr.Code {
 		case "23505":
 			return ErrConflict
-		case "23502":	// can not be empty
+		case "23502", "23514": // can not be empty / check constraint violation
 			return ErrInvalidInput
 		}
 	}

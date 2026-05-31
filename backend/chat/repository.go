@@ -16,6 +16,14 @@ type MessageFilter struct {
 	Limit    int
 }
 
+func normalizeMessageLimit(limit int) int {
+	if limit <= 0 || limit > messageHistoryLimit {
+		return messageHistoryLimit
+	}
+
+	return limit
+}
+
 func (h Handler) createMessage(ctx context.Context, message *Message) error {
 	err := gorm.G[Message](h.DB).Create(ctx, message)
 	return errs.ErrorDB(err)
@@ -25,7 +33,7 @@ func (h Handler) getMessagesByEventID(ctx context.Context, eventID uint, filter 
 	query := gorm.G[Message](h.DB).
 		Where("event_id = ?", eventID).
 		Order("id DESC").
-		Limit(filter.Limit)
+		Limit(normalizeMessageLimit(filter.Limit))
 
 	if filter.BeforeID != 0 {
 		query = query.Where("id < ?", filter.BeforeID)

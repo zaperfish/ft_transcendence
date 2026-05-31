@@ -45,8 +45,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db.AutoMigrate(&user.User{})
-	db.AutoMigrate(&chat.Message{})
+	err = db.AutoMigrate(&user.User{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = db.AutoMigrate(&chat.Message{})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	r := chi.NewRouter()
 	r.Use(chiMiddleware.Logger)

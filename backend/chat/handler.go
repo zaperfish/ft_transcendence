@@ -3,6 +3,7 @@ package chat
 import (
 	// Std
 	"context"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -82,6 +83,7 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 
 	userID, err := auth.UidFromRequest(r)
 	if err != nil {
+		log.Printf("event chat websocket unauthorized: remote_addr=%s err=%v", r.RemoteAddr, err)
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}

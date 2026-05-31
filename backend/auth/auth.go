@@ -4,6 +4,7 @@ import (
 	// Std
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -112,22 +113,22 @@ func UidFromCtx(ctx context.Context) (uint, error) {
 func UidFromRequest(r *http.Request) (uint, error) {
 	cookie, err := r.Cookie("jwt")
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("read jwt cookie: %w", err)
 	}
 
 	token, err := jwtauth.VerifyToken(tokenAuth, cookie.Value)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("verify jwt token: %w", err)
 	}
 
 	sub, ok := token.Subject()
 	if !ok {
-		return 0, errors.New("sub not in claims")
+		return 0, errors.New("read jwt subject: sub not in claims")
 	}
 
 	u64, err := strconv.ParseUint(sub, 10, strconv.IntSize)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("parse jwt subject: %w", err)
 	}
 
 	return uint(u64), nil

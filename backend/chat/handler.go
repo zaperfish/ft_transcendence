@@ -112,7 +112,7 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		return
 	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
+	defer conn.CloseNow()
 
 	client := &Client{
 		userID: userID,
@@ -122,11 +122,18 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 
 	room := h.Hub.GetOrCreateRoom(eventID)
 	room.join <- client
+
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
 	defer func() {
 		room.leave <- client
 	}()
 
-	// Temporary lifecycle wait until the message read loop owns the connection.
-	ctx := conn.CloseRead(r.Context())
-	<-ctx.Done()
+	go func() {
+		client.writeLoop(ctx)
+		cancel()
+	}()
+
+	client.readLoop(ctx, room, eventID, h)
 }

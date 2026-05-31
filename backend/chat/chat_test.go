@@ -150,6 +150,34 @@ func TestNewHandlerInitializesHubAndDB(t *testing.T) {
 	}
 }
 
+func TestNewMessageFromInput(t *testing.T) {
+	message, err := newMessageFromInput(42, 3, createMessageInput{
+		Content: " hello chat ",
+	})
+	if err != nil {
+		t.Fatalf("expected message, got error: %v", err)
+	}
+
+	if message.EventID != 42 {
+		t.Fatalf("expected eventID 42, got %d", message.EventID)
+	}
+	if message.UserID != 3 {
+		t.Fatalf("expected userID 3, got %d", message.UserID)
+	}
+	if message.Content != "hello chat" {
+		t.Fatalf("expected trimmed content %q, got %q", "hello chat", message.Content)
+	}
+}
+
+func TestNewMessageFromInputRejectsEmptyContent(t *testing.T) {
+	_, err := newMessageFromInput(42, 3, createMessageInput{
+		Content: "   ",
+	})
+	if err == nil {
+		t.Fatal("expected empty message content error")
+	}
+}
+
 func TestMessageToDTO(t *testing.T) {
 	createdAt := time.Date(2026, 5, 31, 10, 30, 0, 0, time.UTC)
 

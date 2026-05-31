@@ -6,7 +6,7 @@ import (
 )
 
 type Hub struct {
-	mu    sync.Mutex
+	mu sync.Mutex
 	// rooms stores active chat rooms by event ID
 	rooms map[uint]*Room
 }

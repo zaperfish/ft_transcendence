@@ -117,3 +117,26 @@ func TestMessagesToDTOsOldestFirst(t *testing.T) {
 		}
 	}
 }
+
+func TestNormalizeMessageLimit(t *testing.T) {
+	tests := []struct {
+		name  string
+		limit int
+		want  int
+	}{
+		{name: "uses default for zero", limit: 0, want: messageHistoryLimit},
+		{name: "uses default for negative", limit: -1, want: messageHistoryLimit},
+		{name: "keeps positive value under max", limit: 25, want: 25},
+		{name: "keeps max value", limit: messageHistoryLimit, want: messageHistoryLimit},
+		{name: "uses default above max", limit: messageHistoryLimit + 1, want: messageHistoryLimit},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalizeMessageLimit(tt.limit)
+			if got != tt.want {
+				t.Fatalf("expected limit %d, got %d", tt.want, got)
+			}
+		})
+	}
+}

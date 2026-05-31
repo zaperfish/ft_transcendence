@@ -8,6 +8,7 @@ import (
 	"time"
 
 	// Intern
+	"ft_transcendence/backend/errs"
 	"ft_transcendence/backend/user"
 
 	// Extern
@@ -546,6 +547,21 @@ func IsParticipant(ctx context.Context, db *gorm.DB, eventID uint, userID uint) 
 	err := db.WithContext(ctx).
 		Table("event_participants").
 		Where("event_id = ? AND user_id = ?", eventID, userID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, errs.ErrorDB(err)
+	}
+
+	return count > 0, nil
+}
+
+func EventExists(ctx context.Context, db *gorm.DB, eventID uint) (bool, error) {
+	var count int64
+
+	err := db.WithContext(ctx).
+		Model(&Event{}).
+		Where("id = ?", eventID).
 		Count(&count).Error
 
 	if err != nil {

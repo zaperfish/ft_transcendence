@@ -96,3 +96,24 @@ func TestMessageToDTO(t *testing.T) {
 		t.Fatalf("expected createdAt %s, got %s", message.CreatedAt, dto.CreatedAt)
 	}
 }
+
+func TestMessagesToDTOsOldestFirst(t *testing.T) {
+	messages := []Message{
+		{Model: gorm.Model{ID: 3}, Content: "newest"},
+		{Model: gorm.Model{ID: 2}, Content: "middle"},
+		{Model: gorm.Model{ID: 1}, Content: "oldest"},
+	}
+
+	dtos := messagesToDTOsOldestFirst(messages)
+
+	if len(dtos) != len(messages) {
+		t.Fatalf("expected %d DTOs, got %d", len(messages), len(dtos))
+	}
+
+	expectedIDs := []uint{1, 2, 3}
+	for i, expectedID := range expectedIDs {
+		if dtos[i].ID != expectedID {
+			t.Fatalf("expected DTO at index %d to have ID %d, got %d", i, expectedID, dtos[i].ID)
+		}
+	}
+}

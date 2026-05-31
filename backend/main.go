@@ -49,7 +49,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = db.AutoMigrate(&event.Event{})
+	err = db.AutoMigrate(&event.GormEventModel{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -76,6 +76,63 @@ func main() {
 
 	// Public Routes
 	public := huma.NewGroup(api, "")
+
+	// Setup layers
+	eventRepo := event.NewEventRepository(db)
+	eventService := event.NewEventService(eventRepo)
+	eventHandler := event.NewEventHandler(eventService)
+
+	// Register routes
+	// Register POST /events
+	huma.Register(api, huma.Operation{
+		OperationID:   "create-event",
+		Method:        http.MethodPost,
+		Path:          "/api/events",
+		Summary:       "Create event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusCreated,
+	}, eventHandler.CreateEvent)
+
+	// Register PATCH /events/{id}
+	huma.Register(api, huma.Operation{
+		OperationID:   "update-event",
+		Method:        http.MethodPatch,
+		Path:          "/api/events/{id}",
+		Summary:       "Update event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+	}, eventHandler.UpdateEvent)
+
+	// Register DELETE /events/{id}
+	huma.Register(api, huma.Operation{
+		OperationID:   "delete-event",
+		Method:        http.MethodDelete,
+		Path:          "/api/events/{id}",
+		Summary:       "Delete event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+	}, eventHandler.DeleteEvent)
+
+	// Register GET /events/{id}
+	huma.Register(api, huma.Operation{
+		OperationID:   "get-event",
+		Method:        http.MethodGet,
+		Path:          "/api/events/{id}",
+		Summary:       "Get event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+	}, eventHandler.GetEvent)
+
+	// Register GET /events
+	huma.Register(api, huma.Operation{
+		OperationID:   "list-events",
+		Method:        http.MethodGet,
+		Path:          "/api/events",
+		Summary:       "List events",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+	}, eventHandler.ListEvents)
+
 	user.RegisterPublicRoutes(public, user.Handler{DB: db})
 
 	// Protected Routes
@@ -83,7 +140,6 @@ func main() {
 	protected.UseMiddleware(auth.Verifier(api))
 	protected.UseMiddleware(auth.Refresher(api))
 	user.RegisterProtectedRoutes(protected, user.Handler{DB: db})
-	event.RegisterEventsApi(protected, db)
 	chat.RegisterProtectedRoutes(protected, chat.NewHandler(db))
 
 	startServer(r)

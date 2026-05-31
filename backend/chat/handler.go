@@ -3,6 +3,8 @@ package chat
 import (
 	// Std
 	"context"
+	"net/http"
+	"strconv"
 
 	// Intern
 	"ft_transcendence/backend/auth"
@@ -10,6 +12,7 @@ import (
 
 	// Extern
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 )
 
@@ -62,4 +65,20 @@ func (h *Handler) handleGetEventMessages(ctx context.Context, input *getMessages
 			Data: messagesToDTOsOldestFirst(messages),
 		},
 	}, nil
+}
+
+// raw HTTP/Chi handler for websockets
+func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Request) {
+	eventIDParam := chi.URLParam(r, "id")
+
+	eventID64, err := strconv.ParseUint(eventIDParam, 10, 0)
+	if err != nil {
+		http.Error(w, "invalid event id", http.StatusBadRequest)
+		return
+	}
+
+	eventID := uint(eventID64)
+
+	// auth.UidFromRequest(r) comes next
+	_ = eventID
 }

@@ -10,6 +10,7 @@ import (
 
 	// External
 	"github.com/alexedwards/argon2id"
+	"github.com/go-chi/jwtauth/v5"
 )
 
 // makeLogoutCookie()
@@ -105,5 +106,29 @@ func UidFromCtx(ctx context.Context) (uint, error) {
 		return 0, err
 	}
 	// next line is safe because we used strconv.IntSize above
+	return uint(u64), nil
+}
+
+func UidFromRequest(r *http.Request) (uint, error) {
+	cookie, err := r.Cookie("jwt")
+	if err != nil {
+		return 0, err
+	}
+
+	token, err := jwtauth.VerifyToken(tokenAuth, cookie.Value)
+	if err != nil {
+		return 0, err
+	}
+
+	sub, ok := token.Subject()
+	if !ok {
+		return 0, errors.New("sub not in claims")
+	}
+
+	u64, err := strconv.ParseUint(sub, 10, strconv.IntSize)
+	if err != nil {
+		return 0, err
+	}
+
 	return uint(u64), nil
 }

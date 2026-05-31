@@ -11,6 +11,7 @@ import (
 	"ft_transcendence/backend/event"
 
 	// Extern
+	"github.com/coder/websocket"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
@@ -105,5 +106,18 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	conn, err := websocket.Accept(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close(websocket.StatusNormalClosure, "")
+
+	client := &Client{
+		userID: userID,
+		conn:   conn,
+		send:   make(chan Message),
+	}
+
+	_ = eventID
+	_ = client
 }

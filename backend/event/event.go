@@ -539,3 +539,18 @@ func (h *EventHandler) HandleGetParticipants(ctx context.Context, input *GetPart
 	return participantsOutput, nil
 
 }
+
+func IsParticipant(ctx context.Context, db *gorm.DB, eventID uint, userID uint) (bool, error) {
+	var count int64
+
+	err := db.WithContext(ctx).
+		Table("event_participants").
+		Where("event_id = ? AND user_id = ?", eventID, userID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, errs.ErrorDB(err)
+	}
+
+	return count > 0, nil
+}

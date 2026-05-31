@@ -49,6 +49,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = db.AutoMigrate(&event.Event{})
+	if err != nil {
+		log.Fatal(err)
+	}
 	err = db.AutoMigrate(&chat.Message{})
 	if err != nil {
 		log.Fatal(err)

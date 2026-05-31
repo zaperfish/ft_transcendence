@@ -23,8 +23,6 @@ type EventHandler struct {
 func RegisterEventsApi(api huma.API, db *gorm.DB) {
 	event_handler := EventHandler{db: db}
 
-	db.AutoMigrate(&Event{})
-
 	// Register POST /events
 	huma.Register(api, huma.Operation{
 		OperationID:   "create-event",

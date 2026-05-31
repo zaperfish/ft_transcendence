@@ -120,14 +120,13 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 		send:   make(chan Message, clientSendBuffer),
 	}
 
-	room := h.Hub.GetOrCreateRoom(eventID)
-	room.join <- client
+	room := h.Hub.JoinRoom(eventID, client)
 
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
 	defer func() {
-		room.leave <- client
+		room.Leave(client)
 	}()
 
 	go func() {

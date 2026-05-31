@@ -32,12 +32,15 @@ func TestNewHubInitializesRooms(t *testing.T) {
 	}
 }
 
-func TestHubGetOrCreateRoomReusesRoom(t *testing.T) {
+func TestHubJoinRoomReusesRoom(t *testing.T) {
 	hub := NewHub()
+	firstClient := &Client{send: make(chan Message)}
+	secondClient := &Client{send: make(chan Message)}
+	otherClient := &Client{send: make(chan Message)}
 
-	firstRoom := hub.GetOrCreateRoom(42)
-	secondRoom := hub.GetOrCreateRoom(42)
-	otherRoom := hub.GetOrCreateRoom(43)
+	firstRoom := hub.JoinRoom(42, firstClient)
+	secondRoom := hub.JoinRoom(42, secondClient)
+	otherRoom := hub.JoinRoom(43, otherClient)
 
 	if firstRoom != secondRoom {
 		t.Fatal("expected same event ID to reuse the existing room")
@@ -45,24 +48,18 @@ func TestHubGetOrCreateRoomReusesRoom(t *testing.T) {
 	if firstRoom == otherRoom {
 		t.Fatal("expected different event IDs to use different rooms")
 	}
+
+	firstRoom.Leave(firstClient)
+	secondRoom.Leave(secondClient)
+	otherRoom.Leave(otherClient)
 }
 
-func TestHubGetOrCreateRoomStartsRoomRunLoop(t *testing.T) {
+func TestHubJoinRoomStartsRoomRunLoop(t *testing.T) {
 	hub := NewHub()
-	room := hub.GetOrCreateRoom(42)
 	client := &Client{send: make(chan Message)}
 
-	select {
-	case room.join <- client:
-	case <-time.After(time.Second):
-		t.Fatal("expected room run loop to receive joined client")
-	}
-
-	select {
-	case room.leave <- client:
-	case <-time.After(time.Second):
-		t.Fatal("expected room run loop to receive leaving client")
-	}
+	room := hub.JoinRoom(42, client)
+	room.Leave(client)
 
 	select {
 	case _, ok := <-client.send:
@@ -71,6 +68,39 @@ func TestHubGetOrCreateRoomStartsRoomRunLoop(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("expected leaving client send channel to be closed")
+	}
+}
+
+func TestHubRemovesRoomWhenLastClientLeaves(t *testing.T) {
+	hub := NewHub()
+	client := &Client{send: make(chan Message)}
+
+	room := hub.JoinRoom(42, client)
+	room.Leave(client)
+	waitForRoomClosed(t, room)
+
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
+
+	if _, ok := hub.rooms[42]; ok {
+		t.Fatal("expected room to be removed after last client leaves")
+	}
+}
+
+func TestHubRecreatesRoomAfterPreviousRoomClosed(t *testing.T) {
+	hub := NewHub()
+	firstClient := &Client{send: make(chan Message)}
+
+	firstRoom := hub.JoinRoom(42, firstClient)
+	firstRoom.Leave(firstClient)
+	waitForRoomClosed(t, firstRoom)
+
+	secondClient := &Client{send: make(chan Message)}
+	secondRoom := hub.JoinRoom(42, secondClient)
+	defer secondRoom.Leave(secondClient)
+
+	if firstRoom == secondRoom {
+		t.Fatal("expected a new room after the previous room closed")
 	}
 }
 
@@ -95,6 +125,9 @@ func TestNewRoomInitializesState(t *testing.T) {
 	if room.broadcast == nil {
 		t.Fatal("expected broadcast channel to be initialized")
 	}
+	if room.done == nil {
+		t.Fatal("expected done channel to be initialized")
+	}
 }
 
 func TestRoomRunBroadcastsToJoinedClients(t *testing.T) {
@@ -108,15 +141,11 @@ func TestRoomRunBroadcastsToJoinedClients(t *testing.T) {
 
 	go room.run()
 
-	select {
-	case room.join <- client:
-	case <-time.After(time.Second):
+	if !room.Join(client) {
 		t.Fatal("expected room run loop to receive joined client")
 	}
 
-	select {
-	case room.broadcast <- message:
-	case <-time.After(time.Second):
+	if !room.Broadcast(message) {
 		t.Fatal("expected room run loop to receive broadcast message")
 	}
 
@@ -129,11 +158,8 @@ func TestRoomRunBroadcastsToJoinedClients(t *testing.T) {
 		t.Fatal("expected joined client to receive broadcast message")
 	}
 
-	select {
-	case room.leave <- client:
-	case <-time.After(time.Second):
-		t.Fatal("expected room run loop to receive leaving client")
-	}
+	room.Leave(client)
+	waitForRoomClosed(t, room)
 }
 
 func TestNewHandlerInitializesHubAndDB(t *testing.T) {
@@ -284,4 +310,14 @@ func newChatWebSocketRequest(eventID string) *http.Request {
 	routeCtx.URLParams.Add("id", eventID)
 
 	return req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+}
+
+func waitForRoomClosed(t *testing.T, room *Room) {
+	t.Helper()
+
+	select {
+	case <-room.done:
+	case <-time.After(time.Second):
+		t.Fatal("expected room to close")
+	}
 }

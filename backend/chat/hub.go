@@ -26,9 +26,27 @@ func (h *Hub) GetOrCreateRoom(eventID uint) *Room {
 		return room
 	}
 
-	room = NewRoom(eventID)
+	room = newRoom(eventID, h.removeRoom)
 	h.rooms[eventID] = room
 	go room.run()
 
 	return room
+}
+
+func (h *Hub) JoinRoom(eventID uint, client *Client) *Room {
+	for {
+		room := h.GetOrCreateRoom(eventID)
+		if room.Join(client) {
+			return room
+		}
+	}
+}
+
+func (h *Hub) removeRoom(eventID uint, room *Room) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if h.rooms[eventID] == room {
+		delete(h.rooms, eventID)
+	}
 }

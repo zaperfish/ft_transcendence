@@ -47,7 +47,9 @@ func (c *Client) readLoop(ctx context.Context, room *Room, eventID uint, message
 			return
 		}
 
-		room.broadcast <- message
+		if !room.Broadcast(message) {
+			return
+		}
 	}
 }
 

@@ -74,6 +74,7 @@ func main() {
 	protected.UseMiddleware(auth.Refresher(api))
 	user.RegisterProtectedRoutes(protected, user.Handler{DB: db})
 	event.RegisterEventsApi(protected, db)
+	chat.RegisterProtectedRoutes(protected, chat.NewHandler(db))
 
 	startServer(r)
 }

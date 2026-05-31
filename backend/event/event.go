@@ -8,6 +8,7 @@ import (
 	"time"
 
 	// Intern
+	"ft_transcendence/backend/errs"
 	"ft_transcendence/backend/user"
 
 	// Extern

@@ -33,3 +33,12 @@ func (m *Message) toDTO() MessageDTO {
 		CreatedAt: m.CreatedAt,
 	}
 }
+
+func messagesToDTOsOldestFirst(messages []Message) []MessageDTO {
+	dtos := make([]MessageDTO, len(messages))
+	for i, message := range messages {
+		dtos[len(messages)-1-i] = message.toDTO()
+	}
+
+	return dtos
+}

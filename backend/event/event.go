@@ -555,3 +555,18 @@ func IsParticipant(ctx context.Context, db *gorm.DB, eventID uint, userID uint) 
 
 	return count > 0, nil
 }
+
+func EventExists(ctx context.Context, db *gorm.DB, eventID uint) (bool, error) {
+	var count int64
+
+	err := db.WithContext(ctx).
+		Model(&Event{}).
+		Where("id = ?", eventID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, errs.ErrorDB(err)
+	}
+
+	return count > 0, nil
+}

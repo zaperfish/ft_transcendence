@@ -33,6 +33,14 @@ func (h *Handler) handleGetEventMessages(ctx context.Context, input *getMessages
 		return nil, huma.Error401Unauthorized(err.Error())
 	}
 
+	eventExists, err := event.EventExists(ctx, h.DB, input.ID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+	if !eventExists {
+		return nil, huma.Error404NotFound("event not found")
+	}
+
 	isParticipant, err := event.IsParticipant(ctx, h.DB, input.ID, userID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())

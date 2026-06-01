@@ -3,6 +3,7 @@
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Navigation from "@/components/layout/Navigation";
 
 /**
  * Layout wrapper for protected (authenticated) pages.
@@ -31,11 +32,11 @@ export default function ProtectedLayout({  children }: Readonly<{
 	if (isLoading)
 		return <div>Loading...</div>
 	return (
-    <>
-      <nav>
-        {/* Navigation placeholder */}
-      </nav>
-      {children}
-    </>
+    	<div className='min-h-screen bg-surface-dim flex flex-col'>
+			<Navigation />
+			<main className='flex-1 w-full max-w-300 mx-auto px-md py-xl'>
+      			{children}
+    		</main>
+		</div>
   );
 }

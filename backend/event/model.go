@@ -1,0 +1,22 @@
+package event
+
+import (
+	// Std
+	"time"
+	// Intern
+	// Extern
+)
+
+type Event struct {
+	ID              string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Title           string
+	Description     string
+	StartTime       time.Time
+	Duration        int
+	LocationName    string
+	LocationAddress string
+	MaxCapacity     int
+	NumRegistered   int
+}

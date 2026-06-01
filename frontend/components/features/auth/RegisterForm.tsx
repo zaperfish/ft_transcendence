@@ -63,7 +63,7 @@ export function RegisterForm() {
 			<Input value={email} onChange={e => setEmail(e.target.value)} placeholder='Email' error={errors.email} />
 			<Input value={password} onChange={e => setPassword(e.target.value)} placeholder='Password' error={errors.password} />
 			{errors.general && <div className="text-sm text-error mt-xs">{errors.general}</div>}
-			<Button disabled={loading} onClick={handleSubmit}>{loading ? "loading..." : "login"}</Button>
+			<Button disabled={loading} onClick={handleSubmit}>{loading ? "loading..." : "register"}</Button>
 		</div>
 	);
 }

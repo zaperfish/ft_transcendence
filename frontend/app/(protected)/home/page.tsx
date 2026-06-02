@@ -1,8 +1,27 @@
+'use client';
+
+import { useState } from "react";
 import CreateEventCard from "@/components/features/events/CreateEventCard";
+import CreateEventForm from "@/components/features/events/CreateEventForm";
 
 export default function HomePage() {
+	const [isFormOpen, setIsFormOpen] = useState(false);
+
+	const handleOpenForm = () => {
+		setIsFormOpen(true);
+	};
+
+	const handleCloseForm = () => {
+		setIsFormOpen(false);
+	};
+
+	// Later should add refresh and update
+	const handleEventCreated = () => {
+		console.log("Event created successfully!");
+	};
+
 	return (
-		<div className="max-w-360 mx-auto px-lg py-2xl">
+		<div className="w-full px-xl py-2xl">
 		{ /*Header description*/ }
 			<div className="mb-2xl">
 				<h1 className="text-4xl font-heading font-bold text-text-primary mb-md">
@@ -14,10 +33,15 @@ export default function HomePage() {
 				</p>
 			</div>
 		{ /*Card grid container*/ }
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-lg">
-				<CreateEventCard />
+			<div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-lg">
+				<CreateEventCard onClick={handleOpenForm}/>
 				{ /*Cards to be rendered*/ }
 			</div>
+			<CreateEventForm
+				open={isFormOpen}
+				onClose={handleCloseForm}
+				onSuccess={handleEventCreated}
+			/>
 		</div>
 	);
 }

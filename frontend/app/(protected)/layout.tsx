@@ -34,7 +34,7 @@ export default function ProtectedLayout({  children }: Readonly<{
 	return (
     	<div className='min-h-screen bg-surface-dim flex flex-col'>
 			<Navigation />
-			<main className='flex-1 w-full max-w-300 mx-auto px-md py-xl'>
+			<main className='flex-1 w-full px-md py-xl'>
       			{children}
     		</main>
 		</div>

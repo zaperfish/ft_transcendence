@@ -17,7 +17,7 @@ func NewHub() *Hub {
 	}
 }
 
-func (h *Hub) GetOrCreateRoom(eventID uint) *Room {
+func (h *Hub) getOrCreateRoom(eventID uint) *Room {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -26,6 +26,7 @@ func (h *Hub) GetOrCreateRoom(eventID uint) *Room {
 		return room
 	}
 
+	// Rooms remove themselves from the hub through callback when empty
 	room = newRoom(eventID, h.removeRoom)
 	h.rooms[eventID] = room
 	go room.run()
@@ -35,7 +36,7 @@ func (h *Hub) GetOrCreateRoom(eventID uint) *Room {
 
 func (h *Hub) JoinRoom(eventID uint, client *Client) *Room {
 	for {
-		room := h.GetOrCreateRoom(eventID)
+		room := h.getOrCreateRoom(eventID)
 		if room.Join(client) {
 			return room
 		}

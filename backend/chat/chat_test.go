@@ -9,10 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// These tests cover the initial chat package skeleton.
-// They intentionally verify constructor initialization rather than chat behavior:
-// nil maps would panic on writes, and nil channels would block forever once the
-// room/client loops are implemented.
+// These backend-only tests cover constructors, room lifecycle, DTO conversion,
+// message input validation, repository limit normalization, and basic WebSocket
+// rejection paths. Full end-to-end verification still needs a running backend
+// and an actual WebSocket client or browser.
 
 func TestNewHubInitializesRooms(t *testing.T) {
 	hub := NewHub()

@@ -21,6 +21,7 @@ const (
 type Client struct {
 	userID uint
 	conn   *websocket.Conn
+	// channel used as queue
 	send   chan Message
 }
 

@@ -5,9 +5,11 @@ type Room struct {
 	// clients is used as a set of active WebSocket clients in this room
 	// the bool value is not meaningful
 	clients   map[*Client]bool
+	// channels used as event queues
 	join      chan *Client
 	leave     chan *Client
 	broadcast chan Message
+	// channel used as shutdown signal
 	done      chan struct{}
 	onEmpty   func(uint, *Room)
 }

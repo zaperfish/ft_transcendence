@@ -40,8 +40,8 @@ func Init() error {
 
 func initGlobals() error {
 	minutesString, ok := os.LookupEnv("JWT_EXPIRATION_MINUTES")
-	if !ok {
-		return errors.New("JWT_EXPIRATION_MINUTES not set")
+	if !ok || minutesString == "" {
+		return errors.New("JWT_EXPIRATION_MINUTES not set or empty")
 	}
 
 	minutes, err := strconv.ParseUint(minutesString, 10, 64)
@@ -55,13 +55,13 @@ func initGlobals() error {
 
 func initJWTAuth() error {
 	algorithm, ok := os.LookupEnv("JWT_ALGORITHM")
-	if !ok {
-		return errors.New("JWT_ALGORITHM not set")
+	if !ok || algorithm == "" {
+		return errors.New("JWT_ALGORITHM not set or empty")
 	}
 
 	key, ok := os.LookupEnv("JWT_KEY")
-	if !ok {
-		return errors.New("JWT_KEY not set")
+	if !ok || key == "" {
+		return errors.New("JWT_KEY not set or empty")
 	}
 
 	tokenAuth = jwtauth.New(algorithm, []byte(key), nil)

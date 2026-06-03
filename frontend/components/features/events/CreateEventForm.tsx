@@ -1,4 +1,4 @@
-import type { CreateEvent } from '@/types/event';
+import type { CreateEventRequest, EventEntity } from '@/types/event';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react'
 import { request, ApiError } from '@/lib/api/client';
@@ -11,7 +11,7 @@ interface CreateEventFormProps {
 }
 
 export default function CreateEventForm({ open, onClose, onSuccess }: CreateEventFormProps) {
-	const { register, handleSubmit, reset, formState: { errors, isSubmitting }, } = useForm<CreateEvent>({
+	const { register, handleSubmit, reset, formState: { errors, isSubmitting }, } = useForm<CreateEventRequest>({
 		defaultValues: {
 			description: "",
 			duration: 15,
@@ -27,7 +27,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 	if (!open)
 		return null;
 
-	const onSubmit = async (data: CreateEvent) => {
+	const onSubmit = async (data: CreateEventRequest) => {
 		setServerError(null);
 
 		// change datetime-local to RFC 3339 format, e.g.2026-11-20T10:05:00.000Z
@@ -37,7 +37,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 		};
 
 		try {
-			const res = await request<CreateEvent>("/api/events", {
+			const res = await request<EventEntity>("/api/events", {
 				method: "POST",
 				headers: { "Content-type": "application/json" },
 				body: JSON.stringify(formattedData),

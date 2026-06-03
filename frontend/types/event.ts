@@ -1,4 +1,4 @@
-export interface CreateEvent {
+export interface CreateEventRequest {
 	description: string;
 	duration: number;
 	location_address: string;
@@ -8,7 +8,7 @@ export interface CreateEvent {
 	title: string;
 }
 
-export interface GetEvent {
+export interface EventEntity {
 	description: string;
 	duration: number;
 	location_address: string;
@@ -21,3 +21,17 @@ export interface GetEvent {
 	num_registered: number;
 	updated_at: string;
 }
+
+export interface GetEventRequest {
+	page: number;
+	page_size: number;
+}
+
+export interface PaginatedResponse<T> {
+	data: T[];
+	page: number;
+	page_size: number;
+	total: number;
+}
+
+export type EventsResponse = PaginatedResponse<EventEntity>;

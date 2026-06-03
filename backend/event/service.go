@@ -3,6 +3,11 @@ package event
 import (
 	"context"
 	"errors"
+	"fmt"
+
+	"ft_transcendence/backend/user"
+
+	"gorm.io/gorm"
 )
 
 type EventService interface {
@@ -10,15 +15,19 @@ type EventService interface {
 	UpdateEvent(ctx context.Context, id string, updates map[string]any) (*Event, error)
 	DeleteEvent(ctx context.Context, id string) error
 	GetEvent(ctx context.Context, id string) (*Event, error)
-	ListEvents(ctx context.Context, limit, offset int) ([]*Event, error)
+	ListEvents(ctx context.Context, limit, offset int) ([]Event, error)
+	AddParticipant(ctx context.Context, eventID, userID string) error
+	RemoveParticipant(ctx context.Context, eventID, userID string) error
+	ListParticipants(ctx context.Context, eventID string) ([]user.User, error)
 }
 
 type eventServiceImpl struct {
 	repo EventRepository
+	db   *gorm.DB
 }
 
-func NewEventService(repo EventRepository) EventService {
-	return &eventServiceImpl{repo: repo}
+func NewEventService(repo EventRepository, db *gorm.DB) EventService {
+	return &eventServiceImpl{repo: repo, db: db}
 }
 
 func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, error) {
@@ -82,7 +91,7 @@ func (s *eventServiceImpl) GetEvent(ctx context.Context, id string) (*Event, err
 	return event, nil
 }
 
-func (s *eventServiceImpl) ListEvents(ctx context.Context, limit, offset int) ([]*Event, error) {
+func (s *eventServiceImpl) ListEvents(ctx context.Context, limit, offset int) ([]Event, error) {
 	if limit < 0 {
 		limit = 0
 	}
@@ -97,4 +106,41 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, limit, offset int) ([
 	}
 
 	return events, nil
+}
+
+func (s *eventServiceImpl) AddParticipant(ctx context.Context, eventID, userID string) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := s.repo.CreateParticipant(ctx, tx, eventID, userID); err != nil {
+			return fmt.Errorf("failed to create participant: %w", err)
+		}
+
+		if err := s.repo.IncrementParticipantCount(ctx, tx, eventID, 1); err != nil {
+			return fmt.Errorf("failed to increment participant count: %w", err)
+		}
+
+		return nil
+	})
+}
+
+func (s *eventServiceImpl) RemoveParticipant(ctx context.Context, eventID, userID string) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := s.repo.DeleteParticipant(ctx, tx, eventID, userID); err != nil {
+			return fmt.Errorf("failed to create participant: %w", err)
+		}
+
+		if err := s.repo.DecrementParticipantCount(ctx, tx, eventID, 1); err != nil {
+			return fmt.Errorf("failed to decrement participant count: %w", err)
+		}
+
+		return nil
+	})
+}
+
+func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID string) ([]user.User, error) {
+	users, err := s.repo.GetParticipants(ctx, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get participants: %w", err)
+	}
+
+	return users, nil
 }

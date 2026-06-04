@@ -7,6 +7,7 @@ import (
 	"os"
 
 	// Internal
+	"ft_transcendence/backend/apikey"
 	"ft_transcendence/backend/auth"
 	"ft_transcendence/backend/chat"
 	"ft_transcendence/backend/db"
@@ -72,8 +73,16 @@ func main() {
 	config := huma.DefaultConfig("ft_transcendence api", "0.1.0")
 	config.DocsRenderer = huma.DocsRendererScalar
 	config.CreateHooks = nil // disables schema injection into request json payloads
+	config.Components.SecuritySchemes = map[string]*huma.SecurityScheme{
+		"AdminPassword": {
+			Type:        "http",
+			Scheme:      "bearer",
+			Description: "Enter admin password as: Bearer <password>",
+		},
+	}
 	api := humachi.New(r, config)
 
+	apikey.RegisterRoutes(api, db)
 	// Public Routes
 	public := huma.NewGroup(api, "")
 

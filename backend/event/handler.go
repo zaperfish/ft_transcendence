@@ -3,9 +3,12 @@ package event
 import (
 	// Std
 	"context"
+	"ft_transcendence/backend/user"
+	"strconv"
 	"time"
 
 	// Intern
+	// "ft_transcendence/backend/user"
 
 	// Extern
 	"github.com/danielgtaylor/huma/v2"
@@ -205,6 +208,79 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 			Page:     input.Page,
 			PageSize: input.PageSize,
 			Total:    total,
+		},
+	}, nil
+}
+
+type AddParticipantInput struct {
+	EventID string `path:"id" doc:"Event ID"`
+	Body    struct {
+		UserID int `json:"user_id"`
+	}
+}
+
+type AddParticipantOutput struct {
+	Body struct {
+	}
+}
+
+func (h *EventHandler) AddParticipant(ctx context.Context, input *AddParticipantInput) (*AddParticipantOutput, error) {
+	userID := strconv.Itoa(input.Body.UserID)
+
+	err := h.service.AddParticipant(ctx, input.EventID, userID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("", err)
+	}
+
+	return &AddParticipantOutput{}, nil
+}
+
+type RemoveParticipantInput struct {
+	EventID string `path:"eventID" doc:"Event ID"`
+	UserID  string `path:"userID" doc:"User ID"`
+}
+
+type RemoveParticipantOutput struct {
+	Body struct {
+	}
+}
+
+func (h *EventHandler) RemoveParticipant(ctx context.Context, input *RemoveParticipantInput) (*RemoveParticipantOutput, error) {
+	err := h.service.RemoveParticipant(ctx, input.EventID, input.UserID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("", err)
+	}
+
+	return &RemoveParticipantOutput{}, nil
+}
+
+type ListParticipantsInput struct {
+	EventID string `path:"id" doc:"Event ID"`
+}
+
+type ListParticipantsOutput struct {
+	Body ListParticipantsOutputBody
+}
+
+type ListParticipantsOutputBody struct {
+	Data []user.UserSummaryDTO `json:"data"`
+}
+
+func (h *EventHandler) ListParticipants(ctx context.Context, input *ListParticipantsInput) (*ListParticipantsOutput, error) {
+	users, err := h.service.ListParticipants(ctx, input.EventID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("", err)
+	}
+
+	total := len(users)
+	data := make([]user.UserSummaryDTO, total)
+	for i, user := range users {
+		data[i] = user.ToSummaryDTO()
+	}
+
+	return &ListParticipantsOutput{
+		Body: ListParticipantsOutputBody{
+			Data: data,
 		},
 	}, nil
 }

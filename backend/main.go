@@ -22,6 +22,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"golang.org/x/time/rate"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -36,11 +37,27 @@ func main() {
 		log.Println("Backend is in container")
 	}
 
-	err := auth.Init()
+	db := initDB()
+	r := chi.NewRouter()
+	initApi(r, db)
+
+	startServer(r)
+}
+
+func startServer(r *chi.Mux) {
+	port, ok := os.LookupEnv("PORT")
+	if !ok || port == "" {
+		port = "4000"
+	}
+
+	log.Println("Listening on :" + port + "...")
+	err := http.ListenAndServe(":"+port, r)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
+func initDB() *gorm.DB {
 	db, err := db.ConnectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -59,8 +76,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := chi.NewRouter()
+	return db
+}
+
+func initApi(r *chi.Mux, db *gorm.DB) {
 	r.Use(chiMiddleware.Logger)
+
+	err := auth.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	limiterStore := middleware.LimiterStore{
 		IpLimiters:   make(map[string]*rate.Limiter),
@@ -80,94 +105,14 @@ func main() {
 			Description: "Enter admin password as: Bearer <password>",
 		},
 	}
+
 	api := humachi.New(r, config)
 
 	apikey.RegisterRoutes(api, db)
+	event.RegisterRoutes(api, db)
+
 	// Public Routes
 	public := huma.NewGroup(api, "")
-
-	// Setup layers
-	eventRepo := event.NewEventRepository(db)
-	eventService := event.NewEventService(eventRepo, db)
-	eventHandler := event.NewEventHandler(eventService)
-
-	// Register routes
-	// Register POST /events
-	huma.Register(api, huma.Operation{
-		OperationID:   "create-event",
-		Method:        http.MethodPost,
-		Path:          "/api/events",
-		Summary:       "Create event",
-		Tags:          []string{"Events"},
-		DefaultStatus: http.StatusCreated,
-	}, eventHandler.CreateEvent)
-
-	// Register PATCH /events/{id}
-	huma.Register(api, huma.Operation{
-		OperationID:   "update-event",
-		Method:        http.MethodPatch,
-		Path:          "/api/events/{id}",
-		Summary:       "Update event",
-		Tags:          []string{"Events"},
-		DefaultStatus: http.StatusOK,
-	}, eventHandler.UpdateEvent)
-
-	// Register DELETE /events/{id}
-	huma.Register(api, huma.Operation{
-		OperationID:   "delete-event",
-		Method:        http.MethodDelete,
-		Path:          "/api/events/{id}",
-		Summary:       "Delete event",
-		Tags:          []string{"Events"},
-		DefaultStatus: http.StatusOK,
-	}, eventHandler.DeleteEvent)
-
-	// Register GET /events/{id}
-	huma.Register(api, huma.Operation{
-		OperationID:   "get-event",
-		Method:        http.MethodGet,
-		Path:          "/api/events/{id}",
-		Summary:       "Get event",
-		Tags:          []string{"Events"},
-		DefaultStatus: http.StatusOK,
-	}, eventHandler.GetEvent)
-
-	// Register GET /events
-	huma.Register(api, huma.Operation{
-		OperationID:   "list-events",
-		Method:        http.MethodGet,
-		Path:          "/api/events",
-		Summary:       "List events",
-		Tags:          []string{"Events"},
-		DefaultStatus: http.StatusOK,
-	}, eventHandler.ListEvents)
-
-	huma.Register(api, huma.Operation{
-		OperationID:   "add-participant",
-		Method:        http.MethodPost,
-		Path:          "/api/events/{id}/participants",
-		Summary:       "Add participant",
-		Tags:          []string{"Events"},
-		DefaultStatus: http.StatusOK,
-	}, eventHandler.AddParticipant)
-
-	huma.Register(api, huma.Operation{
-		OperationID:   "remove-participant",
-		Method:        http.MethodDelete,
-		Path:          "/api/events/{eventID}/participants/{userID}",
-		Summary:       "Remove participant",
-		Tags:          []string{"Events"},
-		DefaultStatus: http.StatusOK,
-	}, eventHandler.RemoveParticipant)
-
-	huma.Register(api, huma.Operation{
-		OperationID:   "list-participants",
-		Method:        http.MethodGet,
-		Path:          "/api/events/{id}/participants",
-		Summary:       "List participants",
-		Tags:          []string{"Events"},
-		DefaultStatus: http.StatusOK,
-	}, eventHandler.ListParticipants)
 
 	user.RegisterPublicRoutes(public, user.Handler{DB: db})
 
@@ -177,19 +122,4 @@ func main() {
 	protected.UseMiddleware(auth.Refresher(api))
 	user.RegisterProtectedRoutes(protected, user.Handler{DB: db})
 	chat.RegisterProtectedRoutes(protected, chat.NewHandler(db))
-
-	startServer(r)
-}
-
-func startServer(r *chi.Mux) {
-	port, ok := os.LookupEnv("PORT")
-	if !ok || port == "" {
-		port = "4000"
-	}
-
-	log.Println("Listening on :" + port + "...")
-	err := http.ListenAndServe(":"+port, r)
-	if err != nil {
-		log.Fatal(err)
-	}
 }

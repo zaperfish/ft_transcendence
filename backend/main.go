@@ -104,6 +104,11 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 			Scheme:      "bearer",
 			Description: "Enter admin password as: Bearer <password>",
 		},
+		"ApiKey": {
+			Type:        "http",
+			Scheme:      "bearer",
+			Description: "Enter api key as: Bearer <key>",
+		},
 	}
 
 	api := humachi.New(r, config)

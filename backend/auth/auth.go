@@ -1,14 +1,14 @@
 package auth
 
 import (
-    // Std
+	// Std
 	"context"
 	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
-    // External
+	// External
 	"github.com/alexedwards/argon2id"
 )
 
@@ -16,28 +16,27 @@ import (
 //
 // MaxAge: -1
 // instructs browser to delete matching cookie
-//
 func MakeLogoutCookie() http.Cookie {
-	return http.Cookie {
-			Name:		"jwt",
-			Value:		"",
-			Path:		"/api",
-			HttpOnly:	true,
-			Secure:		true,
-			MaxAge:		-1,
+	return http.Cookie{
+		Name:     "jwt",
+		Value:    "",
+		Path:     "/api",
+		HttpOnly: true,
+		Secure:   true,
+		MaxAge:   -1,
 	}
 }
 
 func makeJWT(sub string) (string, error) {
-	claims := map[string]any {
-		"sub":		sub,
-		"exp":		time.Now().Add(jwtExpirationTime).Unix(),
-		"iat":		time.Now().Unix(),
+	claims := map[string]any{
+		"sub": sub,
+		"exp": time.Now().Add(jwtExpirationTime).Unix(),
+		"iat": time.Now().Unix(),
 	}
-    _, ts, err := tokenAuth.Encode(claims)
-    if err != nil {
-        return "", err
-    }
+	_, ts, err := tokenAuth.Encode(claims)
+	if err != nil {
+		return "", err
+	}
 	return ts, nil
 }
 
@@ -58,20 +57,19 @@ func MakeJWTCookieFromID(id uint) (http.Cookie, error) {
 //
 // SameSite: http.SameSiteStrictMode
 // browser only sends cookie when accessing from the same site
-//
 func makeJWTCookie(sub string) (http.Cookie, error) {
 	t, err := makeJWT(sub)
 	if err != nil {
 		return http.Cookie{}, err
 	}
-	return http.Cookie {
-		Name:		"jwt",
-		Value:		t,
-		Path:		"/api",
-		Expires:	time.Now().Add(jwtExpirationTime),
-		HttpOnly:	true,
-		Secure:		true,
-		SameSite:	http.SameSiteStrictMode,
+	return http.Cookie{
+		Name:     "jwt",
+		Value:    t,
+		Path:     "/api",
+		Expires:  time.Now().Add(jwtExpirationTime),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
 	}, nil
 }
 

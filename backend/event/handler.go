@@ -187,17 +187,17 @@ type ListEventsOutputBody struct {
 	Data     []EventDTO `json:"data"`
 	Page     int        `json:"page"`
 	PageSize int        `json:"page_size"`
-	Total    int        `json:"total"`
+	Total    int64      `json:"total"`
 }
 
 func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (*ListEventsOutput, error) {
-	events, err := h.service.ListEvents(ctx, input.PageSize, input.PageSize*(input.Page-1))
+	events, total, err := h.service.ListEvents(ctx, input.PageSize, input.PageSize*(input.Page-1))
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to list events", err)
 	}
 
-	total := len(events)
-	data := make([]EventDTO, total)
+	num_retrieved := len(events)
+	data := make([]EventDTO, num_retrieved)
 	for i, event := range events {
 		data[i] = event.ToDTO()
 	}

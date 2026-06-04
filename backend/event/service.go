@@ -15,7 +15,7 @@ type EventService interface {
 	UpdateEvent(ctx context.Context, id string, updates map[string]any) (*Event, error)
 	DeleteEvent(ctx context.Context, id string) error
 	GetEvent(ctx context.Context, id string) (*Event, error)
-	ListEvents(ctx context.Context, limit, offset int) ([]Event, error)
+	ListEvents(ctx context.Context, limit, offset int) ([]Event, int64, error)
 	AddParticipant(ctx context.Context, eventID, userID string) error
 	RemoveParticipant(ctx context.Context, eventID, userID string) error
 	ListParticipants(ctx context.Context, eventID string) ([]user.User, error)
@@ -91,7 +91,7 @@ func (s *eventServiceImpl) GetEvent(ctx context.Context, id string) (*Event, err
 	return event, nil
 }
 
-func (s *eventServiceImpl) ListEvents(ctx context.Context, limit, offset int) ([]Event, error) {
+func (s *eventServiceImpl) ListEvents(ctx context.Context, limit, offset int) ([]Event, int64, error) {
 	if limit < 0 {
 		limit = 0
 	}
@@ -100,12 +100,12 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, limit, offset int) ([
 		offset = 0
 	}
 
-	events, err := s.repo.List(ctx, limit, offset)
+	events, total, err := s.repo.List(ctx, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return events, nil
+	return events, total, nil
 }
 
 func (s *eventServiceImpl) AddParticipant(ctx context.Context, eventID, userID string) error {

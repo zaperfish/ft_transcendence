@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"ft_transcendence/backend/middleware"
 	"net/http"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"gorm.io/gorm"
@@ -213,4 +214,29 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 			{"AdminPassword": {}},
 		},
 	}, h.DeleteApiKeyHandler)
+}
+
+func ApiKeyVerifier(api huma.API, db *gorm.DB) func(ctx huma.Context, next func(huma.Context)) {
+	return func(ctx huma.Context, next func(huma.Context)) {
+		auth := ctx.Header("Authorization")
+		if auth == "" {
+			huma.WriteErr(api, ctx, http.StatusUnauthorized, "missing Authorization header")
+			return
+		}
+
+		if !strings.HasPrefix(auth, "Bearer ") {
+			huma.WriteErr(api, ctx, http.StatusUnauthorized, "invalid Authorization format")
+			return
+		}
+
+		provided := strings.TrimPrefix(auth, "Bearer ")
+
+		valid := ValidateApiKey(provided, ctx.Context(), db)
+		if !valid {
+			huma.WriteErr(api, ctx, http.StatusUnauthorized, "invalid api key")
+			return
+		}
+
+		next(ctx)
+	}
 }

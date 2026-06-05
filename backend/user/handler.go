@@ -15,7 +15,11 @@ import (
 
 // login
 
-func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*LoginUserOutput, error) {
+type UserHandler struct {
+	s UserService
+}
+
+func (h *UserHandler) handleLoginUser(ctx context.Context, in *LoginUserInput) (*LoginUserOutput, error) {
     u, err := h.getUserByName(ctx, in.Body.Name)
     if errors.Is(err, errs.ErrNotFound) {
         return nil, huma.Error401Unauthorized(err.Error())
@@ -47,7 +51,7 @@ func (h *Handler) handleLoginUser(ctx context.Context, in *loginUserInput) (*Log
 
 // register
 
-func (h *Handler) handleRegisterUser(ctx context.Context, in *createInput) (*userOutput, error) {
+func (h *UserHandler) handleRegisterUser(ctx context.Context, in *CreateInput) (*UserOutput, error) {
 
 	if err := validateParameters(&in.Body); err != nil {
 		return nil, huma.Error400BadRequest(err.Error())
@@ -72,7 +76,7 @@ func (h *Handler) handleRegisterUser(ctx context.Context, in *createInput) (*use
         return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-    return &userOutput{Body: u.ToSummaryDTO()}, nil
+    return &UserOutput{Body: u.ToSummaryDTO()}, nil
 }
 
 func validateParameters(u *CreateUserDTO) error {
@@ -90,7 +94,7 @@ func validateParameters(u *CreateUserDTO) error {
 
 // logout
 
-func (h *Handler) handleLogoutUser(ctx context.Context, in *struct{}) (*LogoutUserOutput, error) {
+func (h *UserHandler) handleLogoutUser(ctx context.Context, in *struct{}) (*LogoutUserOutput, error) {
 
     out := &LogoutUserOutput {
 		SetCookie: auth.MakeLogoutCookie(),
@@ -101,34 +105,29 @@ func (h *Handler) handleLogoutUser(ctx context.Context, in *struct{}) (*LogoutUs
 
 // get
 
-func (h *Handler) handleGetUser(ctx context.Context, in *getUserInput) (*userOutput, error) {
-	u, err := h.getUserByID(ctx, in.ID)
+func (h *UserHandler) handleGetUser(ctx context.Context, in *GetUserInput) (*UserOutput, error) {
+	u, err := h.s.GetUser(ctx, in.ID)
     if errors.Is(err, errs.ErrNotFound) {
         return nil, huma.Error404NotFound(err.Error())
     }
 	if err != nil {
         return nil, huma.Error500InternalServerError(err.Error())
 	}
-    return &userOutput{Body: u.ToSummaryDTO()}, nil
+    return &UserOutput{Body: *u}, nil
 }
 
 // get list
 
-func (h *Handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*usersOutput, error) {
+func (h *UserHandler) handleGetUsers(ctx context.Context, in *GetUsersInput) (*UsersOutput, error) {
 
-	us, err := h.getUsersList(ctx, UserFilter(*in))
+	us, err := h.s.GetUsers(ctx, in.Page, in.PageSize)
 	if err != nil {
         return nil, huma.Error500InternalServerError(err.Error())
 	}
     
-    userList := make([]UserSummaryDTO, 0, len(us))
-    for _, u := range us {
-        userList = append(userList, u.ToSummaryDTO())
-    }
-
-    out := usersOutput {
+    out := UsersOutput {
         Body: UserListSummaryDTO {
-            Data:       userList,
+            Data:       us,
             Page:       in.Page,
             PageSize:   in.PageSize,
             Total:      len(us),
@@ -139,13 +138,8 @@ func (h *Handler) handleGetUsers(ctx context.Context, in *getUsersInput) (*users
 
 // patch
 
-func (h *Handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
-	updates := map[string]any{}
- 	if err := populateUpdates(&updates, *in); err != nil {
-		return nil, huma.Error400BadRequest(err.Error())
-	}
-
-	u, err := h.updateUserFieldsByID(ctx, in.ID, updates)
+func (h *UserHandler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*UserOutput, error) {
+	u, err := h.s.PatchUser(ctx, in.ID, in.Body)
 	if errors.Is(err, errs.ErrNotFound) {
 		return nil, huma.Error404NotFound(err.Error())
 	}
@@ -153,149 +147,29 @@ func (h *Handler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*use
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-	return &userOutput{Body: u.ToSummaryDTO()}, nil
-}
-
-func populateUpdates(updates *map[string]any, in PatchUserInput) error {
-	if in.Body.Name != nil {
-		if err := auth.ValidUserName(*in.Body.Name); err != nil {
-			return err
-		}
-		(*updates)["name"] = *in.Body.Name
-	}
-	if in.Body.Email != nil {
-		if err := auth.ValidUserEmail(*in.Body.Email); err != nil {
-			return err
-		}
-		(*updates)["email"] = *in.Body.Email
-	}
-	return nil
+	return &UserOutput{Body: *u}, nil
 }
 
 // patch password
 
-func (h *Handler) handlePatchPassword(ctx context.Context, in *PatchPasswordInput) (*userOutput, error) {
-	return h.patchPassword(ctx, in)
-}
-
-func (h *Handler) patchPassword(ctx context.Context, in *PatchPasswordInput) (*userOutput, error) {
-	u, err := h.getUserByID(ctx, in.ID)
-    if errors.Is(err, errs.ErrNotFound) {
+func (h *UserHandler) handlePatchPassword(ctx context.Context, in *PatchPasswordInput) (*UserOutput, error) {
+	u, err := h.s.PatchPassword(ctx, in.ID, in.Body)
+	if errors.Is(err, errs.ErrNotFound) {
         return nil, huma.Error404NotFound(err.Error())
-    }
+	}
+	if errors.Is(err, errs.ErrConflict) || errors.Is(err, errs.ErrInvalidInput) {
+        return nil, huma.Error400BadRequest(err.Error())
+	}
 	if err != nil {
         return nil, huma.Error500InternalServerError(err.Error())
 	}
-
-	match, err := auth.MatchPassword(in.Body.CurrentPassword, u.PasswordHash)
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-	if !match {
-		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-	}
-
-	if in.Body.NewPassword != in.Body.ConfirmPassword {
-		return nil, huma.Error400BadRequest("new passwords do not match")
-	}
-
-	if err := auth.ValidUserPassword(in.Body.NewPassword); err != nil {
-		return nil, huma.Error400BadRequest(err.Error())
-	}
-
-	hash, err := auth.CreateHash(in.Body.NewPassword)
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-
-	u, err = h.updateUserFieldsByID(ctx, in.ID, map[string]any{"password_hash": hash})
-	if errors.Is(err, errs.ErrNotFound) {
-		return nil, huma.Error404NotFound(err.Error())
-	}
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-
-	return &userOutput{Body: u.ToSummaryDTO()}, nil
+	return &UserOutput{Body: *u}, nil
 }
 
 // delete
 
-func (h *Handler) handleDeleteUser(ctx context.Context, in *deleteUserInput) (*userOutput, error) {
-	err := h.deleteUserByID(ctx, in.ID)
-	if errors.Is(err, errs.ErrNotFound) {
-		return nil, huma.Error404NotFound(err.Error())
-	}
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-    return nil, nil
-}
-
-// get me
-
-func (h *Handler) handleGetMe(ctx context.Context, in *struct{}) (*userOutput, error) {
-	id, err := auth.UidFromCtx(ctx)
-	if err != nil {
-		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-	}
-
-	u, err := h.getUserByID(ctx, id)
-    if errors.Is(err, errs.ErrNotFound) {
-        return nil, huma.Error404NotFound(err.Error())
-    }
-	if err != nil {
-        return nil, huma.Error500InternalServerError(err.Error())
-	}
-    return &userOutput{Body: u.ToSummaryDTO()}, nil
-}
-
-// patch me
-
-func (h *Handler) handlePatchMe(ctx context.Context, in *PatchUserInput) (*userOutput, error) {
-	id, err := auth.UidFromCtx(ctx)
-	if err != nil {
-		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-	}
-
-	updates := map[string]any{}
- 	if err := populateUpdates(&updates, *in); err != nil {
-		return nil, huma.Error400BadRequest(err.Error())
-	}
-
-	u, err := h.updateUserFieldsByID(ctx, id, updates)
-	if errors.Is(err, errs.ErrNotFound) {
-		return nil, huma.Error404NotFound(err.Error())
-	}
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-
-	return &userOutput{Body: u.ToSummaryDTO()}, nil
-}
-
-// patch password me
-
-func (h *Handler) handlePatchPasswordMe(ctx context.Context, in *PatchPasswordInput) (*userOutput, error) {
-
-	id, err := auth.UidFromCtx(ctx)
-	if err != nil {
-		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-	}
-
-	in.ID = id;
-	return h.patchPassword(ctx, in)
-}
-
-// delete me
-
-func (h *Handler) handleDeleteMe(ctx context.Context, in *deleteUserInput) (*userOutput, error) {
-	id, err := auth.UidFromCtx(ctx)
-	if err != nil {
-		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-	}
-
-	err = h.deleteUserByID(ctx, id)
+func (h *UserHandler) handleDeleteUser(ctx context.Context, in *DeleteUserInput) (*struct{}, error) {
+	err := h.s.DeleteUser(ctx, in.ID)
 	if errors.Is(err, errs.ErrNotFound) {
 		return nil, huma.Error404NotFound(err.Error())
 	}

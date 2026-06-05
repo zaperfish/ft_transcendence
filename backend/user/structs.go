@@ -6,7 +6,7 @@ import (
 
 // register
 
-type createInput struct {
+type CreateInput struct {
     Body CreateUserDTO
 }
 
@@ -18,13 +18,13 @@ type CreateUserDTO struct {
 
 // login
 
-type userLoginDTO struct {
+type UserLoginDTO struct {
     Name string     `json:"name" example:"Max"`
     Password string `json:"password" example:"secret"`
 }
 
-type loginUserInput struct {
-    Body userLoginDTO
+type LoginUserInput struct {
+    Body UserLoginDTO
 }
 
 type LoginUserOutput struct {
@@ -40,7 +40,7 @@ type LogoutUserOutput struct {
 
 // get
 
-type getUserInput struct {
+type GetUserInput struct {
 	ID uint	`path:"id" doc:"User ID" example:"1"`
 }
 
@@ -51,7 +51,7 @@ type UserFilter struct {
 	PageSize int
 }
 
-type getUsersInput struct {
+type GetUsersInput struct {
 	Page     int `query:"page" minimum:"1" default:"1" doc:"Filter by page"`
 	PageSize int `query:"page_size" minimum:"1" default:"10" doc:"Page size"`
 }
@@ -83,6 +83,6 @@ type PatchPasswordDTO struct {
 
 // delete
 
-type deleteUserInput struct {
+type DeleteUserInput struct {
 	ID uint	`path:"id" doc:"User ID" example:"1"`
 }

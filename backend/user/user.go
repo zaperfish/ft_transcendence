@@ -20,8 +20,8 @@ type User struct {
     PasswordHash string
 }
 
-func (u *User) ToSummaryDTO() UserSummaryDTO {
-    return UserSummaryDTO {
+func (u *User) ToSummaryDTO() *UserSummaryDTO {
+    return &UserSummaryDTO {
         ID:         u.ID,
         Name:       u.Name,
         Email:      u.Email,
@@ -30,11 +30,11 @@ func (u *User) ToSummaryDTO() UserSummaryDTO {
     }
 }
 
-type userOutput struct {
+type UserOutput struct {
     Body UserSummaryDTO
 }
 
-type usersOutput struct {
+type UsersOutput struct {
     Body UserListSummaryDTO
 }
 

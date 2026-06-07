@@ -52,6 +52,22 @@
         messages.textContent += `${JSON.stringify(value)}\n`;
       }
 
+      async function loadHistory() {
+        const response = await fetch(`/api/events/${eventID.value}/chat/messages`);
+
+        if (!response.ok) {
+          writeMessage({ history_error: response.status });
+          return;
+        }
+
+        const body = await response.json();
+        messages.textContent = "";
+        writeMessage({ history_count: body.data.length });
+        for (const message of body.data) {
+          writeMessage(message);
+        }
+      }
+
       document.querySelector("#login").onclick = async () => {
         const response = await fetch("/api/auth/login", {
           method: "POST",
@@ -65,7 +81,9 @@
         write("login", { status: response.status });
       };
 
-      document.querySelector("#connect").onclick = () => {
+      document.querySelector("#connect").onclick = async () => {
+        await loadHistory();
+
         const protocol = location.protocol === "https:" ? "wss:" : "ws:";
         const url = `${protocol}//${location.host}/api/events/${eventID.value}/chat/ws`;
 

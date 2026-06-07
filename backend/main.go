@@ -21,6 +21,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/time/rate"
 	"gorm.io/gorm"
 )
@@ -112,6 +113,8 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 	}
 
 	api := humachi.New(r, config)
+
+	r.Handle("/metrics", promhttp.Handler())
 
 	apikey.RegisterRoutes(api, db)
 	event.RegisterRoutes(api, db)

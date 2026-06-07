@@ -42,6 +42,18 @@ services:
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES}
       CONTAINER_RUNTIME: true
 
+  prometheus:
+    container_name: ft_transcendence_prometheus
+    image: prom/prometheus:v3.12.0
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${PROMETHEUS_HOST_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
   postgres:
     container_name: ft_transcendence_postgres
     image: postgres:18.3
@@ -56,3 +68,4 @@ services:
 volumes:
   pgdata:
   caddy_data:
+  prometheus_data:

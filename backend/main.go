@@ -130,19 +130,4 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 	chatHandler := chat.NewHandler(db)
 	chat.RegisterProtectedRoutes(protected, chatHandler)
 	chat.RegisterWebSocketRoutes(r, chatHandler)
-
-	startServer(r)
-}
-
-func startServer(r *chi.Mux) {
-	port, ok := os.LookupEnv("PORT")
-	if !ok || port == "" {
-		port = "4000"
-	}
-
-	log.Println("Listening on :" + port + "...")
-	err := http.ListenAndServe(":"+port, r)
-	if err != nil {
-		log.Fatal(err)
-	}
 }

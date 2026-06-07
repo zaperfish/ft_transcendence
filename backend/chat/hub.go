@@ -1,6 +1,12 @@
 package chat
 
+import (
+	// Std
+	"sync"
+)
+
 type Hub struct {
+	mu sync.Mutex
 	// rooms stores active chat rooms by event ID
 	rooms map[uint]*Room
 }
@@ -8,5 +14,40 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		rooms: make(map[uint]*Room),
+	}
+}
+
+func (h *Hub) getOrCreateRoom(eventID uint) *Room {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	room, ok := h.rooms[eventID]
+	if ok {
+		return room
+	}
+
+	// Rooms remove themselves from the hub through callback when empty
+	room = newRoom(eventID, h.removeRoom)
+	h.rooms[eventID] = room
+	go room.run()
+
+	return room
+}
+
+func (h *Hub) JoinRoom(eventID uint, client *Client) *Room {
+	for {
+		room := h.getOrCreateRoom(eventID)
+		if room.Join(client) {
+			return room
+		}
+	}
+}
+
+func (h *Hub) removeRoom(eventID uint, room *Room) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if h.rooms[eventID] == room {
+		delete(h.rooms, eventID)
 	}
 }

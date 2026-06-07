@@ -3,13 +3,18 @@ package chat
 import (
 	// Std
 	"context"
+	"log"
+	"net/http"
+	"strconv"
 
 	// Intern
 	"ft_transcendence/backend/auth"
 	"ft_transcendence/backend/event"
 
 	// Extern
+	"github.com/coder/websocket"
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 )
 
@@ -62,4 +67,72 @@ func (h *Handler) handleGetEventMessages(ctx context.Context, input *getMessages
 			Data: messagesToDTOsOldestFirst(messages),
 		},
 	}, nil
+}
+
+// raw HTTP/Chi handler for websockets
+func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Request) {
+	eventIDParam := chi.URLParam(r, "id")
+
+	eventID64, err := strconv.ParseUint(eventIDParam, 10, strconv.IntSize)
+	if err != nil {
+		http.Error(w, "invalid event id", http.StatusBadRequest)
+		return
+	}
+
+	eventID := uint(eventID64)
+
+	userID, err := auth.UidFromRequest(r)
+	if err != nil {
+		log.Printf("event chat websocket unauthorized: remote_addr=%s err=%v", r.RemoteAddr, err)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	eventExists, err := event.EventExists(r.Context(), h.DB, eventID)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	if !eventExists {
+		http.Error(w, "event not found", http.StatusNotFound)
+		return
+	}
+
+	isParticipant, err := event.IsParticipant(r.Context(), h.DB, eventID, userID)
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	if !isParticipant {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	conn, err := websocket.Accept(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.CloseNow()
+
+	client := &Client{
+		userID: userID,
+		conn:   conn,
+		send:   make(chan Message, clientSendBuffer),
+	}
+
+	room := h.Hub.JoinRoom(eventID, client)
+
+	ctx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+
+	defer func() {
+		room.Leave(client)
+	}()
+
+	go func() {
+		client.writeLoop(ctx)
+		cancel()
+	}()
+
+	client.readLoop(ctx, room, eventID, h)
 }

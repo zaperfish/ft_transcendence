@@ -27,6 +27,8 @@ type EventRepository interface {
 	IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID string, amount int) error
 	DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID string, amount int) error
 	GetParticipants(ctx context.Context, eventID string) ([]user.User, error)
+	IsParticipant(ctx context.Context, eventID, userID string) (bool, error)
+	GetParticipantEventIDs(ctx context.Context, userID string) ([]uint, error)
 }
 
 type eventRepositoryImpl struct {
@@ -288,6 +290,36 @@ func (r *eventRepositoryImpl) GetParticipants(ctx context.Context, eventID strin
 	}
 
 	return models, nil
+}
+
+func (r *eventRepositoryImpl) IsParticipant(ctx context.Context, eventID, userID string) (bool, error) {
+	var count int64
+
+	err := r.db.WithContext(ctx).
+		Table("event_participants").
+		Where("event_id = ? AND user_id = ?", eventID, userID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID string) ([]uint, error) {
+	var participantEventIDs []uint
+
+	err := r.db.WithContext(ctx).
+		Table("event_participants").
+		Where("user_id = ?", userID).
+		Pluck("event_id", &participantEventIDs).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return participantEventIDs, nil
 }
 
 func IsParticipant(ctx context.Context, db *gorm.DB, eventID uint, userID uint) (bool, error) {

@@ -80,7 +80,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 								className='w-full px-md py-sm border border-border rounded-md bg-surface text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors'
 								placeholder='Please enter event title (3-100 characters)'
 							/>
-							{errors.title && <p className=''>{errors.title.message}</p>}
+							{errors.title && <p className='text-error text-sm'>{errors.title.message}</p>}
 						</div>
 					{/* Description - required, 10 - 500 characters */}
 						<div className='space-y-sm'>

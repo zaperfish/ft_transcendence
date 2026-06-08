@@ -6,7 +6,7 @@ export default function CreateEventCard({ onClick }: CreateEventCardProps) {
 	return (
 		<div
 			onClick={onClick}
-			className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg aspect-3/4 hover:bg-surface-dim cursor-pointer transition-colors duration-200"
+			className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg h-full min-h-[350px] hover:bg-surface-dim cursor-pointer transition-colors duration-200"
 		>
 			<div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mb-md">
 				<PlusIcon className="size-6 text-text-tertiary"/>

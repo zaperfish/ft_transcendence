@@ -44,12 +44,14 @@ export default function EventCard({ data }: EventCardProps) {
 	return (
 		<div className="border border-border rounded-lg overflow-hidden flex flex-col bg-surface shadow-sm hover:shadow-md transition-shadow">
 			{/* Cover page: No image */}
-			<div className="aspect-video bg-surface-container flex items-center justify-center"></div>
+			<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0"></div>
 			{/* Event info */}
 			<div className="p-md flex flex-col flex-1">
-				<h3 className="text-xl font-semibold text-text-primary line-clamp-2 leading-snug">{data.title}</h3>
-				<p className="text-sm text-text-secondary mt-xs line-clamp-3">{data.description}</p>
-				<div className="mt-md space-y-sm text-text-secondary text-sm">
+				<div className="flex-1">
+					<h3 className="text-xl font-semibold text-text-primary line-clamp-2 leading-snug">{data.title}</h3>
+					<p className="text-sm text-text-secondary mt-xs overflow-y-auto max-h-[4.5rem] pr-1">{data.description}</p>
+				</div>
+				<div className="mt-md space-y-sm text-text-secondary text-sm shrink-0">
 					<div className="flex items-center gap-sm">
 						<CalendarIcon className="size-4 text-text-tertiary"/>
 						<span>{dateStr}</span>

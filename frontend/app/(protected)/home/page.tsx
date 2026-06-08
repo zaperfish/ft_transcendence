@@ -7,7 +7,7 @@ import EventCard from "@/components/features/events/EventCard";
 import { QueryClient, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 
-const PAGE_SIZE = 4
+const PAGE_SIZE = 7
 
 export default function HomePage() {
 	const [isFormOpen, setIsFormOpen] = useState(false);

@@ -36,32 +36,17 @@ func (h *UserHandler) handleRegisterUser(ctx context.Context, in *CreateInput) (
 // login
 
 func (h *UserHandler) handleLoginUser(ctx context.Context, in *LoginUserInput) (*LoginUserOutput, error) {
-    u, err := h.getUserByName(ctx, in.Body.Name)
+	u, cookie, err := h.s.LoginUser(ctx, in.Body.Name, in.Body.Password)
     if errors.Is(err, errs.ErrNotFound) {
         return nil, huma.Error401Unauthorized(err.Error())
     }
 	if err != nil {
         return nil, huma.Error500InternalServerError(err.Error())
 	}
-	
-	match, err := auth.MatchPassword(in.Body.Password, u.PasswordHash)
-	if err != nil {
-        return nil, huma.Error500InternalServerError(err.Error())
-    }
-	if !match {
-        return nil, huma.Error401Unauthorized(errs.ErrNotFound.Error())
-	}
-
-	cookie, err := auth.MakeJWTCookieFromID(u.ID)
-    if err != nil {
-        return nil, huma.Error500InternalServerError(err.Error())
-    }
-
     out := &LoginUserOutput {
 		SetCookie: cookie,
-        Body: 	   u.ToSummaryDTO(),
+        Body: 	   *u,
     }
-
     return out, nil
 }
 
@@ -79,7 +64,7 @@ func (h *UserHandler) handleLogoutUser(ctx context.Context, in *struct{}) (*Logo
 // get
 
 func (h *UserHandler) handleGetUser(ctx context.Context, in *GetUserInput) (*UserOutput, error) {
-	u, err := h.s.GetUser(ctx, in.ID)
+	u, err := h.s.GetUserByID(ctx, in.ID)
     if errors.Is(err, errs.ErrNotFound) {
         return nil, huma.Error404NotFound(err.Error())
     }

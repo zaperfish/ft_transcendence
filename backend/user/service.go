@@ -4,6 +4,7 @@ import (
 	// Internal
 	"context"
 	"errors"
+	"net/http"
 
     // Internal
 	"ft_transcendence/backend/auth"
@@ -18,6 +19,7 @@ type UserService interface {
 	PatchUser(ctx context.Context, id uint, in PatchUserDTO) (*UserSummaryDTO, error)
 	PatchPassword(ctx context.Context, id uint, in PatchPasswordDTO) (*UserSummaryDTO, error)
 	DeleteUser(ctx context.Context, id uint) error
+	LoginUser(ctx context.Context, name, password string) (*UserSummaryDTO, http.Cookie, error)
 }
 
 type UserServiceImpl struct {
@@ -164,4 +166,23 @@ func (s *UserServiceImpl) PatchPassword(ctx context.Context, id uint, in PatchPa
 
 func (s *UserServiceImpl) DeleteUser(ctx context.Context, id uint) error {
 	return s.repo.DeleteByID(ctx, id)
+}
+
+func (s *UserServiceImpl) LoginUser(ctx context.Context, name, password string) (*UserSummaryDTO, http.Cookie, error) {
+    u, err := s.repo.GetByName(ctx, name)
+	if err != nil {
+		return nil, http.Cookie{}, err
+	}
+	match, err := auth.MatchPassword(password, u.PasswordHash)
+	if err != nil {
+        return nil, http.Cookie{}, errs.ErrInternal
+    }
+	if !match {
+        return nil, http.Cookie{}, errs.ErrNotFound
+	}
+	cookie, err := auth.MakeJWTCookieFromID(u.ID)
+	if err != nil {
+        return nil, http.Cookie{}, errs.ErrInternal
+    }
+	return u.ToSummaryDTO(), cookie, nil
 }

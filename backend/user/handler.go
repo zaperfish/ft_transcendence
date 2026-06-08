@@ -13,11 +13,27 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-// login
-
 type UserHandler struct {
 	s UserService
 }
+
+// register
+
+func (h *UserHandler) handleRegisterUser(ctx context.Context, in *CreateInput) (*UserOutput, error) {
+	u, err := h.s.CreateUser(ctx, in.Body)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error())
+	}
+	if errors.Is(err, errs.ErrConflict) {
+        return nil, huma.Error409Conflict(err.Error())
+    }
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+    return &UserOutput{Body: *u}, nil
+}
+
+// login
 
 func (h *UserHandler) handleLoginUser(ctx context.Context, in *LoginUserInput) (*LoginUserOutput, error) {
     u, err := h.getUserByName(ctx, in.Body.Name)
@@ -47,49 +63,6 @@ func (h *UserHandler) handleLoginUser(ctx context.Context, in *LoginUserInput) (
     }
 
     return out, nil
-}
-
-// register
-
-func (h *UserHandler) handleRegisterUser(ctx context.Context, in *CreateInput) (*UserOutput, error) {
-
-	if err := validateParameters(&in.Body); err != nil {
-		return nil, huma.Error400BadRequest(err.Error())
-	}
-
-	hash, err := auth.CreateHash(in.Body.Password)
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-
-    u := User {
-        Name:       	in.Body.Name,
-        Email:      	in.Body.Email,
-        PasswordHash:   hash,
-    }
-
-    err = h.creatUser(ctx, &u)
-    if errors.Is(err, errs.ErrConflict) {
-        return nil, huma.Error409Conflict(err.Error())
-    }
-	if err != nil {
-        return nil, huma.Error500InternalServerError(err.Error())
-	}
-
-    return &UserOutput{Body: u.ToSummaryDTO()}, nil
-}
-
-func validateParameters(u *CreateUserDTO) error {
-	if err := auth.ValidUserName(u.Name); err != nil {
-		return err
-	}
-	if err := auth.ValidUserEmail(u.Email); err != nil {
-		return err
-	}
-	if err := auth.ValidUserPassword(u.Password); err != nil {
-		return err
-	}
-	return nil
 }
 
 // logout

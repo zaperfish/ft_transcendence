@@ -50,7 +50,6 @@ func (r *userRepositoryImpl) List(ctx context.Context, filter UserFilter) ([]Use
 }
 
 func (r *userRepositoryImpl) Create(ctx context.Context, input *User) error {
-
 	err := gorm.G[User](r.db.Debug()).Create(ctx, input)
 	if err != nil {
 		return errs.ErrorDB(err)

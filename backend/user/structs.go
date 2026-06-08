@@ -14,6 +14,7 @@ type CreateUserDTO struct {
     Name string     `json:"name" maxLength:"30" example:"Max" doc:"username"`
     Email string    `json:"email" example:"max@email.com" doc:"email address"`
     Password string `json:"password" example:"secret" doc:"password"`
+    PasswordConfirm string `json:"password_confirm" example:"secret" doc:"password confirmation"`
 }
 
 // login

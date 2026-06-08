@@ -11,6 +11,7 @@ import (
 )
 
 type UserService interface {
+	CreateUser(ctx context.Context, in CreateUserDTO) (*UserSummaryDTO, error)
 	GetUserByID(ctx context.Context, id uint) (*UserSummaryDTO, error)
 	GetUserByName(ctx context.Context, name string) (*UserSummaryDTO, error)
 	GetUsers(ctx context.Context, page, pageSize int) ([]UserSummaryDTO, error)
@@ -25,6 +26,45 @@ type UserServiceImpl struct {
 
 func NewUserService(repo UserRepository) UserService {
 	return &UserServiceImpl{repo: repo}
+}
+
+func (s *UserServiceImpl) CreateUser(ctx context.Context, in CreateUserDTO) (*UserSummaryDTO, error) {
+	if err := validateParameters(&in); err != nil {
+		return nil, errs.ErrInvalidInput
+	}
+
+	hash, err := auth.CreateHash(in.Password)
+	if err != nil {
+		return nil, errs.ErrInternal
+	}
+
+    u := User {
+        Name:       	in.Name,
+        Email:      	in.Email,
+        PasswordHash:   hash,
+    }
+
+    if err = s.repo.Create(ctx, &u); err != nil {
+		return nil, err
+	}
+
+    return u.ToSummaryDTO(), nil
+}
+
+func validateParameters(u *CreateUserDTO) error {
+	if err := auth.ValidUserName(u.Name); err != nil {
+		return err
+	}
+	if err := auth.ValidUserEmail(u.Email); err != nil {
+		return err
+	}
+	if err := auth.ValidUserPassword(u.Password); err != nil {
+		return err
+	}
+	if u.Password != u.PasswordConfirm {
+		return errors.New("passwords do not  match")
+	}
+	return nil
 }
 
 func (s *UserServiceImpl) GetUserByID(ctx context.Context, id uint) (*UserSummaryDTO, error) {

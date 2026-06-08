@@ -3,6 +3,7 @@ import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon } from 'lucide-react';
 import type { EventEntity } from "@/types/event";
 import { useState } from "react";
 import { request } from "@/lib/api/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EventCardProps {
 	data: EventEntity;
@@ -23,19 +24,35 @@ export default function EventCard({ data }: EventCardProps) {
 		hour: "2-digit",
 		minute: "2-digit",
 	});
+
+	const queryClient = useQueryClient();
 	// This api endpoint should be negotiated with backend
-	const handleRegister = async () => {
+	const handleRegister = async (eventId: string) => {
 		setIsRegistering(true);
 		setErrorMsg(null);
+		queryClient.setQueryData(["events"], (oldData: any) => {
+			if (!oldData) return oldData;
+			const newPages = oldData.pages.map((page: any) => ({
+				...page,
+				data: page.data.map((event: any) =>
+					event.id === eventId
+						? { ...event, num_registered: event.num_registered + 1 }
+						: event
+				),
+			}));
+			return { ...oldData, pages: newPages };
+		});
 		try {
 			const res = await request<{ message: string }>(
-				`/api/events/${data.id}/register`, {
+				`/api/me/join/${data.id}`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 			});
 			setIsRegistered(true);
+			queryClient.invalidateQueries({ queryKey: ["events"] });
 		} catch (error) {
 			setErrorMsg("Registration failed, please retry");
+			queryClient.invalidateQueries({ queryKey: ["events"] });
 		} finally {
 			setIsRegistering(false);
 		}
@@ -71,7 +88,7 @@ export default function EventCard({ data }: EventCardProps) {
 				</div>
 				<div className="mt-auto pt-md">
 					<Button
-						onClick={handleRegister}
+						onClick={() => handleRegister(data.id)}
 						disabled={isRegistering || isRegistered}
 						className={`w-full ${
 							isRegistered

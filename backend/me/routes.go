@@ -65,15 +65,15 @@ func RegisterRoutes(api huma.API, h MeHandler) {
         Tags:           []string{"Me"},
     }, h.handleJoinEventMe)
 
-		//  huma.Register(api, huma.Operation{
-		//   OperationID:    "events-me",
-		//   Method:         http.MethodGet,
-		//   Path:           "/api/me/events",
-		// Summary:		"Get events logged in user is registered for",
-		//       DefaultStatus:  http.StatusOK,
-		//       Tags:           []string{"Me"},
-		//   }, h.handleEventsMe)
-		//
+	huma.Register(api, huma.Operation{
+		OperationID:    "list-events-me",
+		Method:         http.MethodGet,
+		Path:           "/api/me/events",
+		Summary:		"List events logged in user is registered for",
+		DefaultStatus:  http.StatusOK,
+		Tags:           []string{"Me"},
+	}, h.handleEventsMe)
+
 		//   huma.Register(api, huma.Operation{
 		//       OperationID:    "admin-events-me",
 		//       Method:         http.MethodGet,

@@ -21,6 +21,7 @@ type EventRepository interface {
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (*Event, error)
 	List(ctx context.Context, limit, offset int) ([]Event, int64, error)
+	ListByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error)
 	CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error
 	DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error
 	IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID string, amount int) error
@@ -149,6 +150,26 @@ func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Ev
 		Scan(ctx, &total)
 
 	return events, total, nil
+}
+
+func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error) {
+
+	var events []Event
+	var count int64
+
+	err := r.db.WithContext(ctx).
+		Joins("JOIN event_participants ep ON ep.event_id = events.id").
+		Where("ep.user_id = ?", id).
+		Limit(limit).
+		Offset(offset).
+		Find(&events).
+		Count(&count).Error
+
+	if err != nil {
+		return nil, 0, errs.ErrorDB(err)
+	}
+
+	return events, count, nil
 }
 
 func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error {

@@ -61,7 +61,7 @@ type CreateEventInput struct {
 		StartTime       time.Time `json:"start_time"                                      example:"2026-06-15T18:00:00Z"                doc:"Start time of the event"`
 		Duration        int       `json:"duration"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    string    `json:"location_name"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
-		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin"doc:"Address of the location"`
+		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
 		MaxCapacity     int       `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
 	}
 }
@@ -97,7 +97,7 @@ type UpdateEventInput struct {
 		StartTime       *time.Time `json:"start_time,omitempty"                                      example:"2026-06-15T18:00:00Z"                doc:"Start time of the event"`
 		Duration        *int       `json:"duration,omitempty"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    *string    `json:"location_name,omitempty"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
-		LocationAddress *string    `json:"location_address,omitempty" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin"doc:"Address of the location"`
+		LocationAddress *string    `json:"location_address,omitempty" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
 		MaxCapacity     *int       `json:"max_capacity,omitempty"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
 	}
 }

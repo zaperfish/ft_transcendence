@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 /**
  * A registration form component with client-side validation and error handling.
  *
- * Collects username, email, and password, validates inputs, and submits
+ * Collects username, email, and password (need confirmation), validates inputs, and submits
  * the data to the registration API. On success, redirects to the login page
  * with a query parameter indicating successful registration. Displays
  * field-level errors and general API errors (e.g., duplicate user or network issues).
@@ -20,7 +20,8 @@ export function RegisterForm() {
 	const [username, setUsername] = useState('');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [errors, setErrors] = useState< { username?: string; email?: string; password?: string; general?: string }>({});
+	const [confirmPassword, setConfirmPassword] =useState('');
+	const [errors, setErrors] = useState< { username?: string; email?: string; password?: string; confirmPassword?: string; general?: string }>({});
 	const [loading, setLoading] = useState(false);
 	const router = useRouter();
 
@@ -34,6 +35,10 @@ export function RegisterForm() {
 			newErrors.email = 'Invalid email address';
 		if (!password.trim())
 			newErrors.password = "Please enter your password";
+		if (!confirmPassword.trim())
+			newErrors.confirmPassword = "Please confirm your password";
+		else if (confirmPassword !== password)
+			newErrors.confirmPassword = "Passwords do not match";
 		setErrors(newErrors);
 		return Object.keys(newErrors).length === 0;
 	};
@@ -44,7 +49,7 @@ export function RegisterForm() {
 		setLoading(true);
 		setErrors({});
 		try {
-			await register({ name: username, email, password });
+			await register({ name: username, email, password, password_confirm: confirmPassword });
 			router.push('/login?registered=true');
 		} catch (err: any) {
 			if (err.status === 409) {
@@ -62,6 +67,7 @@ export function RegisterForm() {
 			<Input value={username} onChange={e => setUsername(e.target.value)} placeholder='Username' error={errors.username} />
 			<Input value={email} onChange={e => setEmail(e.target.value)} placeholder='Email' error={errors.email} />
 			<Input value={password} onChange={e => setPassword(e.target.value)} placeholder='Password' error={errors.password} />
+			<Input value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder='Confirm Password' error={errors.confirmPassword} />
 			{errors.general && <div className="text-sm text-error mt-xs">{errors.general}</div>}
 			<Button disabled={loading} onClick={handleSubmit}>{loading ? "loading..." : "register"}</Button>
 		</div>

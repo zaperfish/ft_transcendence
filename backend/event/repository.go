@@ -20,7 +20,7 @@ type EventRepository interface {
 	Update(ctx context.Context, id string, updated map[string]any) (*Event, error)
 	Delete(ctx context.Context, id string) error
 	Get(ctx context.Context, id string) (*Event, error)
-	List(ctx context.Context, limit, offset int) ([]Event, error)
+	List(ctx context.Context, limit, offset int) ([]Event, int64, error)
 	CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error
 	DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error
 	IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID string, amount int) error
@@ -131,19 +131,24 @@ func (r *eventRepositoryImpl) Get(ctx context.Context, id string) (*Event, error
 	return model.ToDomain(), nil
 }
 
-func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Event, error) {
+func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Event, int64, error) {
 	models, err := gorm.G[GormEventModel](r.db.Debug()).Limit(limit).Offset(offset).Find(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve list of events: %w", err)
+		return nil, 0, fmt.Errorf("failed to retrieve list of events: %w", err)
 	}
 
-	total := len(models)
-	events := make([]Event, total)
+	num_retrieved := len(models)
+	events := make([]Event, num_retrieved)
 	for i, model := range models {
 		events[i] = *model.ToDomain()
 	}
 
-	return events, nil
+	var total int64
+	gorm.G[GormEventModel](r.db.Debug()).
+		Select("count(*)").
+		Scan(ctx, &total)
+
+	return events, total, nil
 }
 
 func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error {

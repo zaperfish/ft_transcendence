@@ -9,7 +9,7 @@ import (
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
-func RegisterPublicRoutes(api huma.API, h *UserHandler) {
+func RegisterPublicRoutes(api huma.API, h UserHandler) {
 
     huma.Register(api, huma.Operation{
         OperationID:    "register-user",
@@ -41,7 +41,9 @@ func RegisterPublicRoutes(api huma.API, h *UserHandler) {
     }, h.handleLogoutUser)
 }
 
-func RegisterProtectedRoutes(api huma.API, h *UserHandler) {
+func RegisterProtectedRoutes(api huma.API, h UserHandler) {
+
+
 
     huma.Register(api, huma.Operation{
         OperationID:    "get-user-by-id",

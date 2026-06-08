@@ -9,10 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type Handler struct {
-    DB *gorm.DB
-}
-
 type User struct {
     gorm.Model
     Name string     `gorm:"unique"`

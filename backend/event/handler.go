@@ -275,7 +275,7 @@ func (h *EventHandler) ListParticipants(ctx context.Context, input *ListParticip
 	total := len(users)
 	data := make([]user.UserSummaryDTO, total)
 	for i, user := range users {
-		data[i] = user.ToSummaryDTO()
+		data[i] = *user.ToSummaryDTO()
 	}
 
 	return &ListParticipantsOutput{

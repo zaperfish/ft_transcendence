@@ -11,10 +11,15 @@ import (
 
     // External
 	"github.com/danielgtaylor/huma/v2"
+	"gorm.io/gorm"
 )
 
 type UserHandler struct {
 	s UserService
+}
+
+func NewHandler(db *gorm.DB) UserHandler {
+	return UserHandler{s: NewUserService(NewUserRepository(db))}
 }
 
 // register

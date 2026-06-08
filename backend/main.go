@@ -116,16 +116,17 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 	apikey.RegisterRoutes(api, db)
 	event.RegisterRoutes(api, db)
 
+	userHandler := user.NewHandler(db)
 	// Public Routes
 	public := huma.NewGroup(api, "")
 
-	user.RegisterPublicRoutes(public, user.Handler{DB: db})
+	user.RegisterPublicRoutes(public, userHandler)
 
 	// Protected Routes
 	protected := huma.NewGroup(api, "")
 	protected.UseMiddleware(auth.Verifier(api))
 	protected.UseMiddleware(auth.Refresher(api))
-	user.RegisterProtectedRoutes(protected, user.Handler{DB: db})
+	user.RegisterProtectedRoutes(protected, userHandler)
 
 	chatHandler := chat.NewHandler(db)
 	chat.RegisterProtectedRoutes(protected, chatHandler)

@@ -11,7 +11,8 @@ import (
 )
 
 type UserService interface {
-	GetUser(ctx context.Context, id uint) (*UserSummaryDTO, error)
+	GetUserByID(ctx context.Context, id uint) (*UserSummaryDTO, error)
+	GetUserByName(ctx context.Context, name string) (*UserSummaryDTO, error)
 	GetUsers(ctx context.Context, page, pageSize int) ([]UserSummaryDTO, error)
 	PatchUser(ctx context.Context, id uint, in PatchUserDTO) (*UserSummaryDTO, error)
 	PatchPassword(ctx context.Context, id uint, in PatchPasswordDTO) (*UserSummaryDTO, error)
@@ -26,8 +27,16 @@ func NewUserService(repo UserRepository) UserService {
 	return &UserServiceImpl{repo: repo}
 }
 
-func (s *UserServiceImpl) GetUser(ctx context.Context, id uint) (*UserSummaryDTO, error) {
+func (s *UserServiceImpl) GetUserByID(ctx context.Context, id uint) (*UserSummaryDTO, error) {
 	u, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return u.ToSummaryDTO(), nil
+}
+
+func (s *UserServiceImpl) GetUserByName(ctx context.Context, name string) (*UserSummaryDTO, error) {
+	u, err := s.repo.GetByName(ctx, name)
 	if err != nil {
 		return nil, err
 	}

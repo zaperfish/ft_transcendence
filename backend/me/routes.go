@@ -9,7 +9,7 @@ import (
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
-func RegisterRoutes(api huma.API, h Handler) {
+func RegisterRoutes(api huma.API, h MeHandler) {
 
     huma.Register(api, huma.Operation{
         OperationID:    "get-me",
@@ -47,21 +47,21 @@ func RegisterRoutes(api huma.API, h Handler) {
         Tags:           []string{"Me"},
     }, h.handleDeleteMe)
 
-	  huma.Register(api, huma.Operation{
-		  OperationID:    "events-me",
-		  Method:         http.MethodGet,
-		  Path:           "/api/me/events",
-		Summary:		"Get events logged in user is registered for",
-		      DefaultStatus:  http.StatusOK,
-		      Tags:           []string{"Me"},
-		  }, h.handleEventsMe)
-
-		  huma.Register(api, huma.Operation{
-		      OperationID:    "admin-events-me",
-		      Method:         http.MethodGet,
-		      Path:           "/api/me/admin-events",
-		Summary:		"Get events logged in user administers",
-		      DefaultStatus:  http.StatusOK,
-		      Tags:           []string{"Me"},
-		  }, h.handleAdminEventsMe)
+		//  huma.Register(api, huma.Operation{
+		//   OperationID:    "events-me",
+		//   Method:         http.MethodGet,
+		//   Path:           "/api/me/events",
+		// Summary:		"Get events logged in user is registered for",
+		//       DefaultStatus:  http.StatusOK,
+		//       Tags:           []string{"Me"},
+		//   }, h.handleEventsMe)
+		//
+		//   huma.Register(api, huma.Operation{
+		//       OperationID:    "admin-events-me",
+		//       Method:         http.MethodGet,
+		//       Path:           "/api/me/admin-events",
+		// Summary:		"Get events logged in user administers",
+		//       DefaultStatus:  http.StatusOK,
+		//       Tags:           []string{"Me"},
+		//   }, h.handleAdminEventsMe)
 }

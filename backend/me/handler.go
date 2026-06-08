@@ -12,6 +12,7 @@ import (
 
     // External
 	"github.com/danielgtaylor/huma/v2"
+	"gorm.io/gorm"
 )
 
 // get me
@@ -20,13 +21,17 @@ type MeHandler struct {
 	su user.UserService
 }
 
+func NewHandler(db *gorm.DB) MeHandler {
+	return MeHandler{su: user.NewUserService(user.NewUserRepository(db))}
+}
+
 func (h *MeHandler) handleGetMe(ctx context.Context, in *struct{}) (*user.UserOutput, error) {
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
 
-	u, err := h.su.GetUser(ctx, id)
+	u, err := h.su.GetUserByID(ctx, id)
     if errors.Is(err, errs.ErrNotFound) {
         return nil, huma.Error404NotFound(err.Error())
     }

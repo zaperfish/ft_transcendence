@@ -8,7 +8,7 @@ import (
 	"time"
 
 	// Intern
-	// "ft_transcendence/backend/user"
+	"ft_transcendence/backend/auth"
 
 	// Extern
 	"github.com/danielgtaylor/huma/v2"
@@ -19,17 +19,22 @@ type EventHandler struct {
 }
 
 type EventDTO struct {
-	ID              string    `json:"id" doc:"ID of the event"`
-	CreatedAt       time.Time `json:"created_at" doc:"Time the event got created"`
-	UpdatedAt       time.Time `json:"updated_at" doc:"Time the event got updated"`
-	Title           string    `json:"title" doc:"Name of the event"`
-	Description     string    `json:"description" doc:"Description of the event"`
-	StartTime       time.Time `json:"start_time" doc:"Start time of the event"`
-	Duration        int       `json:"duration" doc:"Duration of the event in minutes"`
-	LocationName    string    `json:"location_name" doc:"Name of the location"`
-	LocationAddress string    `json:"location_address" doc:"Address of the location"`
-	MaxCapacity     int       `json:"max_capacity" doc:"Maximum number of people the event supports"`
-	NumRegistered   int       `json:"num_registered" doc:"Number of people who registered for this event"`
+	ID              string        `json:"id" doc:"ID of the event"`
+	CreatedAt       time.Time     `json:"created_at" doc:"Time the event got created"`
+	UpdatedAt       time.Time     `json:"updated_at" doc:"Time the event got updated"`
+	Title           string        `json:"title" doc:"Name of the event"`
+	Description     string        `json:"description" doc:"Description of the event"`
+	StartTime       time.Time     `json:"start_time" doc:"Start time of the event"`
+	Duration        int           `json:"duration" doc:"Duration of the event in minutes"`
+	LocationName    string        `json:"location_name" doc:"Name of the location"`
+	LocationAddress string        `json:"location_address" doc:"Address of the location"`
+	MaxCapacity     int           `json:"max_capacity" doc:"Maximum number of people the event supports"`
+	NumRegistered   int           `json:"num_registered" doc:"Number of people who registered for this event"`
+	Self            *EventSelfDTO `json:"self,omitempty" doc:"Information about the authenticated user if authenticated"`
+}
+
+type EventSelfDTO struct {
+	IsParticipant bool `json:"is_participant" doc:"Shows if authenticated user is a participant of the event"`
 }
 
 func (e *Event) ToDTO() EventDTO {
@@ -191,7 +196,16 @@ type ListEventsOutputBody struct {
 }
 
 func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (*ListEventsOutput, error) {
-	events, total, err := h.service.ListEvents(ctx, input.PageSize, input.PageSize*(input.Page-1))
+	user_id, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, huma.Error401Unauthorized("no authenticated user", err)
+	}
+
+	if err != nil {
+		return nil, huma.Error404NotFound("no user id found", err)
+	}
+
+	events, total, err := h.service.ListEvents(ctx, string(user_id), input.PageSize, input.PageSize*(input.Page-1))
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to list events", err)
 	}
@@ -199,7 +213,8 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 	num_retrieved := len(events)
 	data := make([]EventDTO, num_retrieved)
 	for i, event := range events {
-		data[i] = event.ToDTO()
+		data[i] = event.Event.ToDTO()
+		data[i].Self.IsParticipant = event.IsParticipant
 	}
 
 	return &ListEventsOutput{

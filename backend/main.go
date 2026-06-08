@@ -12,6 +12,7 @@ import (
 	"ft_transcendence/backend/chat"
 	"ft_transcendence/backend/db"
 	"ft_transcendence/backend/event"
+	"ft_transcendence/backend/me"
 	"ft_transcendence/backend/middleware"
 	"ft_transcendence/backend/user"
 
@@ -117,6 +118,7 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 	event.RegisterRoutes(api, db)
 
 	userHandler := user.NewHandler(db)
+	meHandler := me.NewHandler(db)
 	// Public Routes
 	public := huma.NewGroup(api, "")
 
@@ -127,6 +129,7 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 	protected.UseMiddleware(auth.Verifier(api))
 	protected.UseMiddleware(auth.Refresher(api))
 	user.RegisterProtectedRoutes(protected, userHandler)
+	me.RegisterRoutes(protected, meHandler)
 
 	chatHandler := chat.NewHandler(db)
 	chat.RegisterProtectedRoutes(protected, chatHandler)

@@ -126,5 +126,8 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 	protected.UseMiddleware(auth.Verifier(api))
 	protected.UseMiddleware(auth.Refresher(api))
 	user.RegisterProtectedRoutes(protected, user.Handler{DB: db})
-	chat.RegisterProtectedRoutes(protected, chat.NewHandler(db))
+
+	chatHandler := chat.NewHandler(db)
+	chat.RegisterProtectedRoutes(protected, chatHandler)
+	chat.RegisterWebSocketRoutes(r, chatHandler)
 }

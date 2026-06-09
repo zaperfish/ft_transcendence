@@ -196,7 +196,7 @@ func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB
 	}
 
 	var count int64
-	db.Table("event_users").Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count)
+	db.Table("event_users").Where("event_id = ? AND user_id = ? AND deleted_at IS NULL", eventID, userID).Count(&count)
 	if count > 0 {
 		return fmt.Errorf("user is already participant")
 	}
@@ -214,61 +214,35 @@ func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB
 	return nil
 }
 
-// func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error {
-// 	db := r.db
-// 	if tx != nil {
-// 		db = tx
-// 	}
-//
-// 	var count int64
-// 	db.Table("event_participants").Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count)
-// 	if count > 0 {
-// 		return fmt.Errorf("user is already participant")
-// 	}
-//
-// 	event, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to find event: %w", err)
-// 	}
-//
-// 	user, err := gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to find user: %w", err)
-// 	}
-//
-// 	err = db.Model(&event).Association("Participants").Append(&user)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to add user to event: %w", err)
-// 	}
-//
-// 	return nil
-// }
-//
 func (r *eventRepositoryImpl) DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error {
 	db := r.db
 	if tx != nil {
 		db = tx
 	}
 
-	var count int64
-	db.Table("event_participants").Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count)
-	if count == 0 {
-		return fmt.Errorf("user is not a participant")
-	}
-
-	event, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
+	_, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to find event: %w", err)
 	}
 
-	user, err := gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)
+	_, err = gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	err = db.Model(&event).Association("Participants").Delete(&user)
+	var count int64
+	db.Table("event_users").Where("event_id = ? AND user_id = ? AND deleted_at IS NULL", eventID, userID).Count(&count)
+	if count <= 0 {
+		return fmt.Errorf("user is not a participant")
+	}
+
+	err = db.
+		WithContext(ctx).
+		Where("user_id = ? AND event_id = ?", userID, eventID).
+		Delete(&EventUsers{}).
+		Error
 	if err != nil {
-		return fmt.Errorf("failed to add user to event: %w", err)
+		return fmt.Errorf("failed to delete user from event: %w", err)
 	}
 
 	return nil

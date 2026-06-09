@@ -111,10 +111,9 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 			Description: "Enter api key as: Bearer <key>",
 		},
 		"SessionToken": {
-			Type:        "apiKey",
-			Scheme:      "cookie",
-			Name: 		 "jwt",
-			Description: "Acquire this by issuing a successful POST request to /api/auth/login",
+			Type:        "http",
+			Scheme:      "bearer",
+			Description: "JWT",
 		},
 	}
 

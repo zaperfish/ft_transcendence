@@ -22,7 +22,7 @@ type EventRepository interface {
 	Get(ctx context.Context, id uint) (*Event, error)
 	List(ctx context.Context, limit, offset int) ([]Event, int64, error)
 	ListByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error)
-	CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error
+	CreateParticipantAs(ctx context.Context, tx *gorm.DB, eventID, userID uint, role string) error
 	DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error
 	IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error
 	DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error
@@ -190,7 +190,7 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 	return events, count, nil
 }
 
-func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error {
+func (r *eventRepositoryImpl) CreateParticipantAs(ctx context.Context, tx *gorm.DB, eventID, userID uint, role string) error {
 	db := r.db
 	if tx != nil {
 		db = tx
@@ -215,7 +215,7 @@ func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB
 	err = db.WithContext(ctx).Create(&EventUsers{
 		UserID: 	userID,
 		EventID: 	eventID,
-		Role:		"member",
+		Role:		role,
 	}).Error
 
 	if err != nil {

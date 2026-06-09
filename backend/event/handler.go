@@ -214,7 +214,8 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 type AddParticipantInput struct {
 	EventID uint `path:"id" doc:"Event ID"`
 	Body    struct {
-		UserID uint `json:"user_id"`
+		UserID uint   `json:"user_id"`
+		Role   string `json:"role"`
 	}
 }
 
@@ -225,7 +226,12 @@ type AddParticipantOutput struct {
 
 func (h *EventHandler) AddParticipant(ctx context.Context, input *AddParticipantInput) (*AddParticipantOutput, error) {
 
-	err := h.service.AddParticipant(ctx, input.EventID, input.Body.UserID)
+	role := input.Body.Role
+	if role == "" {
+		role = "member"
+	}
+
+	err := h.service.AddParticipantAs(ctx, input.EventID, input.Body.UserID, role)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("", err)
 	}

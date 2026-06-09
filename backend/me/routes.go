@@ -47,14 +47,14 @@ func RegisterRoutes(api huma.API, h MeHandler) {
         Tags:           []string{"Me"},
     }, h.handleDeleteMe)
 
-		//   huma.Register(api, huma.Operation{
-		//       OperationID:    "create-event-me",
-		//       Method:         http.MethodDelete,
-		//       Path:           "/api/me/create-event",
-		// Summary:		"Create event as logged in user",
-		//       DefaultStatus:  http.StatusNoContent,
-		//       Tags:           []string{"Me"},
-		//   }, h.handleCreateEventMe)
+	huma.Register(api, huma.Operation{
+		OperationID:    "create-event-me",
+		Method:         http.MethodDelete,
+		Path:           "/api/me/create-event",
+		Summary:		"Create event as logged in user",
+		DefaultStatus:  http.StatusNoContent,
+		Tags:           []string{"Me"},
+	}, h.handleCreateEventMe)
 
     huma.Register(api, huma.Operation{
         OperationID:    "join-event-me",

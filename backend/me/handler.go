@@ -115,7 +115,7 @@ func (h *MeHandler) handleJoinEventMe(ctx context.Context, input *JoinEventInput
 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
 
-	err = h.se.AddParticipant(ctx, input.EventID, uid)
+	err = h.se.AddParticipantAs(ctx, input.EventID, uid, "member")
 	if err != nil {
 		return nil, huma.Error500InternalServerError("", err)
 	}
@@ -149,33 +149,34 @@ func (h *MeHandler) handleEventsMe(ctx context.Context, input *event.ListEventsI
 
 // create event
 
-// func (h *MeHandler) handleCreateEventMe(ctx context.Context,  input *event.CreateEventInput) (*event.CreateEventOutput, error) {
-// 	id, err := auth.UidFromCtx(ctx)
-// 	if err != nil {
-// 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-// 	}
-//
-// 	event := event.Event{
-// 		Title:           input.Body.Title,
-// 		Description:     input.Body.Description,
-// 		StartTime:       input.Body.StartTime,
-// 		Duration:        input.Body.Duration,
-// 		LocationName:    input.Body.LocationName,
-// 		LocationAddress: input.Body.LocationAddress,
-// 		MaxCapacity:     input.Body.MaxCapacity,
-// 	}
-//
-// 	created, err := h.se.CreateEvent(ctx, &event)
-// 	if err != nil {
-// 		return nil, huma.Error500InternalServerError("handler: failed to create event", err)
-// 	}
-//
-// 	err := h.service.AddParticipant(ctx, input.EventID, userID)
-// 	if err != nil {
-// 		return nil, huma.Error500InternalServerError("", err)
-// 	}
-//
-// }
+func (h *MeHandler) handleCreateEventMe(ctx context.Context,  input *event.CreateEventInput) (*event.CreateEventOutput, error) {
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
+	}
+
+	newEvent := event.Event{
+		Title:           input.Body.Title,
+		Description:     input.Body.Description,
+		StartTime:       input.Body.StartTime,
+		Duration:        input.Body.Duration,
+		LocationName:    input.Body.LocationName,
+		LocationAddress: input.Body.LocationAddress,
+		MaxCapacity:     input.Body.MaxCapacity,
+	}
+
+	created, err := h.se.CreateEvent(ctx, &newEvent)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("handler: failed to create event", err)
+	}
+
+	err = h.se.AddParticipantAs(ctx, created.ID, userID, "admin")
+	if err != nil {
+		return nil, huma.Error500InternalServerError("", err)
+	}
+
+	return &event.CreateEventOutput{Body: created.ToDTO()}, nil
+}
 
 // func (h *Handler) handleAdminEventsMe(ctx context.Context. in *struct{}) (*event.ListEventsOutput, error) {
 // 	id, err := auth.UidFromCtx(ctx)

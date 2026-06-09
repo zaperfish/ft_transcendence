@@ -17,7 +17,7 @@ type EventService interface {
 	GetEvent(ctx context.Context, id uint) (*Event, error)
 	ListEvents(ctx context.Context, limit, offset int) ([]Event, int64, error)
 	ListEventsByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error)
-	AddParticipant(ctx context.Context, eventID, userID uint) error
+	AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error
 	RemoveParticipant(ctx context.Context, eventID, userID uint) error
 	ListParticipants(ctx context.Context, eventID uint) ([]user.User, error)
 }
@@ -123,9 +123,9 @@ func (s *eventServiceImpl) ListEventsByUserID(ctx context.Context, limit, offset
 	return events, total, nil
 }
 
-func (s *eventServiceImpl) AddParticipant(ctx context.Context, eventID, userID uint) error {
+func (s *eventServiceImpl) AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := s.repo.CreateParticipant(ctx, tx, eventID, userID); err != nil {
+		if err := s.repo.CreateParticipantAs(ctx, tx, eventID, userID, role); err != nil {
 			return fmt.Errorf("failed to create participant: %w", err)
 		}
 

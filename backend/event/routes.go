@@ -6,6 +6,7 @@ import (
 
 	// Intern
 	"ft_transcendence/backend/apikey"
+	"ft_transcendence/backend/auth"
 
 	// Extern
 
@@ -70,6 +71,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Summary:       "List events",
 		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusOK,
+		Middlewares: huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
 	}, eventHandler.ListEvents)
 
 	huma.Register(api, huma.Operation{

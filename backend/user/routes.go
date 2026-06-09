@@ -25,7 +25,7 @@ func RegisterPublicRoutes(api huma.API, h UserHandler) {
         Method:         http.MethodPost,
         Path:           "/api/auth/login",
 		Summary:		"Login",
-		Description:	"Acquire a JWT cookie",
+		Description:	"Acquire a testing JWT",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Authentification"},
     }, h.handleLoginUser)
@@ -44,7 +44,7 @@ func RegisterPublicRoutes(api huma.API, h UserHandler) {
         OperationID:    "get-session-token",
         Method:         http.MethodGet,
         Path:           "/api/auth/token",
-		Summary:		"Get an auth cookie",
+		Summary:		"Get a JWT session token",
 		Description:	"Creates user \"dummy\" \"dummy@dummy.com\" and/or returns a jwt session token for them (this endpoint should be removed in production)",
         DefaultStatus:  http.StatusCreated,
         Tags:           []string{"Authentification"},

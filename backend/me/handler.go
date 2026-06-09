@@ -106,16 +106,16 @@ func (h *MeHandler) handleDeleteMe(ctx context.Context, in *struct{}) (*struct{}
 // join event
 
 type JoinEventInput struct {
-	EventID string `path:"id" doc:"Event ID"`
+	EventID uint `path:"id" doc:"Event ID"`
 }
 
 func (h *MeHandler) handleJoinEventMe(ctx context.Context, input *JoinEventInput) (*event.AddParticipantOutput, error) {
-	sub, err := auth.ClaimFromCtx(ctx)
+	uid, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
 
-	err = h.se.AddParticipant(ctx, input.EventID, sub)
+	err = h.se.AddParticipant(ctx, input.EventID, uid)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("", err)
 	}

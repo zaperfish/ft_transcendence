@@ -4,7 +4,6 @@ import (
 	// Std
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	// Intern
@@ -17,16 +16,16 @@ import (
 
 type EventRepository interface {
 	Create(ctx context.Context, event *Event) (*Event, error)
-	Update(ctx context.Context, id string, updated map[string]any) (*Event, error)
-	Delete(ctx context.Context, id string) error
-	Get(ctx context.Context, id string) (*Event, error)
+	Update(ctx context.Context, id uint, updated map[string]any) (*Event, error)
+	Delete(ctx context.Context, id uint) error
+	Get(ctx context.Context, id uint) (*Event, error)
 	List(ctx context.Context, limit, offset int) ([]Event, int64, error)
 	ListByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error)
-	CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error
-	DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error
-	IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID string, amount int) error
-	DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID string, amount int) error
-	GetParticipants(ctx context.Context, eventID string) ([]user.User, error)
+	CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error
+	DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error
+	IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error
+	DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error
+	GetParticipants(ctx context.Context, eventID uint) ([]user.User, error)
 }
 
 type eventRepositoryImpl struct {
@@ -52,12 +51,12 @@ type GormEventModel struct {
 	Participants []user.User `gorm:"many2many:event_participants;joinForeignKey:EventID;joinReferences:UserID"`
 }
 
-type GormEventsUsersModel struct {
+type EventUsers struct {
 	gorm.Model
 
 	UserID	uint	`gorm:"primaryKey"`
 	EventID	uint	`gorm:"primaryKey"`
-	Role	string	`gorm:"not null;"`
+	Role	string	`gorm:"not null;"`	// admin, member
 }
 
 func (GormEventModel) TableName() string {
@@ -66,7 +65,7 @@ func (GormEventModel) TableName() string {
 
 func (m *GormEventModel) ToDomain() *Event {
 	return &Event{
-		ID:              strconv.FormatUint(uint64(m.ID), 10),
+		ID:              m.ID,
 		CreatedAt:       m.CreatedAt,
 		UpdatedAt:       m.UpdatedAt,
 		Title:           m.Title,
@@ -100,7 +99,7 @@ func (r *eventRepositoryImpl) Create(ctx context.Context, event *Event) (*Event,
 	return model.ToDomain(), nil
 }
 
-func (r *eventRepositoryImpl) Update(ctx context.Context, id string, updates map[string]any) (*Event, error) {
+func (r *eventRepositoryImpl) Update(ctx context.Context, id uint, updates map[string]any) (*Event, error) {
 	rows, err := gorm.G[map[string]any](r.db.Debug()).Table("events").Where("id = ?", id).Updates(ctx, updates)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update event: %w", err)
@@ -118,7 +117,7 @@ func (r *eventRepositoryImpl) Update(ctx context.Context, id string, updates map
 	return model.ToDomain(), nil
 }
 
-func (r *eventRepositoryImpl) Delete(ctx context.Context, id string) error {
+func (r *eventRepositoryImpl) Delete(ctx context.Context, id uint) error {
 	rows, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", id).Delete(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to delete event: %w", err)
@@ -131,7 +130,7 @@ func (r *eventRepositoryImpl) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *eventRepositoryImpl) Get(ctx context.Context, id string) (*Event, error) {
+func (r *eventRepositoryImpl) Get(ctx context.Context, id uint) (*Event, error) {
 	model, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", id).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve event: %w", err)
@@ -180,29 +179,34 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 	return events, count, nil
 }
 
-func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error {
+func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error {
 	db := r.db
 	if tx != nil {
 		db = tx
 	}
 
-	var count int64
-	db.Table("event_participants").Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count)
-	if count > 0 {
-		return fmt.Errorf("user is already participant")
-	}
-
-	event, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
+	_, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to find event: %w", err)
 	}
 
-	user, err := gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)
+	_, err = gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	err = db.Model(&event).Association("Participants").Append(&user)
+	var count int64
+	db.Table("event_users").Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count)
+	if count > 0 {
+		return fmt.Errorf("user is already participant")
+	}
+
+	err = db.WithContext(ctx).Create(&EventUsers{
+		UserID: 	userID,
+		EventID: 	eventID,
+		Role:		"member",
+	}).Error
+
 	if err != nil {
 		return fmt.Errorf("failed to add user to event: %w", err)
 	}
@@ -210,7 +214,37 @@ func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB
 	return nil
 }
 
-func (r *eventRepositoryImpl) DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error {
+// func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB, eventID, userID string) error {
+// 	db := r.db
+// 	if tx != nil {
+// 		db = tx
+// 	}
+//
+// 	var count int64
+// 	db.Table("event_participants").Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count)
+// 	if count > 0 {
+// 		return fmt.Errorf("user is already participant")
+// 	}
+//
+// 	event, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to find event: %w", err)
+// 	}
+//
+// 	user, err := gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to find user: %w", err)
+// 	}
+//
+// 	err = db.Model(&event).Association("Participants").Append(&user)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to add user to event: %w", err)
+// 	}
+//
+// 	return nil
+// }
+//
+func (r *eventRepositoryImpl) DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error {
 	db := r.db
 	if tx != nil {
 		db = tx
@@ -240,7 +274,7 @@ func (r *eventRepositoryImpl) DeleteParticipant(ctx context.Context, tx *gorm.DB
 	return nil
 }
 
-func (r *eventRepositoryImpl) IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID string, amount int) error {
+func (r *eventRepositoryImpl) IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error {
 	db := r.db
 	if tx != nil {
 		db = tx
@@ -261,7 +295,7 @@ func (r *eventRepositoryImpl) IncrementParticipantCount(ctx context.Context, tx 
 	return nil
 }
 
-func (r *eventRepositoryImpl) DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID string, amount int) error {
+func (r *eventRepositoryImpl) DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error {
 	db := r.db
 	if tx != nil {
 		db = tx
@@ -282,7 +316,7 @@ func (r *eventRepositoryImpl) DecrementParticipantCount(ctx context.Context, tx 
 	return nil
 }
 
-func (r *eventRepositoryImpl) GetParticipants(ctx context.Context, eventID string) ([]user.User, error) {
+func (r *eventRepositoryImpl) GetParticipants(ctx context.Context, eventID uint) ([]user.User, error) {
 	var models []user.User
 
 	err := r.db.WithContext(ctx).

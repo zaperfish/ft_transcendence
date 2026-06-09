@@ -4,7 +4,6 @@ import (
 	// Std
 	"context"
 	"ft_transcendence/backend/user"
-	"strconv"
 	"time"
 
 	// Intern
@@ -19,7 +18,7 @@ type EventHandler struct {
 }
 
 type EventDTO struct {
-	ID              string    `json:"id" doc:"ID of the event"`
+	ID              uint      `json:"id" doc:"ID of the event"`
 	CreatedAt       time.Time `json:"created_at" doc:"Time the event got created"`
 	UpdatedAt       time.Time `json:"updated_at" doc:"Time the event got updated"`
 	Title           string    `json:"title" doc:"Name of the event"`
@@ -90,7 +89,7 @@ func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput)
 }
 
 type UpdateEventInput struct {
-	ID   string `path:"id" doc:"Event ID"`
+	ID   uint `path:"id" doc:"Event ID"`
 	Body struct {
 		Title           *string    `json:"title,omitempty"            minLength:"3"  maxLength:"100" example:"Go Meetup Berlin"                    doc:"Title of the event"`
 		Description     *string    `json:"description,omitempty"      minLength:"10" maxLength:"500" example:"A monthly meetup for Go developers"  doc:"Description of the event"`
@@ -140,7 +139,7 @@ func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput)
 }
 
 type DeleteEventInput struct {
-	ID string `path:"id" doc:"Event ID"`
+	ID uint `path:"id" doc:"Event ID"`
 }
 
 type DeleteEventOutput struct {
@@ -158,7 +157,7 @@ func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput)
 }
 
 type GetEventInput struct {
-	ID string `path:"id" doc:"Event ID"`
+	ID uint `path:"id" doc:"Event ID"`
 }
 
 type GetEventOutput struct {
@@ -213,9 +212,9 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 }
 
 type AddParticipantInput struct {
-	EventID string `path:"id" doc:"Event ID"`
+	EventID uint `path:"id" doc:"Event ID"`
 	Body    struct {
-		UserID int `json:"user_id"`
+		UserID uint `json:"user_id"`
 	}
 }
 
@@ -225,9 +224,8 @@ type AddParticipantOutput struct {
 }
 
 func (h *EventHandler) AddParticipant(ctx context.Context, input *AddParticipantInput) (*AddParticipantOutput, error) {
-	userID := strconv.Itoa(input.Body.UserID)
 
-	err := h.service.AddParticipant(ctx, input.EventID, userID)
+	err := h.service.AddParticipant(ctx, input.EventID, input.Body.UserID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("", err)
 	}
@@ -236,8 +234,8 @@ func (h *EventHandler) AddParticipant(ctx context.Context, input *AddParticipant
 }
 
 type RemoveParticipantInput struct {
-	EventID string `path:"eventID" doc:"Event ID"`
-	UserID  string `path:"userID" doc:"User ID"`
+	EventID uint `path:"eventID" doc:"Event ID"`
+	UserID  uint `path:"userID" doc:"User ID"`
 }
 
 type RemoveParticipantOutput struct {
@@ -255,7 +253,7 @@ func (h *EventHandler) RemoveParticipant(ctx context.Context, input *RemoveParti
 }
 
 type ListParticipantsInput struct {
-	EventID string `path:"id" doc:"Event ID"`
+	EventID uint `path:"id" doc:"Event ID"`
 }
 
 type ListParticipantsOutput struct {

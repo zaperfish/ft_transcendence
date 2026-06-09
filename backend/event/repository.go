@@ -343,7 +343,7 @@ func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID
 func (r *eventRepositoryImpl) GetEventUsersRole(ctx context.Context, eventID, userID uint) (string, error) {
 
 	var membership EventUsers
-	err := r.db.WithContext(ctx).First(&membership).Error
+	err := r.db.WithContext(ctx).Where("event_id = ? AND user_id = ?", eventID, userID).First(&membership).Error
 	if err != nil {
 		return "", err
 	}

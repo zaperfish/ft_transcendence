@@ -12,9 +12,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 		<QueryClientProvider client={queryClient}>
 			<AuthProvider>
 				{children}
-				{/* DevTools only used in dev situation*/}
-				<ReactQueryDevtools initialIsOpen={false} />
 			</AuthProvider>
+			{/* DevTools only used in dev situation*/}
+			<ReactQueryDevtools initialIsOpen={false} />
 		</QueryClientProvider>
 	);
 }

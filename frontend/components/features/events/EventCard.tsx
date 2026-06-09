@@ -11,7 +11,7 @@ interface EventCardProps {
 
 export default function EventCard({ data }: EventCardProps) {
 	const [isRegistering, setIsRegistering] = useState(false);
-	const [isRegistered, setIsRegistered] = useState(false);
+	const isRegistered = data.self.is_participant;
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
 	const eventDate = new Date(data.start_time);
@@ -27,7 +27,8 @@ export default function EventCard({ data }: EventCardProps) {
 
 	const queryClient = useQueryClient();
 	// This api endpoint should be negotiated with backend
-	const handleRegister = async (eventId: string) => {
+	const handleRegister = async () => {
+		if (isRegistered || isRegistering) return;
 		setIsRegistering(true);
 		setErrorMsg(null);
 		queryClient.setQueryData(["events"], (oldData: any) => {
@@ -35,8 +36,8 @@ export default function EventCard({ data }: EventCardProps) {
 			const newPages = oldData.pages.map((page: any) => ({
 				...page,
 				data: page.data.map((event: any) =>
-					event.id === eventId
-						? { ...event, num_registered: event.num_registered + 1 }
+					event.id === data.id
+						? { ...event, num_registered: event.num_registered + 1, self: {...event.self, is_participant: true}, }
 						: event
 				),
 			}));
@@ -48,7 +49,6 @@ export default function EventCard({ data }: EventCardProps) {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 			});
-			setIsRegistered(true);
 			queryClient.invalidateQueries({ queryKey: ["events"] });
 		} catch (error) {
 			setErrorMsg("Registration failed, please retry");
@@ -88,7 +88,7 @@ export default function EventCard({ data }: EventCardProps) {
 				</div>
 				<div className="mt-auto pt-md">
 					<Button
-						onClick={() => handleRegister(data.id)}
+						onClick={() => handleRegister}
 						disabled={isRegistering || isRegistered}
 						className={`w-full ${
 							isRegistered

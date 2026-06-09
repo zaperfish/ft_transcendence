@@ -20,6 +20,9 @@ export interface EventEntity {
 	id: string;
 	num_registered: number;
 	updated_at: string;
+	self: {
+		is_participant: boolean;
+	};
 }
 
 export interface GetEventRequest {

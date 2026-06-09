@@ -47,7 +47,8 @@ export default function HomePage() {
 		initialPageParam: 1,
 	});
 
-	const events = data?.pages.flatMap((page) => page.data) ?? [];
+	// Avoid crash when backend returns empty page.data
+	const events = data?.pages.flatMap((page) => page.data || []) ?? [];
 
 	if (isLoading)
 		return <div className="text-center py-2xl text-text-secondary">Loading...</div>

@@ -53,8 +53,9 @@ type GormEventModel struct {
 }
 
 type EventUsers struct {
-	gorm.Model
-
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 	UserID	uint	`gorm:"primaryKey"`
 	EventID	uint	`gorm:"primaryKey"`
 	Role	string	`gorm:"not null;"`	// admin, member

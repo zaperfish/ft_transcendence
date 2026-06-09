@@ -52,6 +52,14 @@ type GormEventModel struct {
 	Participants []user.User `gorm:"many2many:event_participants;joinForeignKey:EventID;joinReferences:UserID"`
 }
 
+type GormEventsUsersModel struct {
+	gorm.Model
+
+	UserID	uint	`gorm:"primaryKey"`
+	EventID	uint	`gorm:"primaryKey"`
+	Role	string	`gorm:"not null;"`
+}
+
 func (GormEventModel) TableName() string {
 	return "events"
 }

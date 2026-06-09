@@ -3,6 +3,7 @@ package auth
 import (
     // Std
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -17,28 +18,20 @@ import (
 // saves the verified token in context
 func Verifier(api huma.API) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		// get jwt cookie
-		value := ""
-		tokenCookie, err := huma.ReadCookie(ctx, "jwt")
-		if err == nil {
-			value = tokenCookie.Value
-		}
-		if value == "" {
-			value = ctx.Header("Authorization")
-			if value == "" {
-				huma.WriteErr(api, ctx, http.StatusUnauthorized, "missing Authorization header")
+		// get token string
+		tokenString, ok := strings.CutPrefix(ctx.Header("Authorization"), "Bearer ")
+		if !ok || tokenString == "" {
+			tokenCookie, err := huma.ReadCookie(ctx, "jwt")
+			if err != nil {
+				huma.WriteErr(api, ctx, http.StatusUnauthorized, err.Error())
 				return
 			}
-			if !strings.HasPrefix(value, "Bearer ") {
-				huma.WriteErr(api, ctx, http.StatusUnauthorized, "invalid Authorization format")
-				return
-			}
-			value = strings.TrimPrefix(value, "Bearer ")
+			tokenString = tokenCookie.Value
 		}
-
 		// verify and potentially extract token
-		token, err := jwtauth.VerifyToken(tokenAuth, value)
+		token, err := jwtauth.VerifyToken(tokenAuth, tokenString)
 		if err != nil {
+			fmt.Println(err)
 			huma.WriteErr(api, ctx, http.StatusUnauthorized, err.Error())
 			return
 		}

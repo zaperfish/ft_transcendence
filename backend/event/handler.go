@@ -33,7 +33,8 @@ type EventDTO struct {
 }
 
 type EventSelfDTO struct {
-	IsParticipant bool `json:"is_participant" doc:"Shows if authenticated user is a participant of the event"`
+	// IsParticipant bool `json:"is_participant" doc:"Shows if authenticated user is a participant of the event"`
+	Role string `json:"role" doc:"Shows user's role in the event"`
 }
 
 func (e *Event) ToDTO() EventDTO {
@@ -195,16 +196,12 @@ type ListEventsOutputBody struct {
 }
 
 func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (*ListEventsOutput, error) {
-	user_id, err := auth.UidFromCtx(ctx)
+	user_id, err := auth.ClaimFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error401Unauthorized("no authenticated user", err)
 	}
 
-	if err != nil {
-		return nil, huma.Error404NotFound("no user id found", err)
-	}
-
-	events, total, err := h.service.ListEvents(ctx, string(user_id), input.PageSize, input.PageSize*(input.Page-1))
+	events, total, err := h.service.ListEvents(ctx, user_id, input.PageSize, input.PageSize*(input.Page-1))
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to list events", err)
 	}
@@ -213,7 +210,7 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 	data := make([]EventDTO, num_retrieved)
 	for i, event := range events {
 		data[i] = event.Event.ToDTO()
-		data[i].Self.IsParticipant = event.IsParticipant
+		data[i].Self.Role = event.Role
 	}
 
 	return &ListEventsOutput{

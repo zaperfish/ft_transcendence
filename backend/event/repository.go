@@ -28,6 +28,7 @@ type EventRepository interface {
 	DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error
 	GetParticipants(ctx context.Context, eventID uint) ([]user.User, error)
 	GetParticipantEventIDs(ctx context.Context, userID string) ([]uint, error)
+	GetEventUsersRole(ctx context.Context, eventID, userID uint) (string, error)
 }
 
 type eventRepositoryImpl struct {
@@ -336,6 +337,16 @@ func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID
 	}
 
 	return participantEventIDs, nil
+}
+
+func (r *eventRepositoryImpl) GetEventUsersRole(ctx context.Context, eventID, userID uint) (string, error) {
+
+	var membership EventUsers
+	err := r.db.WithContext(ctx).First(&membership).Error
+	if err != nil {
+		return "", err
+	}
+	return membership.Role, nil
 }
 
 func IsParticipant(ctx context.Context, db *gorm.DB, eventID uint, userID uint) (bool, error) {

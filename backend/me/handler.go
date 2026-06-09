@@ -172,13 +172,16 @@ func (h *MeHandler) handleCreateEventMe(ctx context.Context,  input *event.Creat
 
 	err = h.se.AddParticipantAs(ctx, created.ID, userID, "admin")
 	if err != nil {
-		return nil, huma.Error500InternalServerError("", err)
+		h.se.DeleteEvent(ctx, created.ID)
+		return nil, huma.Error500InternalServerError("handler: failed to create event", err)
 	}
+
+
 
 	return &event.CreateEventOutput{Body: created.ToDTO()}, nil
 }
-
-// func (h *Handler) handleAdminEventsMe(ctx context.Context. in *struct{}) (*event.ListEventsOutput, error) {
+//
+// func (h *MeHandler) handleEventsMe(ctx context.Context, in *struct{}) (*event.ListEventsOutput, error) {
 // 	id, err := auth.UidFromCtx(ctx)
 // 	if err != nil {
 // 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())

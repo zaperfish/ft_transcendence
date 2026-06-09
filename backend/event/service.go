@@ -34,7 +34,7 @@ func NewEventService(repo EventRepository, db *gorm.DB) EventService {
 
 type EventWithUserContext struct {
 	Event
-	IsParticipant bool
+	Role string
 }
 
 func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, error) {
@@ -109,26 +109,28 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, user_id string, limit
 		return nil, 0, err
 	}
 
-	participantEventIDs, err := s.repo.GetParticipantEventIDs(ctx, user_id)
-	if err != nil {
-		return nil, 0, err
-	}
+	// participantEventIDs, err := s.repo.GetParticipantEventIDs(ctx, user_id)
+	// if err != nil {
+	// 	return nil, 0, err
+	// }
+	//
+	// participantMap := make(map[uint]bool, len(participantEventIDs))
+	// for _, id := range participantEventIDs {
+	// 	participantMap[id] = true
+	// }
 
-	participantMap := make(map[uint]bool, len(participantEventIDs))
-	for _, id := range participantEventIDs {
-		participantMap[id] = true
-	}
-
+	uid64, err := strconv.ParseUint(user_id, 10, strconv.IntSize)
 	eventsWithUserCtx := make([]EventWithUserContext, 0, len(events))
+	var role string
 	for _, e := range events {
-		id64, err := strconv.ParseUint(e.ID, 10, 64)
+
+		role, err = s.repo.GetEventUsersRole(ctx, e.ID, uint(uid64)) // save because strconv.IntSize
 		if err != nil {
 			return nil, 0, err
 		}
-
 		eventsWithUserCtx = append(eventsWithUserCtx, EventWithUserContext{
-			Event:         e,
-			IsParticipant: participantMap[uint(id64)],
+			Event:  e,
+			Role: 	role,
 		})
 	}
 

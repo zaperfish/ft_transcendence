@@ -48,8 +48,6 @@ type GormEventModel struct {
 	LocationAddress string    `gorm:"type:varchar(255)"`
 	MaxCapacity     int       `gorm:"not null;"`
 	NumRegistered   int       `gorm:"not null;"`
-
-	Participants []user.User `gorm:"many2many:event_participants;joinForeignKey:EventID;joinReferences:UserID"`
 }
 
 type EventUsers struct {
@@ -178,7 +176,7 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 	var count int64
 
 	err := r.db.WithContext(ctx).
-		Joins("JOIN event_participants ep ON ep.event_id = events.id").
+		Joins("JOIN event_users ep ON ep.event_id = events.id").
 		Where("ep.user_id = ?", id).
 		Limit(limit).
 		Offset(offset).
@@ -298,7 +296,7 @@ func (r *eventRepositoryImpl) GetParticipants(ctx context.Context, eventID uint)
 
 	err := r.db.WithContext(ctx).
 		Table("users").
-		Joins("JOIN event_participants ep ON ep.user_id = users.id").
+		Joins("JOIN event_users ep ON ep.user_id = users.id").
 		Where("ep.event_id = ?", eventID).
 		Find(&models).Error
 
@@ -313,7 +311,7 @@ func IsParticipant(ctx context.Context, db *gorm.DB, eventID uint, userID uint) 
 	var count int64
 
 	err := db.WithContext(ctx).
-		Table("event_participants").
+		Table("event_users").
 		Where("event_id = ? AND user_id = ?", eventID, userID).
 		Count(&count).Error
 

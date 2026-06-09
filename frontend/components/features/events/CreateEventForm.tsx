@@ -10,6 +10,12 @@ interface CreateEventFormProps {
 	onSuccess?: () => void;
 }
 
+/**
+ * CreateEventForm renders a modal form for creating a new event.
+ * It includes validation for all fields (title, description, start time, duration, location, capacity),
+ * handles date formatting to RFC 3339, submits the event to the API,
+ * and manages server errors and loading states.
+ */
 export default function CreateEventForm({ open, onClose, onSuccess }: CreateEventFormProps) {
 	const { register, handleSubmit, reset, formState: { errors, isSubmitting }, } = useForm<CreateEventRequest>({
 		defaultValues: {
@@ -58,7 +64,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 
 	return (
 		 <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-			<div className='bg-surface rounded-lg shadow-lg max-w-[700px] w-full mx-auto'>
+			<div className='bg-surface rounded-lg shadow-lg max-w-175 w-full mx-auto'>
 				<div className='p-2xl'>
 					<h2 className='text-2xl font-heading font-bold text-text-primary mb-xl'>Create a new event</h2>
 					<form onSubmit={handleSubmit(onSubmit)} className='space-y-lg'>

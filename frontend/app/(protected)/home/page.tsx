@@ -4,11 +4,16 @@ import { useState } from "react";
 import CreateEventCard from "@/components/features/events/CreateEventCard";
 import CreateEventForm from "@/components/features/events/CreateEventForm";
 import EventCard from "@/components/features/events/EventCard";
-import { QueryClient, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 
 const PAGE_SIZE = 7
 
+/**
+ * HomePage is the main landing page that displays a grid of event cards,
+ * includes a "Create Event" card to open the creation modal, and supports
+ * infinite scrolling pagination for loading more events.
+ */
 export default function HomePage() {
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const queryClient = useQueryClient();
@@ -21,7 +26,7 @@ export default function HomePage() {
 		setIsFormOpen(false);
 	};
 
-	// Later should add refresh and update
+	// Refresh and update home page when a new event is created
 	const handleEventCreated = () => {
 		queryClient.invalidateQueries({ queryKey: ["events"] });
 	};
@@ -81,7 +86,7 @@ export default function HomePage() {
 						variant="outline"
 						onClick={() => fetchNextPage()}
 						disabled={isFetchingNextPage}
-						className="min-w-[200px]"
+						className="min-w-50"
 					>
 						{isFetchingNextPage ? "Loading..." : "Load more"}
 					</Button>

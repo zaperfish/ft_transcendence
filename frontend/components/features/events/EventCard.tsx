@@ -9,6 +9,10 @@ interface EventCardProps {
 	data: EventEntity;
 }
 
+/**
+ * EventCard component displays a single event's details (title, description, date, time, location, capacity)
+ * and provides a registration button with optimistic UI updates and error handling.
+ */
 export default function EventCard({ data }: EventCardProps) {
 	const [isRegistering, setIsRegistering] = useState(false);
 	const isRegistered = data.self.is_participant;
@@ -66,7 +70,7 @@ export default function EventCard({ data }: EventCardProps) {
 			<div className="p-md flex flex-col flex-1">
 				<div className="flex-1">
 					<h3 className="text-xl font-semibold text-text-primary line-clamp-2 leading-snug">{data.title}</h3>
-					<p className="text-sm text-text-secondary mt-xs overflow-y-auto max-h-[4.5rem] pr-1">{data.description}</p>
+					<p className="text-sm text-text-secondary mt-xs overflow-y-auto max-h-18 pr-1">{data.description}</p>
 				</div>
 				<div className="mt-md space-y-sm text-text-secondary text-sm shrink-0">
 					<div className="flex items-center gap-sm">

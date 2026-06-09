@@ -2,6 +2,11 @@ interface CreateEventCardProps {
 	onClick?: () => void;
 }
 
+/**
+ * CreateEventCard is a clickable card component that serves as a visual entry point
+ * for users to create a new event. It displays a plus icon, title, and description,
+ * and triggers the provided onClick callback when clicked.
+ */
 export default function CreateEventCard({ onClick }: CreateEventCardProps) {
 	return (
 		<div

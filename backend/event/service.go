@@ -109,12 +109,12 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, user_id string, limit
 
 	events, total, err := s.repo.List(ctx, limit, offset)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("service: failed to list: %w", err)
 	}
 
 	participantEventIDs, err := s.repo.GetParticipantEventIDs(ctx, user_id)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("service: failed to get participants event ids: %w", err)
 	}
 
 	participantMap := make(map[uint]bool, len(participantEventIDs))
@@ -126,7 +126,7 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, user_id string, limit
 	for _, e := range events {
 		id64, err := strconv.ParseUint(e.ID, 10, 64)
 		if err != nil {
-			return nil, 0, err
+			return nil, 0, fmt.Errorf("service: failed to strconv: %w", err)
 		}
 
 		eventsWithUserCtx = append(eventsWithUserCtx, EventWithUserContext{

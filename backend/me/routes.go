@@ -52,7 +52,7 @@ func RegisterRoutes(api huma.API, h MeHandler) {
 		Method:         http.MethodDelete,
 		Path:           "/api/me/create-event",
 		Summary:		"Create event as logged in user",
-		DefaultStatus:  http.StatusNoContent,
+		DefaultStatus:  http.StatusCreated,
 		Tags:           []string{"Me"},
 	}, h.handleCreateEventMe)
 

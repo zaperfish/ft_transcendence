@@ -196,12 +196,12 @@ type ListEventsOutputBody struct {
 }
 
 func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (*ListEventsOutput, error) {
-	user_id, err := auth.ClaimFromCtx(ctx)
+	userID, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error401Unauthorized("no authenticated user", err)
 	}
 
-	events, total, err := h.service.ListEvents(ctx, user_id, input.PageSize, input.PageSize*(input.Page-1))
+	events, total, err := h.service.ListEvents(ctx, userID, input.PageSize, input.PageSize*(input.Page-1))
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to list events", err)
 	}

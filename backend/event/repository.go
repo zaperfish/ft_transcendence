@@ -16,18 +16,18 @@ import (
 
 type EventRepository interface {
 	Create(ctx context.Context, event *Event) (*Event, error)
-	Update(ctx context.Context, id uint, updated map[string]any) (*Event, error)
-	Delete(ctx context.Context, id uint) error
+	Update(ctx context.Context, eventID uint, updated map[string]any) (*Event, error)
+	Delete(ctx context.Context, eventID uint) error
 	DeleteParticipants(ctx context.Context, id uint) error
-	Get(ctx context.Context, id uint) (*Event, error)
+	Get(ctx context.Context, eventID uint) (*Event, error)
 	List(ctx context.Context, limit, offset int) ([]Event, int64, error)
-	ListByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error)
+	ListByUserID(ctx context.Context, limit, offset int, userID uint) ([]Event, int64, error)
 	CreateParticipantAs(ctx context.Context, tx *gorm.DB, eventID, userID uint, role string) error
 	DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error
 	IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error
 	DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error
 	GetParticipants(ctx context.Context, eventID uint) ([]user.User, error)
-	GetParticipantEventIDs(ctx context.Context, userID string) ([]uint, error)
+	GetParticipantEventIDs(ctx context.Context, userID uint) ([]uint, error)
 	GetEventUsersRole(ctx context.Context, eventID, userID uint) (string, error)
 }
 
@@ -101,8 +101,8 @@ func (r *eventRepositoryImpl) Create(ctx context.Context, event *Event) (*Event,
 	return model.ToDomain(), nil
 }
 
-func (r *eventRepositoryImpl) Update(ctx context.Context, id uint, updates map[string]any) (*Event, error) {
-	rows, err := gorm.G[map[string]any](r.db.Debug()).Table("events").Where("id = ?", id).Updates(ctx, updates)
+func (r *eventRepositoryImpl) Update(ctx context.Context, eventID uint, updates map[string]any) (*Event, error) {
+	rows, err := gorm.G[map[string]any](r.db.Debug()).Table("events").Where("id = ?", eventID).Updates(ctx, updates)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update event: %w", err)
 	}
@@ -111,7 +111,7 @@ func (r *eventRepositoryImpl) Update(ctx context.Context, id uint, updates map[s
 		return nil, fmt.Errorf("no event updated")
 	}
 
-	model, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", id).First(ctx)
+	model, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch updated event: %w", err)
 	}
@@ -119,8 +119,8 @@ func (r *eventRepositoryImpl) Update(ctx context.Context, id uint, updates map[s
 	return model.ToDomain(), nil
 }
 
-func (r *eventRepositoryImpl) Delete(ctx context.Context, id uint) error {
-	rows, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", id).Delete(ctx)
+func (r *eventRepositoryImpl) Delete(ctx context.Context, eventID uint) error {
+	rows, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).Delete(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to delete event: %w", err)
 	}
@@ -144,8 +144,8 @@ func (r *eventRepositoryImpl) DeleteParticipants(ctx context.Context, id uint) e
 	return nil
 }
 
-func (r *eventRepositoryImpl) Get(ctx context.Context, id uint) (*Event, error) {
-	model, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", id).First(ctx)
+func (r *eventRepositoryImpl) Get(ctx context.Context, eventID uint) (*Event, error) {
+	model, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve event: %w", err)
 	}
@@ -173,14 +173,14 @@ func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Ev
 	return events, total, nil
 }
 
-func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error) {
+func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset int, userID uint) ([]Event, int64, error) {
 
 	var events []Event
 	var count int64
 
 	err := r.db.WithContext(ctx).
 		Joins("JOIN event_users ep ON ep.event_id = events.id").
-		Where("ep.user_id = ?", id).
+		Where("ep.user_id = ?", userID).
 		Limit(limit).
 		Offset(offset).
 		Find(&events).
@@ -325,7 +325,7 @@ func (r *eventRepositoryImpl) IsParticipant(ctx context.Context, eventID, userID
 	return count > 0, nil
 }
 
-func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID string) ([]uint, error) {
+func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID uint) ([]uint, error) {
 	var participantEventIDs []uint
 
 	err := r.db.WithContext(ctx).

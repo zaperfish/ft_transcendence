@@ -7,16 +7,22 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface EventCardProps {
 	data: EventEntity;
+	mode?: 'register' | 'detail';
+	onDetail?: () => void;
 }
 
 /**
- * EventCard component displays a single event's details (title, description, date, time, location, capacity)
- * and provides a registration button with optimistic UI updates and error handling.
+ * EventCard component used for both 'register' and 'detail' mode.
+ *
+ * It displays a single event's details (title, description, date, time, location, capacity)
+ * and in 'register' mode provides a registration button with optimistic UI updates and error handling
+ * and in 'detail' mode provides a button redirecting user to event detail page.
  */
-export default function EventCard({ data }: EventCardProps) {
+export default function EventCard({ data, mode = 'register', onDetail }: EventCardProps) {
 	const [isRegistering, setIsRegistering] = useState(false);
 	const isRegistered = data.self.is_participant;
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
+	const queryClient = useQueryClient();
 
 	const eventDate = new Date(data.start_time);
 	const dateStr = eventDate.toLocaleDateString("en-US", {
@@ -29,10 +35,8 @@ export default function EventCard({ data }: EventCardProps) {
 		minute: "2-digit",
 	});
 
-	const queryClient = useQueryClient();
-	// This api endpoint should be negotiated with backend
 	const handleRegister = async () => {
-		if (isRegistered || isRegistering) return;
+		if (mode !== 'register' || isRegistered || isRegistering) return;
 		setIsRegistering(true);
 		setErrorMsg(null);
 		queryClient.setQueryData(["events"], (oldData: any) => {
@@ -61,6 +65,8 @@ export default function EventCard({ data }: EventCardProps) {
 			setIsRegistering(false);
 		}
 	};
+
+	const isDetailMode = mode === 'detail';
 
 	return (
 		<div className="border border-border rounded-lg overflow-hidden flex flex-col bg-surface shadow-sm hover:shadow-md transition-shadow">
@@ -91,20 +97,30 @@ export default function EventCard({ data }: EventCardProps) {
 					</div>
 				</div>
 				<div className="mt-auto pt-md">
-					<Button
-						onClick={() => handleRegister}
-						disabled={isRegistering || isRegistered}
-						className={`w-full ${
-							isRegistered
-								? "bg-success text-white cursor-not-allowed"
-								: isRegistering
-									? "bg-text-tertiary text-white cursor-wait"
-									: "bg-primary text-primary-foreground hover:bg-primary-dim"
-						}`}
-					>
-						{ isRegistered ? "Registered" : isRegistering ? "Registering..." : "Register"}
-					</Button>
-					{errorMsg && <p className="text-error text-xs mt-xs"></p>}
+					{isDetailMode ? (
+						<Button
+							onClick={onDetail}
+							className="w-full"
+							variant="outline"
+						>
+							View Detail
+						</Button>
+					) : (
+						<Button
+							onClick={handleRegister}
+							disabled={isRegistering || isRegistered}
+							className={`w-full ${
+								isRegistered
+									? "bg-success text-white cursor-not-allowed"
+									: isRegistering
+										? "bg-text-tertiary text-white cursor-wait"
+										: "bg-primary text-primary-foreground hover:bg-primary-dim"
+							}`}
+						>
+							{ isRegistered ? "Registered" : isRegistering ? "Registering..." : "Register"}
+						</Button>
+					)}
+					{errorMsg && !isDetailMode && <p className="text-error text-xs mt-xs"></p>}
 				</div>
 			</div>
 		</div>

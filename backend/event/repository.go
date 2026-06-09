@@ -18,6 +18,7 @@ type EventRepository interface {
 	Create(ctx context.Context, event *Event) (*Event, error)
 	Update(ctx context.Context, id uint, updated map[string]any) (*Event, error)
 	Delete(ctx context.Context, id uint) error
+	DeleteParticipants(ctx context.Context, id uint) error
 	Get(ctx context.Context, id uint) (*Event, error)
 	List(ctx context.Context, limit, offset int) ([]Event, int64, error)
 	ListByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error)
@@ -130,6 +131,18 @@ func (r *eventRepositoryImpl) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
+func (r *eventRepositoryImpl) DeleteParticipants(ctx context.Context, id uint) error {
+	err := r.db.
+		WithContext(ctx).
+		Where("event_id = ?", id).
+		Delete(&EventUsers{}).
+		Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *eventRepositoryImpl) Get(ctx context.Context, id uint) (*Event, error) {
 	model, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", id).First(ctx)
 	if err != nil {
@@ -220,23 +233,13 @@ func (r *eventRepositoryImpl) DeleteParticipant(ctx context.Context, tx *gorm.DB
 		db = tx
 	}
 
-	_, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to find event: %w", err)
-	}
-
-	_, err = gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to find user: %w", err)
-	}
-
 	var count int64
 	db.Table("event_users").Where("event_id = ? AND user_id = ? AND deleted_at IS NULL", eventID, userID).Count(&count)
 	if count <= 0 {
 		return fmt.Errorf("user is not a participant")
 	}
 
-	err = db.
+	err := db.
 		WithContext(ctx).
 		Where("user_id = ? AND event_id = ?", userID, eventID).
 		Delete(&EventUsers{}).

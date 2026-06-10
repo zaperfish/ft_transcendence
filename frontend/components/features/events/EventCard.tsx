@@ -15,7 +15,8 @@ interface EventCardProps {
  */
 export default function EventCard({ data }: EventCardProps) {
 	const [isRegistering, setIsRegistering] = useState(false);
-	const isRegistered = data.self.is_participant;
+	// Avoid crash when backend returns undefined self
+	const isRegistered = data.self?.is_participant ?? false;
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
 	const eventDate = new Date(data.start_time);
@@ -30,7 +31,7 @@ export default function EventCard({ data }: EventCardProps) {
 	});
 
 	const queryClient = useQueryClient();
-	// This api endpoint should be negotiated with backend
+	
 	const handleRegister = async () => {
 		if (isRegistered || isRegistering) return;
 		setIsRegistering(true);
@@ -41,7 +42,7 @@ export default function EventCard({ data }: EventCardProps) {
 				...page,
 				data: page.data.map((event: any) =>
 					event.id === data.id
-						? { ...event, num_registered: event.num_registered + 1, self: {...event.self, is_participant: true}, }
+						? { ...event, num_registered: event.num_registered + 1, self: {...(event.self || {}), is_participant: true}, }
 						: event
 				),
 			}));
@@ -92,7 +93,7 @@ export default function EventCard({ data }: EventCardProps) {
 				</div>
 				<div className="mt-auto pt-md">
 					<Button
-						onClick={() => handleRegister}
+						onClick={handleRegister}
 						disabled={isRegistering || isRegistered}
 						className={`w-full ${
 							isRegistered

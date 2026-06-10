@@ -196,7 +196,7 @@ type ListEventsOutputBody struct {
 }
 
 func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (*ListEventsOutput, error) {
-	user_id, err := auth.UidFromCtx(ctx)
+	user_id, err := auth.ClaimFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error401Unauthorized("no authenticated user", err)
 	}
@@ -214,7 +214,11 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 	data := make([]EventDTO, num_retrieved)
 	for i, event := range events {
 		data[i] = event.Event.ToDTO()
-		data[i].Self.IsParticipant = event.IsParticipant
+		if event.IsParticipant != false {
+			data[i].Self = &EventSelfDTO{
+				IsParticipant: event.IsParticipant,
+			}
+		}
 	}
 
 	return &ListEventsOutput{

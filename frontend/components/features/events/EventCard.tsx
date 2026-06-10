@@ -20,7 +20,8 @@ interface EventCardProps {
  */
 export default function EventCard({ data, mode = 'register', onDetail }: EventCardProps) {
 	const [isRegistering, setIsRegistering] = useState(false);
-	const isRegistered = data.self.is_participant;
+	// Avoid crash when backend returns undefined self
+	const isRegistered = data.self?.is_participant ?? false;
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
 	const queryClient = useQueryClient();
 
@@ -45,7 +46,7 @@ export default function EventCard({ data, mode = 'register', onDetail }: EventCa
 				...page,
 				data: page.data.map((event: any) =>
 					event.id === data.id
-						? { ...event, num_registered: event.num_registered + 1, self: {...event.self, is_participant: true}, }
+						? { ...event, num_registered: event.num_registered + 1, self: {...(event.self || {}), is_participant: true}, }
 						: event
 				),
 			}));

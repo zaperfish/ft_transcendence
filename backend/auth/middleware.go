@@ -3,7 +3,9 @@ package auth
 import (
     // Std
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
     // External
 	"github.com/danielgtaylor/huma/v2"
@@ -16,15 +18,20 @@ import (
 // saves the verified token in context
 func Verifier(api huma.API) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
-		// get jwt cookie
-		tokenCookie, err := huma.ReadCookie(ctx, "jwt")
-		if err != nil {
-			huma.WriteErr(api, ctx, http.StatusUnauthorized, err.Error())
-			return
+		// get token string
+		tokenString, ok := strings.CutPrefix(ctx.Header("Authorization"), "Bearer ")
+		if !ok || tokenString == "" {
+			tokenCookie, err := huma.ReadCookie(ctx, "jwt")
+			if err != nil {
+				huma.WriteErr(api, ctx, http.StatusUnauthorized, err.Error())
+				return
+			}
+			tokenString = tokenCookie.Value
 		}
 		// verify and potentially extract token
-		token, err := jwtauth.VerifyToken(tokenAuth, tokenCookie.Value)
+		token, err := jwtauth.VerifyToken(tokenAuth, tokenString)
 		if err != nil {
+			fmt.Println(err)
 			huma.WriteErr(api, ctx, http.StatusUnauthorized, err.Error())
 			return
 		}
@@ -43,7 +50,7 @@ func Refresher(api huma.API) func(ctx huma.Context, next func(huma.Context)) {
 			huma.WriteErr(api, ctx, http.StatusUnauthorized, err.Error())
 			return
         }
-		cookie, err := makeJWTCookie(claims["sub"].(string))
+		cookie, err := MakeJWTCookie(claims["sub"].(string))
 		if err != nil {
 			huma.WriteErr(api, ctx, http.StatusInternalServerError, "error")
 			return

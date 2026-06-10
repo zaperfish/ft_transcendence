@@ -29,7 +29,7 @@ func MakeLogoutCookie() http.Cookie {
 	}
 }
 
-func makeJWT(sub string) (string, error) {
+func MakeJWT(sub string) (string, error) {
 	claims := map[string]any{
 		"sub": sub,
 		"exp": time.Now().Add(jwtExpirationTime).Unix(),
@@ -43,7 +43,7 @@ func makeJWT(sub string) (string, error) {
 }
 
 func MakeJWTCookieFromID(id uint) (http.Cookie, error) {
-	return makeJWTCookie(strconv.FormatUint(uint64(id), 10))
+	return MakeJWTCookie(strconv.FormatUint(uint64(id), 10))
 }
 
 // makeJWTCookie()
@@ -59,8 +59,8 @@ func MakeJWTCookieFromID(id uint) (http.Cookie, error) {
 //
 // SameSite: http.SameSiteStrictMode
 // browser only sends cookie when accessing from the same site
-func makeJWTCookie(sub string) (http.Cookie, error) {
-	t, err := makeJWT(sub)
+func MakeJWTCookie(sub string) (http.Cookie, error) {
+	t, err := MakeJWT(sub)
 	if err != nil {
 		return http.Cookie{}, err
 	}

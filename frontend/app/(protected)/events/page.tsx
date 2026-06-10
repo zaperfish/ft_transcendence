@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useEvents } from '@/lib/hooks/useEvents';
 import EventCard from '@/components/features/events/EventCard';
 import { Button } from '@/components/ui/Button';
+import { useRouter } from "next/navigation";
 
 export default function EventsPage() {
 	const [activeTab, setActiveTab] = useState<'attending' | 'hosting'>('attending');
 	const { data: events, isLoading, isError } = useEvents(activeTab);
+	const router = useRouter();
 
 	return (
 		<div className="w-full px-xl py-2xl">
@@ -55,7 +57,11 @@ export default function EventsPage() {
 			) : events && events.length > 0 ? (
 				<div className='space-y-md'>
 					{events.map((event) => (
-						<EventCard key={event.id} data={event} />
+						<EventCard
+							key={event.id}
+							data={event}
+							mode='detail'
+							onDetail={() => router.push(`/events/${event.id}`)} />
 					))}
 				</div>
 			) : (

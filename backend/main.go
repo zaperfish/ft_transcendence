@@ -113,6 +113,11 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 			Scheme:      "bearer",
 			Description: "Enter api key as: Bearer <key>",
 		},
+		"SessionToken": {
+			Type:        "http",
+			Scheme:      "bearer",
+			Description: "JWT",
+		},
 	}
 
 	api := humachi.New(r, config)

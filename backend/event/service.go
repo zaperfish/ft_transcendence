@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"ft_transcendence/backend/user"
 
@@ -29,6 +30,11 @@ type eventServiceImpl struct {
 
 func NewEventService(repo EventRepository, db *gorm.DB) EventService {
 	return &eventServiceImpl{repo: repo, db: db}
+}
+
+type EventWithUserContext struct {
+	Event
+	IsParticipant bool
 }
 
 func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, error) {
@@ -89,7 +95,7 @@ func (s *eventServiceImpl) GetEvent(ctx context.Context, id uint) (*Event, error
 	return event, nil
 }
 
-func (s *eventServiceImpl) ListEvents(ctx context.Context, limit, offset int) ([]Event, int64, error) {
+func (s *eventServiceImpl) ListEvents(ctx context.Context, user_id string, limit, offset int) ([]EventWithUserContext, int64, error) {
 	if limit < 0 {
 		limit = 0
 	}
@@ -100,10 +106,33 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, limit, offset int) ([
 
 	events, total, err := s.repo.List(ctx, limit, offset)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("service: failed to list: %w", err)
 	}
 
-	return events, total, nil
+	participantEventIDs, err := s.repo.GetParticipantEventIDs(ctx, user_id)
+	if err != nil {
+		return nil, 0, fmt.Errorf("service: failed to get participants event ids: %w", err)
+	}
+
+	participantMap := make(map[uint]bool, len(participantEventIDs))
+	for _, id := range participantEventIDs {
+		participantMap[id] = true
+	}
+
+	eventsWithUserCtx := make([]EventWithUserContext, 0, len(events))
+	for _, e := range events {
+		id64, err := strconv.ParseUint(e.ID, 10, 64)
+		if err != nil {
+			return nil, 0, fmt.Errorf("service: failed to strconv: %w", err)
+		}
+
+		eventsWithUserCtx = append(eventsWithUserCtx, EventWithUserContext{
+			Event:         e,
+			IsParticipant: participantMap[uint(id64)],
+		})
+	}
+
+	return eventsWithUserCtx, total, nil
 }
 
 func (s *eventServiceImpl) ListEventsByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error) {

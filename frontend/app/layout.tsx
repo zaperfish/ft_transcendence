@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { AuthProvider } from "@/lib/context/AuthContext";
 import "./globals.css";
+import Providers from "@/components/providers/Providers";
 
 const inter = Inter({
   variable: "--font-inter",// CSS variable
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
  *
  * Sets up the base HTML structure, applies the Inter font variable,
  * enables font smoothing, and wraps all pages inside the
- * {@link AuthProvider} so that authentication state is available
+ * {@link providers} so that authentication state and query cache is available
  * throughout the app.
  *
  * @param props - The component props.
@@ -33,9 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
-		<AuthProvider>
+		<Providers>
 			{children}
-		</AuthProvider>
+		</Providers>
 	  </body>
     </html>
   );

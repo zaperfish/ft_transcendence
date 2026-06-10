@@ -1,0 +1,31 @@
+interface CreateEventCardProps {
+	onClick?: () => void;
+}
+
+/**
+ * CreateEventCard is a clickable card component that serves as a visual entry point
+ * for users to create a new event. It displays a plus icon, title, and description,
+ * and triggers the provided onClick callback when clicked.
+ */
+export default function CreateEventCard({ onClick }: CreateEventCardProps) {
+	return (
+		<div
+			onClick={onClick}
+			className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg h-full min-h-[350px] hover:bg-surface-dim cursor-pointer transition-colors duration-200"
+		>
+			<div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mb-md">
+				<PlusIcon className="size-6 text-text-tertiary"/>
+			</div>
+			<h3 className="text-lg font-semibold text-text-secondary">Create Event</h3>
+			<p className="text-sm text-text-tertiary mt-xs">Host your own event</p>
+		</div>
+	);
+}
+
+function PlusIcon({ className }: { className?: string }) {
+	return (
+		<svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
+		</svg>
+	);
+}

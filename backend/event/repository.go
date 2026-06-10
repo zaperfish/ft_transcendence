@@ -309,6 +309,14 @@ func (r *eventRepositoryImpl) IsParticipant(ctx context.Context, eventID, userID
 
 func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID string) ([]uint, error) {
 	var participantEventIDs []uint
+	if userID == " " {
+
+		fmt.Println("HEEEEEEENOTOGODD")
+	}
+
+	fmt.Println("g")
+	fmt.Println(userID, "A")
+	fmt.Println("g")
 
 	err := r.db.WithContext(ctx).
 		Table("event_participants").

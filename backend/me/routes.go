@@ -18,6 +18,9 @@ func RegisterRoutes(api huma.API, h MeHandler) {
 		Summary:		"Get logged in user",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Me"},
+		Security: 		[]map[string][]string{
+							{"SessionToken": {}},
+						},
     }, h.handleGetMe)
 
     huma.Register(api, huma.Operation{
@@ -27,6 +30,9 @@ func RegisterRoutes(api huma.API, h MeHandler) {
         Summary:        "Update logged in user",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Me"},
+		Security: 		[]map[string][]string{
+							{"SessionToken": {}},
+						},
     }, h.handlePatchMe)
 
     huma.Register(api, huma.Operation{
@@ -36,6 +42,9 @@ func RegisterRoutes(api huma.API, h MeHandler) {
         Summary:        "Update logged in user's password",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Me"},
+		Security: 		[]map[string][]string{
+							{"SessionToken": {}},
+						},
     }, h.handlePatchPasswordMe)
 
     huma.Register(api, huma.Operation{
@@ -45,6 +54,9 @@ func RegisterRoutes(api huma.API, h MeHandler) {
 		Summary:		"Delete logged in user",
         DefaultStatus:  http.StatusNoContent,
         Tags:           []string{"Me"},
+		Security: 		[]map[string][]string{
+							{"SessionToken": {}},
+						},
     }, h.handleDeleteMe)
 
 		//   huma.Register(api, huma.Operation{
@@ -63,6 +75,9 @@ func RegisterRoutes(api huma.API, h MeHandler) {
 		Summary:		"Add logged in user to event",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Me"},
+		Security: 		[]map[string][]string{
+							{"SessionToken": {}},
+						},
     }, h.handleJoinEventMe)
 
 	huma.Register(api, huma.Operation{
@@ -72,6 +87,9 @@ func RegisterRoutes(api huma.API, h MeHandler) {
 		Summary:		"List events logged in user is registered for",
 		DefaultStatus:  http.StatusOK,
 		Tags:           []string{"Me"},
+		Security: 		[]map[string][]string{
+							{"SessionToken": {}},
+						},
 	}, h.handleEventsMe)
 
 		//   huma.Register(api, huma.Operation{

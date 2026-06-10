@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"ft_transcendence/backend/user"
 
@@ -13,11 +12,11 @@ import (
 
 type EventService interface {
 	CreateEvent(ctx context.Context, event *Event) (*Event, error)
-	UpdateEvent(ctx context.Context, id uint, updates map[string]any) (*Event, error)
-	DeleteEvent(ctx context.Context, id uint) error
-	GetEvent(ctx context.Context, id uint) (*Event, error)
-	ListEvents(ctx context.Context, limit, offset int) ([]Event, int64, error)
-	ListEventsByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error)
+	UpdateEvent(ctx context.Context, userID uint, updates map[string]any) (*Event, error)
+	DeleteEvent(ctx context.Context, userID uint) error
+	GetEvent(ctx context.Context, userID uint) (*Event, error)
+	ListEvents(ctx context.Context, userID uint, limit, offset int) ([]EventWithUserContext, int64, error)
+	// ListEventsByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error)
 	AddParticipant(ctx context.Context, eventID, userID uint) error
 	RemoveParticipant(ctx context.Context, eventID, userID uint) error
 	ListParticipants(ctx context.Context, eventID uint) ([]user.User, error)
@@ -35,6 +34,7 @@ func NewEventService(repo EventRepository, db *gorm.DB) EventService {
 type EventWithUserContext struct {
 	Event
 	IsParticipant bool
+	Role		  string
 }
 
 func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, error) {
@@ -95,7 +95,7 @@ func (s *eventServiceImpl) GetEvent(ctx context.Context, id uint) (*Event, error
 	return event, nil
 }
 
-func (s *eventServiceImpl) ListEvents(ctx context.Context, user_id string, limit, offset int) ([]EventWithUserContext, int64, error) {
+func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, offset int) ([]EventWithUserContext, int64, error) {
 	if limit < 0 {
 		limit = 0
 	}
@@ -104,53 +104,41 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, user_id string, limit
 		offset = 0
 	}
 
-	events, total, err := s.repo.List(ctx, limit, offset)
+	events, total, err := s.repo.ListByUserID(ctx, limit, offset, userID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("service: failed to list: %w", err)
 	}
 
-	participantEventIDs, err := s.repo.GetParticipantEventIDs(ctx, user_id)
-	if err != nil {
-		return nil, 0, fmt.Errorf("service: failed to get participants event ids: %w", err)
-	}
-
-	participantMap := make(map[uint]bool, len(participantEventIDs))
-	for _, id := range participantEventIDs {
-		participantMap[id] = true
-	}
-
-	eventsWithUserCtx := make([]EventWithUserContext, 0, len(events))
-	for _, e := range events {
-		id64, err := strconv.ParseUint(e.ID, 10, 64)
-		if err != nil {
-			return nil, 0, fmt.Errorf("service: failed to strconv: %w", err)
+	eventsWithUserCtx := make([]EventWithUserContext, len(events))
+	for i, e := range events {
+		eventsWithUserCtx[i].Event = e.Event
+		eventsWithUserCtx[i].IsParticipant = false
+		eventsWithUserCtx[i].Role = "none"
+		if e.Role != nil {
+			eventsWithUserCtx[i].IsParticipant = true
+			eventsWithUserCtx[i].Role = *e.Role
 		}
-
-		eventsWithUserCtx = append(eventsWithUserCtx, EventWithUserContext{
-			Event:         e,
-			IsParticipant: participantMap[uint(id64)],
-		})
 	}
 
 	return eventsWithUserCtx, total, nil
 }
 
-func (s *eventServiceImpl) ListEventsByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error) {
-	if limit < 0 {
-		limit = 0
-	}
-
-	if offset < 0 {
-		offset = 0
-	}
-
-	events, total, err := s.repo.ListByUserID(ctx, limit, offset, id)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return events, total, nil
-}
+// func (s *eventServiceImpl) ListEventsByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error) {
+// 	if limit < 0 {
+// 		limit = 0
+// 	}
+//
+// 	if offset < 0 {
+// 		offset = 0
+// 	}
+//
+// 	events, total, err := s.repo.ListByUserID(ctx, limit, offset, id)
+// 	if err != nil {
+// 		return nil, 0, err
+// 	}
+//
+// 	return events, total, nil
+// }
 
 func (s *eventServiceImpl) AddParticipant(ctx context.Context, eventID, userID uint) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {

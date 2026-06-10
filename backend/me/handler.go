@@ -122,30 +122,30 @@ func (h *MeHandler) handleJoinEventMe(ctx context.Context, input *JoinEventInput
 
 	return &event.AddParticipantOutput{}, nil
 }
-
-func (h *MeHandler) handleEventsMe(ctx context.Context, input *event.ListEventsInput) (*event.ListEventsOutput, error) {
-	id, err := auth.UidFromCtx(ctx)
-	if err != nil {
-		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-	}
-
-	offset := input.PageSize * (input.Page - 1)
-	events, total, err := h.se.ListEventsByUserID(ctx, input.PageSize, offset, id)
-
-	data := make([]event.EventDTO, len(events), 0)
-	for _, event := range events {
-		data = append(data, event.ToDTO())
-	}
-
-	return &event.ListEventsOutput{
-		Body: event.ListEventsOutputBody{
-			Data:     data,
-			Page:     input.Page,
-			PageSize: input.PageSize,
-			Total:    total,
-		},
-	}, nil
-}
+//
+// func (h *MeHandler) handleEventsMe(ctx context.Context, input *event.ListEventsInput) (*event.ListEventsOutput, error) {
+// 	id, err := auth.UidFromCtx(ctx)
+// 	if err != nil {
+// 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
+// 	}
+//
+// 	offset := input.PageSize * (input.Page - 1)
+// 	events, total, err := h.se.ListEventsByUserID(ctx, input.PageSize, offset, id)
+//
+// 	data := make([]event.EventDTO, len(events), 0)
+// 	for _, event := range events {
+// 		data = append(data, event.ToDTO())
+// 	}
+//
+// 	return &event.ListEventsOutput{
+// 		Body: event.ListEventsOutputBody{
+// 			Data:     data,
+// 			Page:     input.Page,
+// 			PageSize: input.PageSize,
+// 			Total:    total,
+// 		},
+// 	}, nil
+// }
 
 // create event
 

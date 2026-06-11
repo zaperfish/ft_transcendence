@@ -70,19 +70,17 @@ func (s *eventServiceImpl) UpdateEvent(ctx context.Context, id uint, updates map
 	return updated, nil
 }
 
-func (s *eventServiceImpl) DeleteEvent(ctx context.Context, id uint) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-
-		if err := s.repo.DeleteParticipants(ctx, id); err != nil {
-			return err
-		}
-
-		if err := s.repo.Delete(ctx, id); err != nil {
-			return err
-		}
-
-		return nil
-	})
+func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error {
+	return s.repo.Delete(ctx, eventID)
+	// return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	// 	if err := s.repo.Delete(ctx, eventID); err != nil {
+	// 		return err
+	// 	}
+	// 	if err := s.repo.DeleteParticipants(ctx, eventID); err != nil {
+	// 		return err
+	// 	}
+	// 	return nil
+	// })
 }
 
 func (s *eventServiceImpl) GetEvent(ctx context.Context, id uint) (*Event, error) {
@@ -112,33 +110,12 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, o
 	eventsWithUserCtx := make([]EventWithUserContext, len(events))
 	for i, e := range events {
 		eventsWithUserCtx[i].Event = e.Event
-		eventsWithUserCtx[i].IsParticipant = false
-		eventsWithUserCtx[i].Role = "none"
-		if e.Role != nil {
-			eventsWithUserCtx[i].IsParticipant = true
-			eventsWithUserCtx[i].Role = *e.Role
-		}
+		eventsWithUserCtx[i].IsParticipant = e.Role != "none"
+		eventsWithUserCtx[i].Role = e.Role
 	}
 
 	return eventsWithUserCtx, total, nil
 }
-
-// func (s *eventServiceImpl) ListEventsByUserID(ctx context.Context, limit, offset int, id uint) ([]Event, int64, error) {
-// 	if limit < 0 {
-// 		limit = 0
-// 	}
-//
-// 	if offset < 0 {
-// 		offset = 0
-// 	}
-//
-// 	events, total, err := s.repo.ListByUserID(ctx, limit, offset, id)
-// 	if err != nil {
-// 		return nil, 0, err
-// 	}
-//
-// 	return events, total, nil
-// }
 
 func (s *eventServiceImpl) AddParticipant(ctx context.Context, eventID, userID uint) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {

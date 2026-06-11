@@ -72,15 +72,6 @@ func (s *eventServiceImpl) UpdateEvent(ctx context.Context, id uint, updates map
 
 func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error {
 	return s.repo.Delete(ctx, eventID)
-	// return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-	// 	if err := s.repo.Delete(ctx, eventID); err != nil {
-	// 		return err
-	// 	}
-	// 	if err := s.repo.DeleteParticipants(ctx, eventID); err != nil {
-	// 		return err
-	// 	}
-	// 	return nil
-	// })
 }
 
 func (s *eventServiceImpl) GetEvent(ctx context.Context, id uint) (*Event, error) {

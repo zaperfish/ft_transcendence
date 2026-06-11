@@ -3,11 +3,11 @@ package event
 import (
 	// Std
 	"context"
-	"ft_transcendence/backend/user"
 	"time"
 
 	// Intern
 	"ft_transcendence/backend/auth"
+	"ft_transcendence/backend/user"
 
 	// Extern
 	"github.com/danielgtaylor/huma/v2"
@@ -76,6 +76,11 @@ type CreateEventOutput struct {
 }
 
 func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput) (*CreateEventOutput, error) {
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, huma.Error401Unauthorized("no authenticated user", err)
+	}
+
 	event := Event{
 		Title:           input.Body.Title,
 		Description:     input.Body.Description,
@@ -86,7 +91,7 @@ func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput)
 		MaxCapacity:     input.Body.MaxCapacity,
 	}
 
-	created, err := h.service.CreateEvent(ctx, &event)
+	created, err := h.service.CreateEventWithAdmin(ctx, &event, userID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to create event", err)
 	}
@@ -228,7 +233,8 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 type AddParticipantInput struct {
 	EventID uint `path:"id" doc:"Event ID"`
 	Body    struct {
-		UserID uint `json:"user_id"`
+		UserID uint     `json:"user_id" example:"1" doc:"ID of user to be added"`
+		Role   string	`json:"role" example:"member" doc:"member/admin"`
 	}
 }
 
@@ -239,7 +245,7 @@ type AddParticipantOutput struct {
 
 func (h *EventHandler) AddParticipant(ctx context.Context, input *AddParticipantInput) (*AddParticipantOutput, error) {
 
-	err := h.service.AddParticipant(ctx, input.EventID, input.Body.UserID)
+	err := h.service.AddParticipantAs(ctx, input.EventID, input.Body.UserID, input.Body.Role)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("", err)
 	}

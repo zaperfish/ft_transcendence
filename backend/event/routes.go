@@ -28,6 +28,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Summary:       "Create event",
 		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusCreated,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
 		// Security: []map[string][]string{
 		// 	{"AdminPassword": {}},
 		// },
@@ -71,7 +72,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Summary:       "List events",
 		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusOK,
-		Middlewares: huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
 	}, eventHandler.ListEvents)
 
 	huma.Register(api, huma.Operation{

@@ -125,7 +125,7 @@ func (s *eventServiceImpl) AddParticipant(ctx context.Context, eventID, userID u
 func (s *eventServiceImpl) RemoveParticipant(ctx context.Context, eventID, userID uint) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := s.repo.DeleteParticipant(ctx, tx, eventID, userID); err != nil {
-			return fmt.Errorf("failed to create participant: %w", err)
+			return fmt.Errorf("failed to remove participant: %w", err)
 		}
 
 		if err := s.repo.DecrementParticipantCount(ctx, tx, eventID, 1); err != nil {

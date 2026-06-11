@@ -122,64 +122,23 @@ func (h *MeHandler) handleJoinEventMe(ctx context.Context, input *JoinEventInput
 
 	return &event.AddParticipantOutput{}, nil
 }
-//
-// func (h *MeHandler) handleEventsMe(ctx context.Context, input *event.ListEventsInput) (*event.ListEventsOutput, error) {
-// 	id, err := auth.UidFromCtx(ctx)
-// 	if err != nil {
-// 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-// 	}
-//
-// 	offset := input.PageSize * (input.Page - 1)
-// 	events, total, err := h.se.ListEventsByUserID(ctx, input.PageSize, offset, id)
-//
-// 	data := make([]event.EventDTO, len(events), 0)
-// 	for _, event := range events {
-// 		data = append(data, event.ToDTO())
-// 	}
-//
-// 	return &event.ListEventsOutput{
-// 		Body: event.ListEventsOutputBody{
-// 			Data:     data,
-// 			Page:     input.Page,
-// 			PageSize: input.PageSize,
-// 			Total:    total,
-// 		},
-// 	}, nil
-// }
 
-// create event
+// leave event
 
-// func (h *MeHandler) handleCreateEventMe(ctx context.Context,  input *event.CreateEventInput) (*event.CreateEventOutput, error) {
-// 	id, err := auth.UidFromCtx(ctx)
-// 	if err != nil {
-// 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-// 	}
-//
-// 	event := event.Event{
-// 		Title:           input.Body.Title,
-// 		Description:     input.Body.Description,
-// 		StartTime:       input.Body.StartTime,
-// 		Duration:        input.Body.Duration,
-// 		LocationName:    input.Body.LocationName,
-// 		LocationAddress: input.Body.LocationAddress,
-// 		MaxCapacity:     input.Body.MaxCapacity,
-// 	}
-//
-// 	created, err := h.se.CreateEvent(ctx, &event)
-// 	if err != nil {
-// 		return nil, huma.Error500InternalServerError("handler: failed to create event", err)
-// 	}
-//
-// 	err := h.service.AddParticipant(ctx, input.EventID, userID)
-// 	if err != nil {
-// 		return nil, huma.Error500InternalServerError("", err)
-// 	}
-//
-// }
+type LeaveEventInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+}
 
-// func (h *Handler) handleAdminEventsMe(ctx context.Context. in *struct{}) (*event.ListEventsOutput, error) {
-// 	id, err := auth.UidFromCtx(ctx)
-// 	if err != nil {
-// 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
-// 	}
-// }
+func (h *MeHandler) handleLeaveEventMe(ctx context.Context, input *LeaveEventInput) (*event.AddParticipantOutput, error) {
+	uid, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
+	}
+
+	err = h.se.RemoveParticipant(ctx, input.EventID, uid)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("", err)
+	}
+
+	return &event.AddParticipantOutput{}, nil
+}

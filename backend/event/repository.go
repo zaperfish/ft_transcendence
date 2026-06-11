@@ -255,7 +255,7 @@ func (r *eventRepositoryImpl) DeleteParticipant(ctx context.Context, tx *gorm.DB
 	}
 
 	var count int64
-	err := db.Model(&GormEventModel{}).
+	err := db.Model(&eventusers.EventUser{}).
 		WithContext(ctx).
 		Where("event_id = ? AND user_id = ?", eventID, userID).
 		Count(&count).

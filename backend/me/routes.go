@@ -80,6 +80,18 @@ func RegisterRoutes(api huma.API, h MeHandler) {
 						},
     }, h.handleJoinEventMe)
 
+    huma.Register(api, huma.Operation{
+        OperationID:    "leave-event-me",
+        Method:         http.MethodPost,
+        Path:           "/api/me/leave/{id}",
+		Summary:		"Remove logged in user from event",
+        DefaultStatus:  http.StatusOK,
+        Tags:           []string{"Me"},
+		Security: 		[]map[string][]string{
+							{"SessionToken": {}},
+						},
+    }, h.handleLeaveEventMe)
+
 	// huma.Register(api, huma.Operation{
 	// 	OperationID:    "list-events-me",
 	// 	Method:         http.MethodGet,

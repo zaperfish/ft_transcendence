@@ -8,7 +8,7 @@ import (
 )
 
 type Event struct {
-	ID              string
+	ID              uint
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	Title           string

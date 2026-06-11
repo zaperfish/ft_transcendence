@@ -1,7 +1,8 @@
-import type { CreateEventRequest, EventEntity } from '@/types/event';
+import type { CreateEventRequest } from '@/types/event';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react'
-import { request, ApiError } from '@/lib/api/client';
+import { ApiError } from '@/lib/api/client';
+import { createEvent } from '@/lib/api/events';
 import { Button } from '@/components/ui/Button';
 
 interface CreateEventFormProps {
@@ -43,11 +44,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 		};
 
 		try {
-			const res = await request<EventEntity>("/api/events", {
-				method: "POST",
-				headers: { "Content-type": "application/json" },
-				body: JSON.stringify(formattedData),
-			});
+			await createEvent(formattedData);
 			onSuccess?.();
 			onClose();
 			reset();

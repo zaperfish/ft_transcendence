@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon } from 'lucide-react';
 import type { EventEntity } from "@/types/event";
 import { useState } from "react";
-import { request } from "@/lib/api/client";
+import { joinEvent } from "@/lib/api/events";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface EventCardProps {
@@ -53,11 +53,7 @@ export default function EventCard({ data, mode = 'register', onDetail }: EventCa
 			return { ...oldData, pages: newPages };
 		});
 		try {
-			const res = await request<{ message: string }>(
-				`/api/me/join/${data.id}`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-			});
+			await joinEvent(data.id);
 			queryClient.invalidateQueries({ queryKey: ["events"] });
 		} catch (error) {
 			setErrorMsg("Registration failed, please retry");

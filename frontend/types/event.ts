@@ -17,11 +17,14 @@ export interface EventEntity {
 	start_time: string;
 	title: string;
 	created_at: string;
-	id: string;
+	id: number;
 	num_registered: number;
 	updated_at: string;
+	// Backend always returns self because user has to login to register event
+	// Here maintain ? for crash protection reason
 	self?: {
 		is_participant: boolean;
+		role: string;// Later should update according to the specific name of role
 	};
 }
 

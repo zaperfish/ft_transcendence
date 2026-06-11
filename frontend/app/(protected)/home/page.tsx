@@ -6,6 +6,7 @@ import CreateEventForm from "@/components/features/events/CreateEventForm";
 import EventCard from "@/components/features/events/EventCard";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
+import { getEvents } from "@/lib/api/events";
 
 const PAGE_SIZE = 7
 
@@ -41,8 +42,7 @@ export default function HomePage() {
 	} = useInfiniteQuery({
 		queryKey: ["events"],
 		queryFn: async ({ pageParam = 1 }) => {
-			const res = await fetch(`/api/events?page=${pageParam}&page_size=${PAGE_SIZE}`);
-			return res.json();
+			return getEvents(pageParam, PAGE_SIZE);
 		},
 		getNextPageParam: (lastPage) => {
 			const { page, page_size, total } = lastPage;

@@ -4,7 +4,6 @@ import (
 	// Std
 	"context"
 	"ft_transcendence/backend/user"
-	"strconv"
 	"time"
 
 	// Intern
@@ -19,22 +18,23 @@ type EventHandler struct {
 }
 
 type EventDTO struct {
-	ID              string        `json:"id" doc:"ID of the event"`
-	CreatedAt       time.Time     `json:"created_at" doc:"Time the event got created"`
-	UpdatedAt       time.Time     `json:"updated_at" doc:"Time the event got updated"`
-	Title           string        `json:"title" doc:"Name of the event"`
-	Description     string        `json:"description" doc:"Description of the event"`
-	StartTime       time.Time     `json:"start_time" doc:"Start time of the event"`
-	Duration        int           `json:"duration" doc:"Duration of the event in minutes"`
-	LocationName    string        `json:"location_name" doc:"Name of the location"`
-	LocationAddress string        `json:"location_address" doc:"Address of the location"`
-	MaxCapacity     int           `json:"max_capacity" doc:"Maximum number of people the event supports"`
-	NumRegistered   int           `json:"num_registered" doc:"Number of people who registered for this event"`
+	ID              uint      `json:"id" doc:"ID of the event"`
+	CreatedAt       time.Time `json:"created_at" doc:"Time the event got created"`
+	UpdatedAt       time.Time `json:"updated_at" doc:"Time the event got updated"`
+	Title           string    `json:"title" doc:"Name of the event"`
+	Description     string    `json:"description" doc:"Description of the event"`
+	StartTime       time.Time `json:"start_time" doc:"Start time of the event"`
+	Duration        int       `json:"duration" doc:"Duration of the event in minutes"`
+	LocationName    string    `json:"location_name" doc:"Name of the location"`
+	LocationAddress string    `json:"location_address" doc:"Address of the location"`
+	MaxCapacity     int       `json:"max_capacity" doc:"Maximum number of people the event supports"`
+	NumRegistered   int       `json:"num_registered" doc:"Number of people who registered for this event"`
 	Self            *EventSelfDTO `json:"self,omitempty" doc:"Information about the authenticated user if authenticated"`
 }
 
 type EventSelfDTO struct {
 	IsParticipant bool `json:"is_participant" doc:"Shows if authenticated user is a participant of the event"`
+	Role string 	   `json:"role" doc:"Shows user's role in the event"`
 }
 
 func (e *Event) ToDTO() EventDTO {
@@ -95,7 +95,7 @@ func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput)
 }
 
 type UpdateEventInput struct {
-	ID   string `path:"id" doc:"Event ID"`
+	ID   uint `path:"id" doc:"Event ID"`
 	Body struct {
 		Title           *string    `json:"title,omitempty"            minLength:"3"  maxLength:"100" example:"Go Meetup Berlin"                    doc:"Title of the event"`
 		Description     *string    `json:"description,omitempty"      minLength:"10" maxLength:"500" example:"A monthly meetup for Go developers"  doc:"Description of the event"`
@@ -145,7 +145,7 @@ func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput)
 }
 
 type DeleteEventInput struct {
-	ID string `path:"id" doc:"Event ID"`
+	ID uint `path:"id" doc:"Event ID"`
 }
 
 type DeleteEventOutput struct {
@@ -163,7 +163,7 @@ func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput)
 }
 
 type GetEventInput struct {
-	ID string `path:"id" doc:"Event ID"`
+	ID uint `path:"id" doc:"Event ID"`
 }
 
 type GetEventOutput struct {
@@ -196,28 +196,22 @@ type ListEventsOutputBody struct {
 }
 
 func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (*ListEventsOutput, error) {
-	user_id, err := auth.ClaimFromCtx(ctx)
+	userID, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error401Unauthorized("no authenticated user", err)
 	}
 
-	if err != nil {
-		return nil, huma.Error404NotFound("no user id found", err)
-	}
-
-	events, total, err := h.service.ListEvents(ctx, string(user_id), input.PageSize, input.PageSize*(input.Page-1))
+	events, total, err := h.service.ListEvents(ctx, userID, input.PageSize, input.PageSize*(input.Page-1))
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to list events", err)
 	}
 
-	num_retrieved := len(events)
-	data := make([]EventDTO, num_retrieved)
+	data := make([]EventDTO, len(events))
 	for i, event := range events {
-		data[i] = event.Event.ToDTO()
-		if event.IsParticipant != false {
-			data[i].Self = &EventSelfDTO{
-				IsParticipant: event.IsParticipant,
-			}
+		data[i] = event.ToDTO()
+		data[i].Self = &EventSelfDTO{
+			IsParticipant: event.IsParticipant,
+			Role:		   event.Role,
 		}
 	}
 
@@ -232,9 +226,9 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 }
 
 type AddParticipantInput struct {
-	EventID string `path:"id" doc:"Event ID"`
+	EventID uint `path:"id" doc:"Event ID"`
 	Body    struct {
-		UserID int `json:"user_id"`
+		UserID uint `json:"user_id"`
 	}
 }
 
@@ -244,9 +238,8 @@ type AddParticipantOutput struct {
 }
 
 func (h *EventHandler) AddParticipant(ctx context.Context, input *AddParticipantInput) (*AddParticipantOutput, error) {
-	userID := strconv.Itoa(input.Body.UserID)
 
-	err := h.service.AddParticipant(ctx, input.EventID, userID)
+	err := h.service.AddParticipant(ctx, input.EventID, input.Body.UserID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("", err)
 	}
@@ -255,8 +248,8 @@ func (h *EventHandler) AddParticipant(ctx context.Context, input *AddParticipant
 }
 
 type RemoveParticipantInput struct {
-	EventID string `path:"eventID" doc:"Event ID"`
-	UserID  string `path:"userID" doc:"User ID"`
+	EventID uint `path:"eventID" doc:"Event ID"`
+	UserID  uint `path:"userID" doc:"User ID"`
 }
 
 type RemoveParticipantOutput struct {
@@ -274,7 +267,7 @@ func (h *EventHandler) RemoveParticipant(ctx context.Context, input *RemoveParti
 }
 
 type ListParticipantsInput struct {
-	EventID string `path:"id" doc:"Event ID"`
+	EventID uint `path:"id" doc:"Event ID"`
 }
 
 type ListParticipantsOutput struct {

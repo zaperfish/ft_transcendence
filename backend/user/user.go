@@ -11,8 +11,8 @@ import (
 
 type User struct {
     gorm.Model
-    Name string     `gorm:"unique"`
-	Email string    `gorm:"unique"`
+	Name    string `gorm:"uniqueIndex:idx_name_active,where:deleted_at IS NULL"`
+	Email   string `gorm:"uniqueIndex:idx_name_active,where:deleted_at IS NULL"`
     PasswordHash string
 }
 

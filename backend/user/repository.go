@@ -6,6 +6,7 @@ import (
 
 	// Internal
 	"ft_transcendence/backend/errs"
+	"ft_transcendence/backend/eventusers"
 
 	// External
 	"gorm.io/gorm"
@@ -17,7 +18,7 @@ type UserRepository interface {
 	GetByName(ctx context.Context, name string) (*User, error)
     List(ctx context.Context, filter UserFilter) ([]User, error)
 	UpdateFieldsByID(ctx context.Context, id uint, fields map[string]any) (*User, error)
-    DeleteByID(ctx context.Context, id uint) error
+    DeleteByID(ctx context.Context, userID uint) error
 }
 
 type userRepositoryImpl struct {
@@ -26,6 +27,13 @@ type userRepositoryImpl struct {
 
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepositoryImpl{db: db}
+}
+
+func (u *User) AfterDelete(tx *gorm.DB) error {
+    return tx.
+        Model(&eventusers.EventUser{}).
+        Where("user_id = ?", u.ID).
+        Delete(&eventusers.EventUser{}).Error
 }
 
 func (r *userRepositoryImpl) GetByID(ctx context.Context, id uint) (*User, error) {
@@ -73,12 +81,15 @@ func (r *userRepositoryImpl) UpdateFieldsByID(ctx context.Context, id uint, fiel
 	return &updated, nil
 }
 
-func (r *userRepositoryImpl) DeleteByID(ctx context.Context, id uint) error {
-	rows, err := gorm.G[User](r.db.Debug()).Where("id = ?", id).Delete(ctx)
-	if err != nil {
-		return errs.ErrorDB(err)
+func (r *userRepositoryImpl) DeleteByID(ctx context.Context, userID uint) error {
+	user := User{
+		Model: gorm.Model{ID: userID},
 	}
-	if rows == 0 {
+	result := r.db.Debug().Delete(&user)
+	if result.Error != nil {
+		return errs.ErrorDB(result.Error)
+	}
+	if result.RowsAffected == 0 {
 		return errs.ErrNotFound
 	}
 	return nil

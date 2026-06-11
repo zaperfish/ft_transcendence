@@ -12,6 +12,7 @@ import (
 	"ft_transcendence/backend/chat"
 	"ft_transcendence/backend/db"
 	"ft_transcendence/backend/event"
+	"ft_transcendence/backend/eventusers"
 	"ft_transcendence/backend/me"
 	"ft_transcendence/backend/middleware"
 	"ft_transcendence/backend/user"
@@ -72,11 +73,14 @@ func initDB() *gorm.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = db.AutoMigrate(&eventusers.EventUser{})
+	if err != nil {
+		log.Fatal(err)
+	}
 	err = db.AutoMigrate(&chat.Message{})
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	return db
 }
 

@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"time"
-	"log"
 
 	// Intern
 	"ft_transcendence/backend/errs"
@@ -96,7 +95,6 @@ func (r *eventRepositoryImpl) Create(ctx context.Context, event *Event) (*Event,
 
 // after delete hook
 func (e *GormEventModel) AfterDelete(tx *gorm.DB) error {
-	log.Printf("unscoped=%v", tx.Statement.Unscoped)
     return tx.
         Model(&eventusers.EventUser{}).
         Where("event_id = ?", e.ID).
@@ -229,7 +227,10 @@ func (r *eventRepositoryImpl) CreateParticipant(ctx context.Context, tx *gorm.DB
 	}
 
 	var count int64
-	db.Model(&eventusers.EventUser{}).Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count)
+	err = db.Model(&eventusers.EventUser{}).Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count).Error
+	if err != nil {
+		return err
+	}
 	if count > 0 {
 		return fmt.Errorf("user is already participant")
 	}

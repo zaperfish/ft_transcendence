@@ -101,7 +101,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 
 	return (
 		<div className="min-h-screen bg-surface-dim p-lg">
-			<div className="mx-auto flex h-[calc(100vh-2rem)] max-w-3xl flex-col">
+			<div className="flex h-[calc(100vh-2rem)] w-full flex-col">
 				<div className="mb-md">
 					<h1 className="text-2xl font-heading font-bold text-text-primary">
 						Event Chat

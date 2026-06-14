@@ -114,6 +114,7 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 
 	api := humachi.New(r, config)
 
+	// Generate and return the Prometheus metrics payload at /metrics
 	r.Handle("/metrics", promhttp.Handler())
 
 	apikey.RegisterRoutes(api, db)

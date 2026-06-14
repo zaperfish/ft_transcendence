@@ -1,5 +1,6 @@
 import type { CreateEventRequest, EventEntity, EventsResponse, GetEventRequest, GetMyEventsRequest } from "@/types/event";
 import type { User } from "@/types/user";
+import type { CreateEventRequest, EventEntity, EventsResponse, EventParticipantsResponse } from "@/types/event";
 import { request } from '@/lib/api/client';
 
 // API functions used for home page
@@ -95,4 +96,23 @@ export async function leaveEvent(id: number): Promise<void> {
 	return request<void>(`/api/me/events/${id}/leave`, {
 		method: "DELETE",
 	});
+}
+/**
+ * Fetch one event by ID.
+ *
+ * This is used by event-specific views, such as the chat window header,
+ * when the frontend needs the event title and basic event metadata.
+ */
+export async function getEvent(eventId: number): Promise<EventEntity> {
+	return request<EventEntity>(`/api/events/${eventId}`);
+}
+
+/**
+ * Fetch the participants registered for one event.
+ *
+ * The chat frontend uses this list to resolve message sender IDs into
+ * participant names when rendering persisted history and live messages.
+ */
+export async function getEventParticipants(eventId: number): Promise<EventParticipantsResponse> {
+	return request<EventParticipantsResponse>(`/api/events/${eventId}/participants`);
 }

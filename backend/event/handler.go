@@ -176,12 +176,23 @@ type GetEventOutput struct {
 }
 
 func (h *EventHandler) GetEvent(ctx context.Context, input *GetEventInput) (*GetEventOutput, error) {
-	event, err := h.service.GetEvent(ctx, input.ID)
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, huma.Error401Unauthorized("no authenticated user", err)
+	}
+
+	event, err := h.service.GetEventForUser(ctx, userID, input.ID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to get event", err)
 	}
 
-	return &GetEventOutput{Body: event.ToDTO()}, nil
+	output := GetEventOutput{Body: event.ToDTO()}
+	output.Body.Self = &EventSelfDTO{
+		IsParticipant: event.IsParticipant,
+		Role:		   event.Role,
+	}
+
+	return &output, nil
 }
 
 type ListEventsInput struct {

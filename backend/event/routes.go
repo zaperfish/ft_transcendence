@@ -62,6 +62,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Summary:       "Get event",
 		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
 	}, eventHandler.GetEvent)
 
 	// Register GET /events

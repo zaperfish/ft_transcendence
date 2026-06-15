@@ -24,8 +24,8 @@ export interface EventEntity {
 	// Remain optional for crash protection reason
 	self?: {
 		is_participant: boolean;
-		role: string;// Later should update according to the specific name of role
-	};
+		role: 'admin' | 'member' | 'none';
+	}
 }
 
 export interface GetEventRequest {

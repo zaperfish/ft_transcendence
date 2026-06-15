@@ -21,6 +21,7 @@ type EventRepository interface {
 	Delete(ctx context.Context, eventID uint) error
 	DeleteParticipants(ctx context.Context, eventID uint) error
 	Get(ctx context.Context, eventID uint) (*Event, error)
+	GetForUser(ctx context.Context, userID, eventID uint) (*EventWithRole, error)
 	List(ctx context.Context, limit, offset int) ([]Event, int64, error)
 	ListByUserID(ctx context.Context, limit, offset int, userID uint) ([]EventWithRole, int64, error)
 	CreateParticipantAs(ctx context.Context, tx *gorm.DB, eventID, userID uint, role string) error
@@ -151,6 +152,26 @@ func (r *eventRepositoryImpl) Get(ctx context.Context, eventID uint) (*Event, er
 	}
 
 	return model.ToDomain(), nil
+}
+
+func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID uint) (*EventWithRole, error) {
+	var eventRole EventWithRole
+	if err := r.db.WithContext(ctx).
+	Model(&GormEventModel{}).
+    Select(`
+        events.*,
+        COALESCE(event_users.role, 'none') as role
+    `).
+    Joins(`
+        LEFT JOIN event_users 
+        ON event_users.event_id = ?
+        AND event_users.user_id = ?
+		AND event_users.deleted_at IS NULL
+    `, eventID, userID).
+    Scan(&eventRole).Error; err != nil {
+		return nil, errs.ErrorDB(err)
+	}
+	return &eventRole, nil
 }
 
 func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Event, int64, error) {

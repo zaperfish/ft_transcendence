@@ -16,7 +16,8 @@ type EventService interface {
 	CreateEventWithAdmin(ctx context.Context, event *Event, userID uint) (*Event, error)
 	UpdateEvent(ctx context.Context, userID uint, updates map[string]any) (*Event, error)
 	DeleteEvent(ctx context.Context, userID uint) error
-	GetEvent(ctx context.Context, userID uint) (*Event, error)
+	GetEvent(ctx context.Context, eventID uint) (*Event, error)
+	GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error)
 	ListEvents(ctx context.Context, userID uint, limit, offset int) ([]EventWithUserContext, int64, error)
 	AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error
 	RemoveParticipant(ctx context.Context, eventID, userID uint) error
@@ -122,14 +123,30 @@ func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error 
 	return s.repo.Delete(ctx, eventID)
 }
 
-func (s *eventServiceImpl) GetEvent(ctx context.Context, id uint) (*Event, error) {
+func (s *eventServiceImpl) GetEvent(ctx context.Context, eventID uint) (*Event, error) {
 
-	event, err := s.repo.Get(ctx, id)
+	event, err := s.repo.Get(ctx, eventID)
 	if err != nil {
 		return nil, err
 	}
 
 	return event, nil
+}
+
+func (s *eventServiceImpl) GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error) {
+
+	event, err := s.repo.GetForUser(ctx, userID, eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	output := EventWithUserContext{
+		Event: event.Event,
+		IsParticipant: event.Role != "none",
+		Role: event.Role,
+	}
+
+	return &output, nil
 }
 
 func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, offset int) ([]EventWithUserContext, int64, error) {

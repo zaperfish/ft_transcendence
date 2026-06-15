@@ -52,9 +52,9 @@ export default function navigation() {
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Avatar className='h-9 w-9 cursor-pointer'>
-								<AvatarImage src={user?.avatar} alt={user?.username} />
+								<AvatarImage src={user?.avatar} alt={user?.name} />
 								<AvatarFallback className='bg-primary text-primary-foreground'>
-									 {user?.username?.charAt(0)?.toUpperCase() || "U"}
+									 {user?.name?.charAt(0)?.toUpperCase() || "U"}
 								</AvatarFallback>
 							</Avatar>
 						</DropdownMenuTrigger>

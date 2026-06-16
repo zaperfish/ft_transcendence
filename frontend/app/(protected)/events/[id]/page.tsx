@@ -51,6 +51,14 @@ export default function EventDetailPage() {
 		},
 	});
 
+	const deleteMutation = useMutation({
+		mutationFn: () => deleteEvent(numericId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['event'] });
+			router.push('/events');
+		}
+	});
+
 	const handleLeaveEvent = () => {
 		if (confirm('Do you want to unregister?')) {
 			leaveMutation.mutate();
@@ -60,6 +68,12 @@ export default function EventDetailPage() {
 	const handleRemoveParticipant = (userId: number, userName: string) => {
 		if (confirm(`Do you want to remove ${userName}?`)) {
 			removeMutation.mutate(userId);
+		}
+	};
+
+	const handleDeleteEvent = () => {
+		if (confirm('Do you want to delete the event?')) {
+			deleteMutation.mutate();
 		}
 	};
 
@@ -122,16 +136,28 @@ export default function EventDetailPage() {
 					<MessageSquareIcon className="size-4 mr-2" />
 					Open Event Chatroom
 				</Button>
-				{ /* Edit event information */ }
+				{ /* Admin-only operations */ }
 				{isCreator && (
-					<Button
-						onClick={() => setIsEditModalOpen(true)}
-						variant="outline"
-						className="w-full"
-					>
-						<EditIcon className="size-4 mr-2" />
-						Modify event information
-					</Button>
+					<>
+						{ /* Edit event information */ }
+						<Button
+							onClick={() => setIsEditModalOpen(true)}
+							variant="outline"
+							className="w-full"
+						>
+							<EditIcon className="size-4 mr-2" />
+							Modify Event Information
+						</Button>
+						{ /* Delete event */ }
+						<Button
+							onClick={handleDeleteEvent}
+							variant="outline"
+							className="w-full text-error border-error hover:bg-error/10"
+							disabled={deleteMutation.isPending}
+						>
+							{deleteMutation.isPending ? 'deleting..' : 'Delete Event'}
+						</Button>
+					</>
 				)}
 				{ /* Leave event */ }
 				{isParticipant && !isCreator && (

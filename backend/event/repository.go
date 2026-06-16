@@ -164,10 +164,11 @@ func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID ui
     `).
     Joins(`
         LEFT JOIN event_users 
-        ON event_users.event_id = ?
+        ON event_users.event_id = events.id
         AND event_users.user_id = ?
 		AND event_users.deleted_at IS NULL
-    `, eventID, userID).
+    `, userID).
+	Where("events.id = ?", eventID).
     Scan(&eventRole).Error; err != nil {
 		return nil, errs.ErrorDB(err)
 	}

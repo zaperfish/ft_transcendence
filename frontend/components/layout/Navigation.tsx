@@ -44,11 +44,8 @@ export default function navigation() {
 						</Link>
 					</nav>
 				</div>
-				{/* right: notification + user avatar */}
+				{/* right: user avatar */}
 				<div className='flex items-center gap-md'>
-					<Button variant='ghost' size='icon' aria-label='Notification'>
-						<Bell className='h-5 w-5 text-text-secondary'/>
-					</Button>
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Avatar className='h-9 w-9 cursor-pointer'>

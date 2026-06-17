@@ -27,8 +27,8 @@ type EventDTO struct {
 	Duration        int       `json:"duration" doc:"Duration of the event in minutes"`
 	LocationName    string    `json:"location_name" doc:"Name of the location"`
 	LocationAddress string    `json:"location_address" doc:"Address of the location"`
-	MaxCapacity     int       `json:"max_capacity" doc:"Maximum number of people the event supports"`
-	NumRegistered   int       `json:"num_registered" doc:"Number of people who registered for this event"`
+	MaxCapacity     uint      `json:"max_capacity" doc:"Maximum number of people the event supports"`
+	NumRegistered   uint      `json:"num_registered" doc:"Number of people who registered for this event"`
 	Self            *EventSelfDTO `json:"self,omitempty" doc:"Information about the authenticated user if authenticated"`
 }
 
@@ -67,7 +67,7 @@ type CreateEventInput struct {
 		Duration        int       `json:"duration"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    string    `json:"location_name"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
-		MaxCapacity     int       `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
+		MaxCapacity     uint      `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
 	}
 }
 
@@ -108,7 +108,7 @@ type UpdateEventInput struct {
 		Duration        *int       `json:"duration,omitempty"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    *string    `json:"location_name,omitempty"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress *string    `json:"location_address,omitempty" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
-		MaxCapacity     *int       `json:"max_capacity,omitempty"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
+		MaxCapacity     *uint      `json:"max_capacity,omitempty"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
 	}
 }
 

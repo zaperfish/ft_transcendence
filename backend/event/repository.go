@@ -3,6 +3,7 @@ package event
 import (
 	// Std
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -21,13 +22,13 @@ type EventRepository interface {
 	Delete(ctx context.Context, eventID uint) error
 	DeleteParticipants(ctx context.Context, eventID uint) error
 	Get(ctx context.Context, eventID uint) (*Event, error)
+	GetCapacity(ctx context.Context, tx *gorm.DB, eventID uint) (uint, error)
 	GetForUser(ctx context.Context, userID, eventID uint) (*EventWithRole, error)
+	GetParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint) (uint, error)
 	List(ctx context.Context, limit, offset int) ([]Event, int64, error)
 	ListByUserID(ctx context.Context, limit, offset int, userID uint) ([]EventWithRole, int64, error)
 	CreateParticipantAs(ctx context.Context, tx *gorm.DB, eventID, userID uint, role string) error
 	DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error
-	IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error
-	DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error
 	GetParticipants(ctx context.Context, eventID uint) ([]user.User, error)
 	IsParticipant(ctx context.Context, eventID, userID uint) (bool, error)
 	GetParticipantEventIDs(ctx context.Context, userID uint) ([]uint, error)
@@ -50,8 +51,7 @@ type GormEventModel struct {
 	Duration        int       `gorm:"type:smallint;not null"`
 	LocationName    string    `gorm:"type:varchar(255)"`
 	LocationAddress string    `gorm:"type:varchar(255)"`
-	MaxCapacity     int       `gorm:"not null;"`
-	NumRegistered   int       `gorm:"not null;"`
+	MaxCapacity     uint      `gorm:"not null;"`
 }
 
 func (GormEventModel) TableName() string {
@@ -70,7 +70,7 @@ func (m *GormEventModel) ToDomain() *Event {
 		LocationName:    m.LocationName,
 		LocationAddress: m.LocationAddress,
 		MaxCapacity:     m.MaxCapacity,
-		NumRegistered:   m.NumRegistered,
+		NumRegistered:   0,
 	}
 }
 
@@ -83,7 +83,6 @@ func (r *eventRepositoryImpl) Create(ctx context.Context, event *Event) (*Event,
 		LocationName:    event.LocationName,
 		LocationAddress: event.LocationAddress,
 		MaxCapacity:     event.MaxCapacity,
-		NumRegistered:   event.NumRegistered,
 	}
 
 	err := gorm.G[GormEventModel](r.db.Debug()).Create(ctx, &model)
@@ -103,6 +102,12 @@ func (e *GormEventModel) AfterDelete(tx *gorm.DB) error {
 }
 
 func (r *eventRepositoryImpl) Update(ctx context.Context, eventID uint, updates map[string]any) (*Event, error) {
+
+	count, err := r.GetParticipantCount(ctx, nil, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+	}
+
 	rows, err := gorm.G[map[string]any](r.db.Debug()).Table("events").Where("id = ?", eventID).Updates(ctx, updates)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update event: %w", err)
@@ -116,6 +121,9 @@ func (r *eventRepositoryImpl) Update(ctx context.Context, eventID uint, updates 
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch updated event: %w", err)
 	}
+
+	ret := model.ToDomain()
+	ret.NumRegistered = count
 
 	return model.ToDomain(), nil
 }
@@ -151,10 +159,23 @@ func (r *eventRepositoryImpl) Get(ctx context.Context, eventID uint) (*Event, er
 		return nil, fmt.Errorf("failed to retrieve event: %w", err)
 	}
 
+	count, err := r.GetParticipantCount(ctx, nil, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+	}
+
+	ret := model.ToDomain()
+	ret.NumRegistered = count
+
 	return model.ToDomain(), nil
 }
 
 func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID uint) (*EventWithRole, error) {
+	count, err := r.GetParticipantCount(ctx, nil, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+	}
+
 	var eventRole EventWithRole
 	if err := r.db.WithContext(ctx).
 	Model(&GormEventModel{}).
@@ -172,9 +193,50 @@ func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID ui
     Scan(&eventRole).Error; err != nil {
 		return nil, errs.ErrorDB(err)
 	}
+
+	eventRole.NumRegistered = count
+
 	return &eventRole, nil
 }
 
+func (r *eventRepositoryImpl) GetCapacity(ctx context.Context, tx *gorm.DB, eventID uint) (uint, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var cap uint
+	if err := tx.WithContext(ctx).
+	Model(&Event{}).
+	Select("max_capacity").
+	Where("id = ?", eventID).
+	Scan(&cap).Error; err != nil {
+		return 0, err
+	}
+	return cap, nil
+}
+
+func (r *eventRepositoryImpl) GetParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint) (uint, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var count int64
+	if err := tx.WithContext(ctx).
+	Model(&eventusers.EventUser{}).
+	Where("event_id = ?", eventID).
+    Count(&count).Error; err != nil {
+		return 0, err
+	}
+
+	fmt.Println("GET PARTICIPANT:", count)
+
+	if count < 0 || uint64(count) > uint64(^uint(0)) {
+		return 0, errors.New("integer overflow")
+	}
+
+	return uint(count), nil
+}
+
+// having to individually query the participant count for each event is the tradeof for getting rid of NumParticipants in the GormEventModel
+// there might be a smarter, more sql heavy version to do this with a single query but I don't know how
 func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Event, int64, error) {
 	models, err := gorm.G[GormEventModel](r.db.Debug()).Limit(limit).Offset(offset).Find(ctx)
 	if err != nil {
@@ -185,6 +247,11 @@ func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Ev
 	events := make([]Event, num_retrieved)
 	for i, model := range models {
 		events[i] = *model.ToDomain()
+		count, err := r.GetParticipantCount(ctx, nil, events[i].ID)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to retrieve event: %w", err)
+		}
+		events[i].NumRegistered = count
 	}
 
 	var total int64
@@ -200,6 +267,8 @@ type EventWithRole struct {
     Role  string
 }
 
+// having to individually query the participant count for each event is the tradeof for getting rid of NumParticipants in the GormEventModel
+// there might be a smarter, more sql heavy version to do this with a single query but I don't know how
 func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset int, userID uint) ([]EventWithRole, int64, error) {
 
 	var eventsRoles []EventWithRole
@@ -222,6 +291,14 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 		return nil, 0, errs.ErrorDB(err)
 	}
 
+	for i := range eventsRoles {
+		count, err := r.GetParticipantCount(ctx, nil, eventsRoles[i].ID)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to retrieve event: %w", err)
+		}
+		eventsRoles[i].NumRegistered = count
+	}
+
 	var count int64
 	if err := r.db.WithContext(ctx).
 	Model(&GormEventModel{}).
@@ -229,6 +306,7 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 		return nil, 0, errs.ErrorDB(err)
 	}
 
+	fmt.Println(eventsRoles)
 	return eventsRoles, count, nil
 }
 
@@ -298,48 +376,6 @@ func (r *eventRepositoryImpl) DeleteParticipant(ctx context.Context, tx *gorm.DB
 		Error
 	if err != nil {
 		return fmt.Errorf("failed to delete user from event: %w", err)
-	}
-
-	return nil
-}
-
-func (r *eventRepositoryImpl) IncrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error {
-	db := r.db
-	if tx != nil {
-		db = tx
-	}
-
-	rows, err := gorm.G[GormEventModel](db.Debug()).
-		Where("id = ?", eventID).
-		Where("num_registered + ? <= max_capacity", amount).
-		Update(ctx, "num_registered", gorm.Expr("num_registered + ?", amount))
-	if err != nil {
-		return fmt.Errorf("failed to find event: %w", err)
-	}
-
-	if rows == 0 {
-		return fmt.Errorf("no rows updated, event maybe full")
-	}
-
-	return nil
-}
-
-func (r *eventRepositoryImpl) DecrementParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint, amount int) error {
-	db := r.db
-	if tx != nil {
-		db = tx
-	}
-
-	rows, err := gorm.G[GormEventModel](db.Debug()).
-		Where("id = ?", eventID).
-		Where("num_registered - ? >= 0", amount).
-		Update(ctx, "num_registered", gorm.Expr("num_registered - ?", amount))
-	if err != nil {
-		return fmt.Errorf("failed to find event: %w", err)
-	}
-
-	if rows == 0 {
-		return fmt.Errorf("no rows updated")
 	}
 
 	return nil

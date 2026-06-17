@@ -17,6 +17,6 @@ type Event struct {
 	Duration        int
 	LocationName    string
 	LocationAddress string
-	MaxCapacity     int
-	NumRegistered   int
+	MaxCapacity     uint
+	NumRegistered   uint
 }

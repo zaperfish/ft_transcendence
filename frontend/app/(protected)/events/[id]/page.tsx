@@ -167,7 +167,7 @@ export default function EventDetailPage() {
 						className="w-full text-error border-error hover:bg-error/10"
 						disabled={leaveMutation.isPending}
 					>
-						{leaveMutation.isPending ? 'unregistering..' : 'unregistered'}
+						{leaveMutation.isPending ? 'unregistering..' : 'Unregister'}
 					</Button>
 				)}
 			</Card>
@@ -211,7 +211,7 @@ export default function EventDetailPage() {
 					event={event}
 					onClose={() => setIsEditModalOpen(false)}
 					onSuccess={() => {
-						queryClient.invalidateQueries({ queryKey: ['event', eventId] });
+						queryClient.invalidateQueries({ queryKey: ['event', numericId] });
 						setIsEditModalOpen(false);
 					}}
 				/>

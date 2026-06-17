@@ -24,7 +24,7 @@ export async function createEvent(data: CreateEventRequest) : Promise<EventEntit
 
 // Join a event
 export async function joinEvent(eventId: number): Promise<void> {
-	return request<void>(`/api/me/join/${eventId}`, {
+	return request<void>(`/api/me/events/${eventId}/join`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 	});
@@ -86,7 +86,7 @@ export async function removeParticipant(
 
 // User unregisters event
 export async function leaveEvent(id: number): Promise<void> {
-	return request<void>(`/api/me/leave/${id}`, {
+	return request<void>(`/api/me/events/${id}/leave`, {
 		method: "DELETE",
 	});
 }

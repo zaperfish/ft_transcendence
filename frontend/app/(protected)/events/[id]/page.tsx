@@ -193,7 +193,7 @@ export default function EventDetailPage() {
 								<p className="text-sm font-medium text-text-primary truncate">{participant.name}</p>
 							</div>
 							{ /* Remove participants*/ }
-							{isCreator && (
+							{isCreator && participant.id !== user?.id && (
 								<Button
 									onClick={() => handleRemoveParticipant(participant.id, participant.name)}
 									className="text-error bg-white hover:bg-error/10 p-1 rounded-md transition-colors"

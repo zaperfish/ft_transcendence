@@ -11,6 +11,12 @@ import { Card } from "@/components/ui/Card";
 import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
 import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon, MessageSquareIcon, EditIcon, XIcon } from "lucide-react";
 
+/**
+ * EventDetailPage displays detailed information for a single event,
+ * including its title, description, date, location, and participant list.
+ * It provides actions for event creators (edit, delete, remove participants)
+ * and for participants (unregister), with support for real-time updates via React Query.
+ */
 export default function EventDetailPage() {
 	const params = useParams();
 	const eventId = params.id as string;

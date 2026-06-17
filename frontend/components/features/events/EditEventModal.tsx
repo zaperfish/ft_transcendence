@@ -12,6 +12,11 @@ interface EditEventModalProps {
 	onSuccess: () => void;
 }
 
+/**
+ * EditEventModal is a modal form for editing an existing event.
+ * It pre-populates fields with the event data, validates input,
+ * and submits updates via the updateEvent mutation.
+ */
 export default function EditEventModal({
 	event,
 	onClose,
@@ -53,6 +58,7 @@ export default function EditEventModal({
 		updateMutation.mutate(formattedData);
 	};
 
+	// Reuse CreateEventForm with some edits
 	return (
 		 <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
 			<div className='bg-surface rounded-lg shadow-lg max-w-175 w-full mx-auto'>

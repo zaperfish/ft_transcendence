@@ -53,6 +53,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Summary:       "Delete event",
 		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
 	}, eventHandler.DeleteEvent)
 
 	// Register GET /events/{id}

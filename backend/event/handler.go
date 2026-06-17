@@ -4,7 +4,6 @@ import (
 	// Std
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	// Intern
@@ -175,7 +174,20 @@ type DeleteEventOutput struct {
 }
 
 func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput) (*DeleteEventOutput, error) {
-	err := h.service.DeleteEvent(ctx, input.ID)
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, huma.Error401Unauthorized("no authenticated user", err)
+	}
+
+	event, err := h.service.GetEventForUser(ctx, userID, input.ID)
+	if err != nil && errors.Is(err, errs.ErrInternal) {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+	if err != nil || event.Role != "admin" {
+		return nil, huma.Error401Unauthorized("must be admin")
+	}
+
+	err = h.service.DeleteEvent(ctx, input.ID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to delete event", err)
 	}

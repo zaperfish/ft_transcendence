@@ -3,14 +3,13 @@ package event
 import (
 	// Std
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
 	// Intern
 	"ft_transcendence/backend/errs"
-	"ft_transcendence/backend/user"
 	"ft_transcendence/backend/eventusers"
+	"ft_transcendence/backend/user"
 
 	// Extern
 	"gorm.io/gorm"
@@ -30,7 +29,7 @@ type EventRepository interface {
 	CreateParticipantAs(ctx context.Context, tx *gorm.DB, eventID, userID uint, role string) error
 	DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error
 	GetParticipants(ctx context.Context, eventID uint) ([]user.User, error)
-	IsParticipant(ctx context.Context, eventID, userID uint) (bool, error)
+	GetParticipantRole(ctx context.Context, eventID, userID uint) (bool, string, error)
 	GetParticipantEventIDs(ctx context.Context, userID uint) ([]uint, error)
 }
 
@@ -223,13 +222,11 @@ func (r *eventRepositoryImpl) GetParticipantCount(ctx context.Context, tx *gorm.
 	Model(&eventusers.EventUser{}).
 	Where("event_id = ?", eventID).
     Count(&count).Error; err != nil {
-		return 0, err
+		return 0, errs.ErrorDB(err)
 	}
 
-	fmt.Println("GET PARTICIPANT:", count)
-
 	if count < 0 || uint64(count) > uint64(^uint(0)) {
-		return 0, errors.New("integer overflow")
+		return 0, errs.ErrInternal
 	}
 
 	return uint(count), nil
@@ -306,7 +303,6 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 		return nil, 0, errs.ErrorDB(err)
 	}
 
-	fmt.Println(eventsRoles)
 	return eventsRoles, count, nil
 }
 
@@ -401,20 +397,20 @@ func (r *eventRepositoryImpl) GetParticipants(ctx context.Context, eventID uint)
 	return models, nil
 }
 
-func (r *eventRepositoryImpl) IsParticipant(ctx context.Context, eventID, userID uint) (bool, error) {
-	var count int64
 
-	err := r.db.WithContext(ctx).
-		Model(&user.User{}).
+func (r *eventRepositoryImpl) GetParticipantRole(ctx context.Context, eventID, userID uint) (bool, string, error) {
+	var count int64
+	var role eventusers.EventUser
+	if err := r.db.WithContext(ctx).
+		Model(&eventusers.EventUser{}).
 		Where("user_id = ?", userID).
 		Where("event_id = ?", eventID).
-		Count(&count).Error
-
-	if err != nil {
-		return false, err
+		Count(&count).
+		Scan(&role).Error; err != nil || count == 0 {
+		return false, "none", err
 	}
 
-	return count > 0, nil
+	return true, role.Role, nil
 }
 
 // TODO: rework or remove

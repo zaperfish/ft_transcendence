@@ -3,10 +3,12 @@ package event
 import (
 	// Std
 	"context"
+	"errors"
 	"time"
 
 	// Intern
 	"ft_transcendence/backend/auth"
+	"ft_transcendence/backend/errs"
 	"ft_transcendence/backend/user"
 
 	// Extern
@@ -117,6 +119,10 @@ type UpdateEventOutput struct {
 }
 
 func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput) (*UpdateEventOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.ID); err != nil {
+		return nil, err
+	}
+
 	updates := map[string]any{}
 
 	if input.Body.Title != nil {
@@ -159,6 +165,10 @@ type DeleteEventOutput struct {
 }
 
 func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput) (*DeleteEventOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.ID); err != nil {
+		return nil, err
+	}
+
 	err := h.service.DeleteEvent(ctx, input.ID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to delete event", err)
@@ -275,6 +285,10 @@ type RemoveParticipantOutput struct {
 }
 
 func (h *EventHandler) RemoveParticipant(ctx context.Context, input *RemoveParticipantInput) (*RemoveParticipantOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
 	err := h.service.RemoveParticipant(ctx, input.EventID, input.UserID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("", err)
@@ -313,3 +327,19 @@ func (h *EventHandler) ListParticipants(ctx context.Context, input *ListParticip
 		},
 	}, nil
 }
+
+func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) error {
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return huma.Error401Unauthorized("no authenticated user", err)
+	}
+	event, err := h.service.GetEventForUser(ctx, userID, eventID)
+	if err != nil && errors.Is(err, errs.ErrInternal) {
+		return huma.Error500InternalServerError(err.Error())
+	}
+	if err != nil || event.Role != "admin" {
+		return huma.Error401Unauthorized("must be admin")
+	}
+	return nil
+}
+

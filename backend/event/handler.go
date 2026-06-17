@@ -290,8 +290,14 @@ func (h *EventHandler) RemoveParticipant(ctx context.Context, input *RemoveParti
 	}
 
 	err := h.service.RemoveParticipant(ctx, input.EventID, input.UserID)
+	if err != nil && errors.Is(err, errs.ErrCanNotRemoveAdmin) {
+		return nil, huma.Error403Forbidden(err.Error())
+	}
+	if err != nil && errors.Is(err, errs.ErrUserNotInEvent) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError("", err)
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &RemoveParticipantOutput{}, nil

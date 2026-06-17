@@ -193,6 +193,17 @@ func isValidRole(role string) bool {
 }
 
 func (s *eventServiceImpl) RemoveParticipant(ctx context.Context, eventID, userID uint) error {
+	event, err := s.repo.GetForUser(ctx, userID, eventID)
+	if err != nil {
+		return errors.New("failed to get event user information")
+	}
+	if event.Role == "none" {
+		return errs.ErrUserNotInEvent
+	}
+	if event.Role == "admin" {
+		return errs.ErrCanNotRemoveAdmin
+	}
+
 	if err := s.repo.DeleteParticipant(ctx, nil, eventID, userID); err != nil {
 		return fmt.Errorf("failed to remove participant: %w", err)
 	}

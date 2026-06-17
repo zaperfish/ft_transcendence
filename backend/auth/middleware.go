@@ -3,7 +3,6 @@ package auth
 import (
     // Std
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -31,7 +30,6 @@ func Verifier(api huma.API) func(ctx huma.Context, next func(huma.Context)) {
 		// verify and potentially extract token
 		token, err := jwtauth.VerifyToken(tokenAuth, tokenString)
 		if err != nil {
-			fmt.Println(err)
 			huma.WriteErr(api, ctx, http.StatusUnauthorized, err.Error())
 			return
 		}

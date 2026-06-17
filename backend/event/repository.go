@@ -303,7 +303,6 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 		return nil, 0, errs.ErrorDB(err)
 	}
 
-	fmt.Println(eventsRoles)
 	return eventsRoles, count, nil
 }
 

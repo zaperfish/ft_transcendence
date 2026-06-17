@@ -3,10 +3,13 @@ package event
 import (
 	// Std
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	// Intern
 	"ft_transcendence/backend/auth"
+	"ft_transcendence/backend/errs"
 	"ft_transcendence/backend/user"
 
 	// Extern
@@ -117,6 +120,19 @@ type UpdateEventOutput struct {
 }
 
 func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput) (*UpdateEventOutput, error) {
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, huma.Error401Unauthorized("no authenticated user", err)
+	}
+
+	event, err := h.service.GetEventForUser(ctx, userID, input.ID)
+	if err != nil && errors.Is(err, errs.ErrInternal) {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+	if err != nil || event.Role != "admin" {
+		return nil, huma.Error401Unauthorized("must be admin")
+	}
+
 	updates := map[string]any{}
 
 	if input.Body.Title != nil {

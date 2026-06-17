@@ -153,7 +153,6 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, o
 
 	eventsWithUserCtx := make([]EventWithUserContext, len(events))
 	for i, e := range events {
-		fmt.Println("EVENT:", e)
 		eventsWithUserCtx[i].Event = e.Event
 		eventsWithUserCtx[i].IsParticipant = e.Role != "none"
 		eventsWithUserCtx[i].Role = e.Role

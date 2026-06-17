@@ -387,8 +387,11 @@ func (r *eventRepositoryImpl) GetParticipants(ctx context.Context, eventID uint)
 
 	err := r.db.WithContext(ctx).
 		Model(&user.User{}).
-		Joins("JOIN event_users ep ON ep.user_id = users.id").
-		Where("ep.event_id = ?", eventID).
+		Joins(`
+			JOIN event_users eu 
+			ON eu.user_id = users.id
+			AND eu.deleted_at IS NULL`).
+		Where("eu.event_id = ?", eventID).
 		Find(&models).Error
 
 	if err != nil {

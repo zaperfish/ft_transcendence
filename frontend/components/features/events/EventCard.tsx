@@ -67,8 +67,10 @@ export default function EventCard({ data, mode = 'register', onDetail }: EventCa
 
 	return (
 		<div className="border border-border rounded-lg overflow-hidden flex flex-col bg-surface shadow-sm hover:shadow-md transition-shadow">
-			{/* Cover page: No image */}
-			<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0"></div>
+			{/* Cover page: default image */}
+			<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0">
+				<img src="/images/default-event-cover.jpg" alt="Default cover" className="w-full h-full object-cover"/>
+			</div>
 			{/* Event info */}
 			<div className="p-md flex flex-col flex-1">
 				<div className="flex-1">

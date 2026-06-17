@@ -3,10 +3,12 @@ package event
 import (
 	// Std
 	"context"
+	"errors"
 	"time"
 
 	// Intern
 	"ft_transcendence/backend/auth"
+	"ft_transcendence/backend/errs"
 	"ft_transcendence/backend/user"
 
 	// Extern
@@ -27,8 +29,8 @@ type EventDTO struct {
 	Duration        int       `json:"duration" doc:"Duration of the event in minutes"`
 	LocationName    string    `json:"location_name" doc:"Name of the location"`
 	LocationAddress string    `json:"location_address" doc:"Address of the location"`
-	MaxCapacity     int       `json:"max_capacity" doc:"Maximum number of people the event supports"`
-	NumRegistered   int       `json:"num_registered" doc:"Number of people who registered for this event"`
+	MaxCapacity     uint      `json:"max_capacity" doc:"Maximum number of people the event supports"`
+	NumRegistered   uint      `json:"num_registered" doc:"Number of people who registered for this event"`
 	Self            *EventSelfDTO `json:"self,omitempty" doc:"Information about the authenticated user if authenticated"`
 }
 
@@ -67,7 +69,7 @@ type CreateEventInput struct {
 		Duration        int       `json:"duration"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    string    `json:"location_name"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
-		MaxCapacity     int       `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
+		MaxCapacity     uint      `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
 	}
 }
 
@@ -108,7 +110,7 @@ type UpdateEventInput struct {
 		Duration        *int       `json:"duration,omitempty"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    *string    `json:"location_name,omitempty"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress *string    `json:"location_address,omitempty" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
-		MaxCapacity     *int       `json:"max_capacity,omitempty"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
+		MaxCapacity     *uint      `json:"max_capacity,omitempty"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
 	}
 }
 
@@ -117,6 +119,10 @@ type UpdateEventOutput struct {
 }
 
 func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput) (*UpdateEventOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.ID); err != nil {
+		return nil, err
+	}
+
 	updates := map[string]any{}
 
 	if input.Body.Title != nil {
@@ -159,6 +165,10 @@ type DeleteEventOutput struct {
 }
 
 func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput) (*DeleteEventOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.ID); err != nil {
+		return nil, err
+	}
+
 	err := h.service.DeleteEvent(ctx, input.ID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to delete event", err)
@@ -275,9 +285,19 @@ type RemoveParticipantOutput struct {
 }
 
 func (h *EventHandler) RemoveParticipant(ctx context.Context, input *RemoveParticipantInput) (*RemoveParticipantOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
 	err := h.service.RemoveParticipant(ctx, input.EventID, input.UserID)
+	if err != nil && errors.Is(err, errs.ErrCanNotRemoveAdmin) {
+		return nil, huma.Error403Forbidden(err.Error())
+	}
+	if err != nil && errors.Is(err, errs.ErrUserNotInEvent) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError("", err)
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &RemoveParticipantOutput{}, nil
@@ -313,3 +333,19 @@ func (h *EventHandler) ListParticipants(ctx context.Context, input *ListParticip
 		},
 	}, nil
 }
+
+func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) error {
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return huma.Error401Unauthorized("no authenticated user", err)
+	}
+	event, err := h.service.GetEventForUser(ctx, userID, eventID)
+	if err != nil && errors.Is(err, errs.ErrInternal) {
+		return huma.Error500InternalServerError(err.Error())
+	}
+	if err != nil || event.Role != "admin" {
+		return huma.Error401Unauthorized("must be admin")
+	}
+	return nil
+}
+

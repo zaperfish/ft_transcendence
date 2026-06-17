@@ -10,10 +10,12 @@ import (
 )
 
 var (
-	ErrNotFound     = errors.New("not found")
-	ErrConflict     = errors.New("conflict")
-	ErrInvalidInput = errors.New("invalid input")
-	ErrInternal     = errors.New("internal error")
+	ErrNotFound     		= errors.New("not found")
+	ErrConflict     		= errors.New("conflict")
+	ErrInvalidInput 		= errors.New("invalid input")
+	ErrInternal     		= errors.New("internal error")
+	ErrCanNotRemoveAdmin	= errors.New("can not remove admin from event")
+	ErrUserNotInEvent	    = errors.New("user is not registered for the event")
 )
 
 func ErrorDB(err error) error {

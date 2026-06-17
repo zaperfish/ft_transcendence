@@ -119,17 +119,8 @@ type UpdateEventOutput struct {
 }
 
 func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput) (*UpdateEventOutput, error) {
-	userID, err := auth.UidFromCtx(ctx)
-	if err != nil {
-		return nil, huma.Error401Unauthorized("no authenticated user", err)
-	}
-
-	event, err := h.service.GetEventForUser(ctx, userID, input.ID)
-	if err != nil && errors.Is(err, errs.ErrInternal) {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-	if err != nil || event.Role != "admin" {
-		return nil, huma.Error401Unauthorized("must be admin")
+	if err := confirmAdminPriviliges(ctx, h, input.ID); err != nil {
+		return nil, err
 	}
 
 	updates := map[string]any{}
@@ -174,20 +165,11 @@ type DeleteEventOutput struct {
 }
 
 func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput) (*DeleteEventOutput, error) {
-	userID, err := auth.UidFromCtx(ctx)
-	if err != nil {
-		return nil, huma.Error401Unauthorized("no authenticated user", err)
+	if err := confirmAdminPriviliges(ctx, h, input.ID); err != nil {
+		return nil, err
 	}
 
-	event, err := h.service.GetEventForUser(ctx, userID, input.ID)
-	if err != nil && errors.Is(err, errs.ErrInternal) {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-	if err != nil || event.Role != "admin" {
-		return nil, huma.Error401Unauthorized("must be admin")
-	}
-
-	err = h.service.DeleteEvent(ctx, input.ID)
+	err := h.service.DeleteEvent(ctx, input.ID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to delete event", err)
 	}
@@ -303,6 +285,10 @@ type RemoveParticipantOutput struct {
 }
 
 func (h *EventHandler) RemoveParticipant(ctx context.Context, input *RemoveParticipantInput) (*RemoveParticipantOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
 	err := h.service.RemoveParticipant(ctx, input.EventID, input.UserID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("", err)
@@ -341,3 +327,19 @@ func (h *EventHandler) ListParticipants(ctx context.Context, input *ListParticip
 		},
 	}, nil
 }
+
+func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) error {
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return huma.Error401Unauthorized("no authenticated user", err)
+	}
+	event, err := h.service.GetEventForUser(ctx, userID, eventID)
+	if err != nil && errors.Is(err, errs.ErrInternal) {
+		return huma.Error500InternalServerError(err.Error())
+	}
+	if err != nil || event.Role != "admin" {
+		return huma.Error401Unauthorized("must be admin")
+	}
+	return nil
+}
+

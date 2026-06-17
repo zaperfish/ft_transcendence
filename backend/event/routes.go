@@ -94,6 +94,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Summary:       "Remove participant",
 		Tags:          []string{"Events"},
 		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
 	}, eventHandler.RemoveParticipant)
 
 	huma.Register(api, huma.Operation{

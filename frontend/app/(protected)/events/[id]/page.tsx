@@ -1,9 +1,9 @@
 'use client';
+
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEventById, getEventParticipants, updateEvent, deleteEvent, removeParticipant, leaveEvent } from "@/lib/api/events";
+import { getEventById, getEventParticipants, deleteEvent, removeParticipant, leaveEvent } from "@/lib/api/events";
 import { useAuth } from "@/lib/hooks/useAuth";
-import type { User } from "@/types/user";
 import EditEventModal from "@/components/features/events/EditEventModal";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -101,8 +101,10 @@ export default function EventDetailPage() {
 			</Button>
 			{ /* Card for Event information display*/ }
 			<Card className="overflow-hidden">
-				{/* Cover page: No image */}
-				<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0"></div>
+				{/* Cover page: Default image */}
+				<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0">
+					<img src="/images/default-event-cover.jpg" alt="Default cover" className="w-full h-full object-cover" />
+				</div>
 				{/* Event info */}
 				<div className="p-md flex flex-col flex-1">
 					<div className="flex-1">

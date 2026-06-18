@@ -8,15 +8,16 @@ import { Button } from '@/components/ui/Button';
 import { register as registerApi } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
 
+// Define the schema of validating register data
 const registerSchema = z
 	.object({
 		username: z
 			.string()
-			.min(1, 'Please enter your username')
-			.min(3, 'Username should be at least 3 characters')
+			.min(1, 'Please enter your username') // This field cannot be empty
+			.min(3, 'Username should be at least 3 characters long')
 			.max(20, 'Username should be no more than 20 characters')
 			.regex(/^\S+$/, 'Username should not contain whitespace'),
-		email: z.pipe(
+		email: z.pipe( // Zod v4 not support email calling in chain
 			z.string().min(1, 'Please enter your email address'),
 			z.email('Invalid email address')
 		),
@@ -30,11 +31,18 @@ const registerSchema = z
 	})
 	.refine((data) => data.password === data.confirmPassword, {
 		message: 'Passwords do not match',
-		path: ['confirmPassword'],
+		path: ['confirmPassword'], // Need specify path because refine() is global validation
 	});
 
+// Typescript enables infering type of each attribute in object automatically
 type RegisterFormData = z.infer<typeof registerSchema>;
 
+/**
+ * RegisterForm is a form component for user registration.
+ * It captures username, email, password, and password confirmation,
+ * validates input using Zod schema, submits data to the registration API,
+ * and handles errors such as duplicate credentials or network issues.
+ */
 export function RegisterForm() {
 	const router = useRouter();
 	const {
@@ -44,7 +52,7 @@ export function RegisterForm() {
 		formState: { errors, isSubmitting },
 	} = useForm<RegisterFormData>({
 		resolver: zodResolver(registerSchema),
-		mode: 'onBlur',
+		mode: 'onBlur', // Remind error when user leaves one field
 		defaultValues: {
 			username: '',
 			email: '',
@@ -52,7 +60,7 @@ export function RegisterForm() {
 			confirmPassword: '',
 		},
 	});
-
+	// Data is a frontend object collecting from user input and will send to server later
 	const onSubmit = async (data: RegisterFormData) => {
 		try {
 			await registerApi({
@@ -76,9 +84,9 @@ export function RegisterForm() {
 			{/* Username */}
 			<div>
 				<Input
-					type='text'
+					type='text' // Specify the type of input to enable browser behaviors
 					placeholder='Username'
-					{...register('username')}
+					{...register('username')} // Register passing data collected from user input to 'Input'
 					className={errors.username ? 'border-error' : ''}
 				/>
 				{errors.username && (
@@ -132,6 +140,7 @@ export function RegisterForm() {
 	);
 }
 
+// This is the previous version of RegisterForm
 // /**
 //  * A registration form component with client-side validation and error handling.
 //  *

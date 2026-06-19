@@ -11,8 +11,8 @@ import (
 
 const (
 	minUsernameLength = 3
-	maxUsernameLength = 30
-	minPasswordLength = 4
+	maxUsernameLength = 20
+	minPasswordLength = 8
 	maxPasswordLength = 128
 )
 
@@ -35,6 +35,9 @@ func ValidUserPassword(password string) error {
 	return validation.Validate(password, 
 			validation.Required,
 			validation.Length(minPasswordLength, maxPasswordLength),
+			validation.Match(regexp.MustCompile(`[a-z]`)).Error("must contain at least one lower case character"),
+			validation.Match(regexp.MustCompile(`[A-Z]`)).Error("must contain at least one upper case character"),
+			validation.Match(regexp.MustCompile(`[0-9]`)).Error("must contain at least one digit"),
 		)
 }
 

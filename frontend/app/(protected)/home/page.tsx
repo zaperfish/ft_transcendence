@@ -42,7 +42,7 @@ export default function HomePage() {
 	} = useInfiniteQuery({
 		queryKey: ["events"],
 		queryFn: async ({ pageParam = 1 }) => {
-			return getEvents(pageParam, PAGE_SIZE);
+			return getEvents({ page: pageParam, page_size: PAGE_SIZE });
 		},
 		getNextPageParam: (lastPage) => {
 			const { page, page_size, total } = lastPage;

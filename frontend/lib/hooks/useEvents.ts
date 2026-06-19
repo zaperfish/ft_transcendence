@@ -1,9 +1,30 @@
-import { useQuery } from "@tanstack/react-query";
-import { getAttendingEvents, getHostingEvents } from "@/lib/api/events";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { getMyEvents } from "@/lib/api/events";
+
+const FILTER_MAP = {
+	attending: 'joined',
+	hosting: 'owned',
+} as const;
+
+const PAGE_SIZE = 10;
 
 export function useEvents(tab: 'attending' | 'hosting') {
-	return useQuery({
-		queryKey: ['events', tab],
-		queryFn: () => (tab === 'attending' ? getAttendingEvents() : getHostingEvents()),
+	const filter = FILTER_MAP[tab];
+
+	return useInfiniteQuery({
+		queryKey: ['myEvents', tab],
+		queryFn: async ({ pageParam = 1 }) => {
+			return getMyEvents({
+				filter,
+				page: pageParam,
+				page_size: PAGE_SIZE,
+			});
+		},
+		getNextPageParam: (lastPage) => {
+			const { page, page_size, total } = lastPage;
+			const maxPage = Math.ceil(total / page_size);
+			return page < maxPage ? page + 1 : undefined;
+		},
+		initialPageParam: 1,
 	});
 }

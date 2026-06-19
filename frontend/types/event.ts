@@ -33,6 +33,12 @@ export interface GetEventRequest {
 	page_size: number;
 }
 
+export interface GetMyEventsRequest {
+	filter: 'joined' | 'owned';
+	page: number;
+	page_size: number;
+}
+
 export interface PaginatedResponse<T> {
 	data: T[];
 	page: number;

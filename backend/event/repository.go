@@ -281,10 +281,10 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
     `, userID)
 
 	switch filter {
-	case EventFilterJoined:
-		q = q.Where("event_users.user_id IS NOT NULL")
+	case EventFilterMember:
+		q = q.Where("event_users.role = ?", "member")
 
-	case EventFilterOwned:
+	case EventFilterAdmin:
 		q = q.Where("event_users.role = ?", "admin")
 
 	case EventFilterAll:

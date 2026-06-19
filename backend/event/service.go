@@ -21,7 +21,7 @@ type EventService interface {
 	DeleteEvent(ctx context.Context, userID uint) error
 	GetEvent(ctx context.Context, eventID uint) (*Event, error)
 	GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error)
-	ListEvents(ctx context.Context, userID uint, limit, offset int) ([]EventWithUserContext, int64, error)
+	ListEvents(ctx context.Context, userID uint, limit, offset int, filer EventFilter) ([]EventWithUserContext, int64, error)
 	AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error
 	RemoveParticipant(ctx context.Context, eventID, userID uint) error
 	ListParticipants(ctx context.Context, eventID uint) ([]user.User, error)
@@ -39,7 +39,7 @@ func NewEventService(repo EventRepository, db *gorm.DB) EventService {
 type EventWithUserContext struct {
 	Event
 	IsParticipant bool
-	Role		  string
+	Role          string
 }
 
 func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, error) {
@@ -129,15 +129,15 @@ func (s *eventServiceImpl) GetEventForUser(ctx context.Context, userID, eventID 
 	}
 
 	output := EventWithUserContext{
-		Event: event.Event,
+		Event:         event.Event,
 		IsParticipant: event.Role != "none",
-		Role: event.Role,
+		Role:          event.Role,
 	}
 
 	return &output, nil
 }
 
-func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, offset int) ([]EventWithUserContext, int64, error) {
+func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, offset int, filter EventFilter) ([]EventWithUserContext, int64, error) {
 	if limit < 0 {
 		limit = 0
 	}
@@ -146,7 +146,7 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, o
 		offset = 0
 	}
 
-	events, total, err := s.repo.ListByUserID(ctx, limit, offset, userID)
+	events, total, err := s.repo.ListByUserID(ctx, limit, offset, userID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("service: failed to list: %w", err)
 	}

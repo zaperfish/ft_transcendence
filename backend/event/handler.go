@@ -209,14 +209,14 @@ type EventFilter string
 
 const (
 	EventFilterAll    EventFilter = "all"
-	EventFilterJoined EventFilter = "joined"
-	EventFilterOwned  EventFilter = "owned"
+	EventFilterMember EventFilter = "member"
+	EventFilterAdmin  EventFilter = "admin"
 )
 
 type ListEventsInput struct {
 	Page     int         `query:"page" minimum:"1" default:"1" doc:"Filter by page"`
 	PageSize int         `query:"page_size" minimum:"1" default:"10" doc:"Page size"`
-	Filter   EventFilter `query:"filter" enum:"all,joined,owned" default:"all" doc:"Event filer"`
+	Filter   EventFilter `query:"filter" enum:"all,member,admin" default:"all" doc:"Event filer"`
 }
 
 type ListEventsOutput struct {

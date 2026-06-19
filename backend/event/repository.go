@@ -25,7 +25,7 @@ type EventRepository interface {
 	GetForUser(ctx context.Context, userID, eventID uint) (*EventWithRole, error)
 	GetParticipantCount(ctx context.Context, tx *gorm.DB, eventID uint) (uint, error)
 	List(ctx context.Context, limit, offset int) ([]Event, int64, error)
-	ListByUserID(ctx context.Context, limit, offset int, userID uint) ([]EventWithRole, int64, error)
+	ListByUserID(ctx context.Context, limit, offset int, userID uint, filter EventFilter) ([]EventWithRole, int64, error)
 	CreateParticipantAs(ctx context.Context, tx *gorm.DB, eventID, userID uint, role string) error
 	DeleteParticipant(ctx context.Context, tx *gorm.DB, eventID, userID uint) error
 	GetParticipants(ctx context.Context, eventID uint) ([]user.User, error)
@@ -86,7 +86,7 @@ func (r *eventRepositoryImpl) Create(ctx context.Context, event *Event) (*Event,
 
 	err := gorm.G[GormEventModel](r.db.Debug()).Create(ctx, &model)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create event failed: %w", err)
 	}
 
 	return model.ToDomain(), nil
@@ -94,10 +94,10 @@ func (r *eventRepositoryImpl) Create(ctx context.Context, event *Event) (*Event,
 
 // after delete hook
 func (e *GormEventModel) AfterDelete(tx *gorm.DB) error {
-    return tx.
-        Model(&eventusers.EventUser{}).
-        Where("event_id = ?", e.ID).
-        Delete(&eventusers.EventUser{}).Error
+	return tx.
+		Model(&eventusers.EventUser{}).
+		Where("event_id = ?", e.ID).
+		Delete(&eventusers.EventUser{}).Error
 }
 
 func (r *eventRepositoryImpl) Update(ctx context.Context, eventID uint, updates map[string]any) (*Event, error) {
@@ -177,19 +177,19 @@ func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID ui
 
 	var eventRole EventWithRole
 	if err := r.db.WithContext(ctx).
-	Model(&GormEventModel{}).
-    Select(`
+		Model(&GormEventModel{}).
+		Select(`
         events.*,
         COALESCE(event_users.role, 'none') as role
     `).
-    Joins(`
+		Joins(`
         LEFT JOIN event_users 
         ON event_users.event_id = events.id
         AND event_users.user_id = ?
 		AND event_users.deleted_at IS NULL
     `, userID).
-	Where("events.id = ?", eventID).
-    Scan(&eventRole).Error; err != nil {
+		Where("events.id = ?", eventID).
+		Scan(&eventRole).Error; err != nil {
 		return nil, errs.ErrorDB(err)
 	}
 
@@ -204,10 +204,10 @@ func (r *eventRepositoryImpl) GetCapacity(ctx context.Context, tx *gorm.DB, even
 	}
 	var cap uint
 	if err := tx.WithContext(ctx).
-	Model(&Event{}).
-	Select("max_capacity").
-	Where("id = ?", eventID).
-	Scan(&cap).Error; err != nil {
+		Model(&Event{}).
+		Select("max_capacity").
+		Where("id = ?", eventID).
+		Scan(&cap).Error; err != nil {
 		return 0, err
 	}
 	return cap, nil
@@ -219,9 +219,9 @@ func (r *eventRepositoryImpl) GetParticipantCount(ctx context.Context, tx *gorm.
 	}
 	var count int64
 	if err := tx.WithContext(ctx).
-	Model(&eventusers.EventUser{}).
-	Where("event_id = ?", eventID).
-    Count(&count).Error; err != nil {
+		Model(&eventusers.EventUser{}).
+		Where("event_id = ?", eventID).
+		Count(&count).Error; err != nil {
 		return 0, errs.ErrorDB(err)
 	}
 
@@ -261,30 +261,41 @@ func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Ev
 
 type EventWithRole struct {
 	Event
-    Role  string
+	Role string
 }
 
 // having to individually query the participant count for each event is the tradeof for getting rid of NumParticipants in the GormEventModel
 // there might be a smarter, more sql heavy version to do this with a single query but I don't know how
-func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset int, userID uint) ([]EventWithRole, int64, error) {
-
-	var eventsRoles []EventWithRole
-
-	if err := r.db.WithContext(ctx).
-	Model(&GormEventModel{}).
-    Select(`
+func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset int, userID uint, filter EventFilter) ([]EventWithRole, int64, error) {
+	q := r.db.WithContext(ctx).
+		Model(&GormEventModel{}).
+		Select(`
         events.*,
         COALESCE(event_users.role, 'none') as role
     `).
-    Joins(`
+		Joins(`
         LEFT JOIN event_users 
         ON event_users.event_id = events.id 
         AND event_users.user_id = ?
 		AND event_users.deleted_at IS NULL
-    `, userID).
-	Limit(limit).
-	Offset(offset).
-    Scan(&eventsRoles).Error; err != nil {
+    `, userID)
+
+	switch filter {
+	case EventFilterJoined:
+		q = q.Where("event_users.user_id IS NOT NULL")
+
+	case EventFilterOwned:
+		q = q.Where("event_users.role = ?", "admin")
+
+	case EventFilterAll:
+		// No filter
+	}
+
+	var eventsRoles []EventWithRole
+	if err := q.
+		Limit(limit).
+		Offset(offset).
+		Scan(&eventsRoles).Error; err != nil {
 		return nil, 0, errs.ErrorDB(err)
 	}
 
@@ -298,8 +309,8 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 
 	var count int64
 	if err := r.db.WithContext(ctx).
-	Model(&GormEventModel{}).
-    Count(&count).Error; err != nil {
+		Model(&GormEventModel{}).
+		Count(&count).Error; err != nil {
 		return nil, 0, errs.ErrorDB(err)
 	}
 
@@ -332,9 +343,9 @@ func (r *eventRepositoryImpl) CreateParticipantAs(ctx context.Context, tx *gorm.
 	}
 
 	err = db.WithContext(ctx).Create(&eventusers.EventUser{
-		UserID: 	userID,
-		EventID: 	eventID,
-		Role:		role,
+		UserID:  userID,
+		EventID: eventID,
+		Role:    role,
 	}).Error
 
 	if err != nil {
@@ -396,7 +407,6 @@ func (r *eventRepositoryImpl) GetParticipants(ctx context.Context, eventID uint)
 
 	return models, nil
 }
-
 
 func (r *eventRepositoryImpl) GetParticipantRole(ctx context.Context, eventID, userID uint) (bool, string, error) {
 	var count int64

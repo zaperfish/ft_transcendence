@@ -1,13 +1,16 @@
 package event
 
 import (
+	// Std
 	"context"
 	"errors"
 	"fmt"
 
+	// Internal
 	"ft_transcendence/backend/errs"
 	"ft_transcendence/backend/user"
 
+	// External
 	"gorm.io/gorm"
 )
 
@@ -16,8 +19,9 @@ type EventService interface {
 	CreateEventWithAdmin(ctx context.Context, event *Event, userID uint) (*Event, error)
 	UpdateEvent(ctx context.Context, userID uint, updates map[string]any) (*Event, error)
 	DeleteEvent(ctx context.Context, userID uint) error
-	GetEvent(ctx context.Context, userID uint) (*Event, error)
-	ListEvents(ctx context.Context, userID uint, limit, offset int) ([]EventWithUserContext, int64, error)
+	GetEvent(ctx context.Context, eventID uint) (*Event, error)
+	GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error)
+	ListEvents(ctx context.Context, userID uint, limit, offset int, filer EventFilter) ([]EventWithUserContext, int64, error)
 	AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error
 	RemoveParticipant(ctx context.Context, eventID, userID uint) error
 	ListParticipants(ctx context.Context, eventID uint) ([]user.User, error)
@@ -35,7 +39,7 @@ func NewEventService(repo EventRepository, db *gorm.DB) EventService {
 type EventWithUserContext struct {
 	Event
 	IsParticipant bool
-	Role		  string
+	Role          string
 }
 
 func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, error) {
@@ -46,12 +50,6 @@ func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, e
 	if e.Duration <= 0 {
 		return nil, errors.New("duration must be greater than 0")
 	}
-
-	if e.MaxCapacity < 0 {
-		return nil, errors.New("max capacity cannot be negative")
-	}
-
-	e.NumRegistered = 0
 
 	created, err := s.repo.Create(ctx, e)
 	if err != nil {
@@ -70,12 +68,6 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 	if e.Duration <= 0 {
 		return nil, errors.New("duration must be greater than 0")
 	}
-
-	if e.MaxCapacity < 0 {
-		return nil, errors.New("max capacity cannot be negative")
-	}
-
-	e.NumRegistered = 0
 
 	var created Event
 
@@ -96,11 +88,8 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 			return err
 		}
 
-		if err := s.repo.IncrementParticipantCount(ctx, tx, created.ID, 1); err != nil {
-			return fmt.Errorf("failed to increment participant count: %w", err)
-		}
-
 		return nil
+
 	}); err != nil {
 		return nil, err
 	}
@@ -122,9 +111,9 @@ func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error 
 	return s.repo.Delete(ctx, eventID)
 }
 
-func (s *eventServiceImpl) GetEvent(ctx context.Context, id uint) (*Event, error) {
+func (s *eventServiceImpl) GetEvent(ctx context.Context, eventID uint) (*Event, error) {
 
-	event, err := s.repo.Get(ctx, id)
+	event, err := s.repo.Get(ctx, eventID)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +121,23 @@ func (s *eventServiceImpl) GetEvent(ctx context.Context, id uint) (*Event, error
 	return event, nil
 }
 
-func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, offset int) ([]EventWithUserContext, int64, error) {
+func (s *eventServiceImpl) GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error) {
+
+	event, err := s.repo.GetForUser(ctx, userID, eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	output := EventWithUserContext{
+		Event:         event.Event,
+		IsParticipant: event.Role != "none",
+		Role:          event.Role,
+	}
+
+	return &output, nil
+}
+
+func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, offset int, filter EventFilter) ([]EventWithUserContext, int64, error) {
 	if limit < 0 {
 		limit = 0
 	}
@@ -141,7 +146,7 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, o
 		offset = 0
 	}
 
-	events, total, err := s.repo.ListByUserID(ctx, limit, offset, userID)
+	events, total, err := s.repo.ListByUserID(ctx, limit, offset, userID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("service: failed to list: %w", err)
 	}
@@ -161,12 +166,22 @@ func (s *eventServiceImpl) AddParticipantAs(ctx context.Context, eventID, userID
 		return errs.ErrInvalidInput
 	}
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := s.repo.CreateParticipantAs(ctx, tx, eventID, userID, role); err != nil {
-			return fmt.Errorf("failed to create participant: %w", err)
+		cap, err := s.repo.GetCapacity(ctx, tx, eventID)
+		if err != nil {
+			return err
 		}
 
-		if err := s.repo.IncrementParticipantCount(ctx, tx, eventID, 1); err != nil {
-			return fmt.Errorf("failed to increment participant count: %w", err)
+		count, err := s.repo.GetParticipantCount(ctx, tx, eventID)
+		if err != nil {
+			return err
+		}
+
+		if count >= cap {
+			return errors.New("event full")
+		}
+
+		if err := s.repo.CreateParticipantAs(ctx, tx, eventID, userID, role); err != nil {
+			return fmt.Errorf("failed to create participant: %w", err)
 		}
 
 		return nil
@@ -178,17 +193,21 @@ func isValidRole(role string) bool {
 }
 
 func (s *eventServiceImpl) RemoveParticipant(ctx context.Context, eventID, userID uint) error {
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := s.repo.DeleteParticipant(ctx, tx, eventID, userID); err != nil {
-			return fmt.Errorf("failed to remove participant: %w", err)
-		}
+	event, err := s.repo.GetForUser(ctx, userID, eventID)
+	if err != nil {
+		return errors.New("failed to get event user information")
+	}
+	if event.Role == "none" {
+		return errs.ErrUserNotInEvent
+	}
+	if event.Role == "admin" {
+		return errs.ErrCanNotRemoveAdmin
+	}
 
-		if err := s.repo.DecrementParticipantCount(ctx, tx, eventID, 1); err != nil {
-			return fmt.Errorf("failed to decrement participant count: %w", err)
-		}
-
-		return nil
-	})
+	if err := s.repo.DeleteParticipant(ctx, nil, eventID, userID); err != nil {
+		return fmt.Errorf("failed to remove participant: %w", err)
+	}
+	return nil
 }
 
 func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) ([]user.User, error) {

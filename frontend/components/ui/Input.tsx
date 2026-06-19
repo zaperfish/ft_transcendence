@@ -1,39 +1,19 @@
-interface InputProps {
-	value: string;
-	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-	placeholder?: string;
-	type?: string;
-	error?: string;
-	disabled?: boolean;
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  return (
+    <input
+      type={type}
+      data-slot="input"
+      className={cn(
+        "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
-/**
- * A reusable input component with built-in error handling.
- *
- * Extends native `<input>` attributes and adds an `error` prop.
- * When `error` is provided, the input is styled as invalid and can display
- * the error message below it.
- *
- * @param props - All standard input attributes plus the custom error prop.
- * @param props.error - An optional error message that triggers error styling.
- * @returns A styled input element that shows visual feedback for errors.
- */
-export function Input({ error, ...props }: InputProps) {
-	return (
-		<div className="flex flex-col gap-xs">
-			<input {...props} className={`
-				w-full
-				px-md py-sm
-				bg-surface
-				border border-border
-				rounded-md
-				text-text-primary
-				placeholder:text-text-tertiary
-				focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-				disabled:opacity-50 disabled:cursor-not-allowed
-				`}
-			/>
-			{error && <span className="text-sm text-error mt-xs" >{error}</span>}
-		</div>
-	);
-}
+export { Input }

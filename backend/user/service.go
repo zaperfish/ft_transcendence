@@ -54,13 +54,13 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, in CreateUserDTO) (*Us
 }
 
 func validateParameters(u *CreateUserDTO) error {
-	if err := auth.ValidUserName(u.Name); err != nil {
+	if err := ValidUserName(u.Name); err != nil {
 		return err
 	}
-	if err := auth.ValidUserEmail(u.Email); err != nil {
+	if err := ValidUserEmail(u.Email); err != nil {
 		return err
 	}
-	if err := auth.ValidUserPassword(u.Password); err != nil {
+	if err := ValidUserPassword(u.Password); err != nil {
 		return err
 	}
 	if u.Password != u.PasswordConfirm {
@@ -102,13 +102,13 @@ func (s *UserServiceImpl) GetUsers(ctx context.Context, page, pageSize int) ([]U
 
 func populateUpdates(updates *map[string]any, in *PatchUserDTO) error {
 	if in.Name != nil {
-		if err := auth.ValidUserName(*in.Name); err != nil {
+		if err := ValidUserName(*in.Name); err != nil {
 			return err
 		}
 		(*updates)["name"] = *in.Name
 	}
 	if in.Email != nil {
-		if err := auth.ValidUserEmail(*in.Email); err != nil {
+		if err := ValidUserEmail(*in.Email); err != nil {
 			return err
 		}
 		(*updates)["email"] = *in.Email
@@ -147,7 +147,7 @@ func (s *UserServiceImpl) PatchPassword(ctx context.Context, id uint, in PatchPa
 		return nil, errors.New("new passwords do not match")
 	}
 
-	if err := auth.ValidUserPassword(in.NewPassword); err != nil {
+	if err := ValidUserPassword(in.NewPassword); err != nil {
 		return nil, errs.ErrInvalidInput
 	}
 

@@ -130,15 +130,22 @@ type LeaveEventInput struct {
 }
 
 func (h *MeHandler) handleLeaveEventMe(ctx context.Context, input *LeaveEventInput) (*event.AddParticipantOutput, error) {
-	uid, err := auth.UidFromCtx(ctx)
+	userID, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
 
-	err = h.se.RemoveParticipant(ctx, input.EventID, uid)
-	if err != nil {
-		return nil, huma.Error500InternalServerError("", err)
+	err = h.se.RemoveParticipant(ctx, input.EventID, userID)
+	if err != nil && errors.Is(err, errs.ErrCanNotRemoveAdmin) {
+		return nil, huma.Error403Forbidden(err.Error())
 	}
+	if err != nil && errors.Is(err, errs.ErrUserNotInEvent) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
 
 	return &event.AddParticipantOutput{}, nil
 }

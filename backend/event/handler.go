@@ -3,10 +3,12 @@ package event
 import (
 	// Std
 	"context"
+	"errors"
 	"time"
 
 	// Intern
 	"ft_transcendence/backend/auth"
+	"ft_transcendence/backend/errs"
 	"ft_transcendence/backend/user"
 
 	// Extern
@@ -18,23 +20,23 @@ type EventHandler struct {
 }
 
 type EventDTO struct {
-	ID              uint      `json:"id" doc:"ID of the event"`
-	CreatedAt       time.Time `json:"created_at" doc:"Time the event got created"`
-	UpdatedAt       time.Time `json:"updated_at" doc:"Time the event got updated"`
-	Title           string    `json:"title" doc:"Name of the event"`
-	Description     string    `json:"description" doc:"Description of the event"`
-	StartTime       time.Time `json:"start_time" doc:"Start time of the event"`
-	Duration        int       `json:"duration" doc:"Duration of the event in minutes"`
-	LocationName    string    `json:"location_name" doc:"Name of the location"`
-	LocationAddress string    `json:"location_address" doc:"Address of the location"`
-	MaxCapacity     int       `json:"max_capacity" doc:"Maximum number of people the event supports"`
-	NumRegistered   int       `json:"num_registered" doc:"Number of people who registered for this event"`
+	ID              uint          `json:"id" doc:"ID of the event"`
+	CreatedAt       time.Time     `json:"created_at" doc:"Time the event got created"`
+	UpdatedAt       time.Time     `json:"updated_at" doc:"Time the event got updated"`
+	Title           string        `json:"title" doc:"Name of the event"`
+	Description     string        `json:"description" doc:"Description of the event"`
+	StartTime       time.Time     `json:"start_time" doc:"Start time of the event"`
+	Duration        int           `json:"duration" doc:"Duration of the event in minutes"`
+	LocationName    string        `json:"location_name" doc:"Name of the location"`
+	LocationAddress string        `json:"location_address" doc:"Address of the location"`
+	MaxCapacity     uint          `json:"max_capacity" doc:"Maximum number of people the event supports"`
+	NumRegistered   uint          `json:"num_registered" doc:"Number of people who registered for this event"`
 	Self            *EventSelfDTO `json:"self,omitempty" doc:"Information about the authenticated user if authenticated"`
 }
 
 type EventSelfDTO struct {
-	IsParticipant bool `json:"is_participant" doc:"Shows if authenticated user is a participant of the event"`
-	Role string 	   `json:"role" doc:"Shows user's role in the event"`
+	IsParticipant bool   `json:"is_participant" doc:"Shows if authenticated user is a participant of the event"`
+	Role          string `json:"role" doc:"Shows user's role in the event"`
 }
 
 func (e *Event) ToDTO() EventDTO {
@@ -67,7 +69,7 @@ type CreateEventInput struct {
 		Duration        int       `json:"duration"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    string    `json:"location_name"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
-		MaxCapacity     int       `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
+		MaxCapacity     uint      `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
 	}
 }
 
@@ -108,7 +110,7 @@ type UpdateEventInput struct {
 		Duration        *int       `json:"duration,omitempty"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    *string    `json:"location_name,omitempty"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress *string    `json:"location_address,omitempty" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
-		MaxCapacity     *int       `json:"max_capacity,omitempty"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
+		MaxCapacity     *uint      `json:"max_capacity,omitempty"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
 	}
 }
 
@@ -117,6 +119,10 @@ type UpdateEventOutput struct {
 }
 
 func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput) (*UpdateEventOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.ID); err != nil {
+		return nil, err
+	}
+
 	updates := map[string]any{}
 
 	if input.Body.Title != nil {
@@ -159,6 +165,10 @@ type DeleteEventOutput struct {
 }
 
 func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput) (*DeleteEventOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.ID); err != nil {
+		return nil, err
+	}
+
 	err := h.service.DeleteEvent(ctx, input.ID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to delete event", err)
@@ -176,17 +186,37 @@ type GetEventOutput struct {
 }
 
 func (h *EventHandler) GetEvent(ctx context.Context, input *GetEventInput) (*GetEventOutput, error) {
-	event, err := h.service.GetEvent(ctx, input.ID)
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return nil, huma.Error401Unauthorized("no authenticated user", err)
+	}
+
+	event, err := h.service.GetEventForUser(ctx, userID, input.ID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to get event", err)
 	}
 
-	return &GetEventOutput{Body: event.ToDTO()}, nil
+	output := GetEventOutput{Body: event.ToDTO()}
+	output.Body.Self = &EventSelfDTO{
+		IsParticipant: event.IsParticipant,
+		Role:          event.Role,
+	}
+
+	return &output, nil
 }
 
+type EventFilter string
+
+const (
+	EventFilterAll    EventFilter = "all"
+	EventFilterJoined EventFilter = "joined"
+	EventFilterOwned  EventFilter = "owned"
+)
+
 type ListEventsInput struct {
-	Page     int `query:"page" minimum:"1" default:"1" doc:"Filter by page"`
-	PageSize int `query:"page_size" minimum:"1" default:"10" doc:"Page size"`
+	Page     int         `query:"page" minimum:"1" default:"1" doc:"Filter by page"`
+	PageSize int         `query:"page_size" minimum:"1" default:"10" doc:"Page size"`
+	Filter   EventFilter `query:"filter" enum:"all,joined,owned" default:"all" doc:"Event filer"`
 }
 
 type ListEventsOutput struct {
@@ -206,7 +236,7 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 		return nil, huma.Error401Unauthorized("no authenticated user", err)
 	}
 
-	events, total, err := h.service.ListEvents(ctx, userID, input.PageSize, input.PageSize*(input.Page-1))
+	events, total, err := h.service.ListEvents(ctx, userID, input.PageSize, input.PageSize*(input.Page-1), input.Filter)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to list events", err)
 	}
@@ -216,7 +246,7 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 		data[i] = event.ToDTO()
 		data[i].Self = &EventSelfDTO{
 			IsParticipant: event.IsParticipant,
-			Role:		   event.Role,
+			Role:          event.Role,
 		}
 	}
 
@@ -233,8 +263,8 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 type AddParticipantInput struct {
 	EventID uint `path:"id" doc:"Event ID"`
 	Body    struct {
-		UserID uint     `json:"user_id" example:"1" doc:"ID of user to be added"`
-		Role   string	`json:"role" example:"member" doc:"member/admin"`
+		UserID uint   `json:"user_id" example:"1" doc:"ID of user to be added"`
+		Role   string `json:"role" example:"member" doc:"member/admin"`
 	}
 }
 
@@ -264,9 +294,19 @@ type RemoveParticipantOutput struct {
 }
 
 func (h *EventHandler) RemoveParticipant(ctx context.Context, input *RemoveParticipantInput) (*RemoveParticipantOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
 	err := h.service.RemoveParticipant(ctx, input.EventID, input.UserID)
+	if err != nil && errors.Is(err, errs.ErrCanNotRemoveAdmin) {
+		return nil, huma.Error403Forbidden(err.Error())
+	}
+	if err != nil && errors.Is(err, errs.ErrUserNotInEvent) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError("", err)
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &RemoveParticipantOutput{}, nil
@@ -301,4 +341,19 @@ func (h *EventHandler) ListParticipants(ctx context.Context, input *ListParticip
 			Data: data,
 		},
 	}, nil
+}
+
+func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) error {
+	userID, err := auth.UidFromCtx(ctx)
+	if err != nil {
+		return huma.Error401Unauthorized("no authenticated user", err)
+	}
+	event, err := h.service.GetEventForUser(ctx, userID, eventID)
+	if err != nil && errors.Is(err, errs.ErrInternal) {
+		return huma.Error500InternalServerError(err.Error())
+	}
+	if err != nil || event.Role != "admin" {
+		return huma.Error401Unauthorized("must be admin")
+	}
+	return nil
 }

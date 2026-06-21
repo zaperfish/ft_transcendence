@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { getEvent, getEventParticipants } from '@/lib/api/events';
+import { getEventById, getEventParticipants } from '@/lib/api/events';
 import { buildEventChatWebSocketUrl, getEventChatMessages } from '@/lib/api/chat';
 import { ApiError } from '@/lib/api/client';
 import type { ChatMessage, ChatMessageInput } from '@/types/chat';
@@ -37,13 +37,13 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 
 	const eventQuery = useQuery({
 		queryKey: ['event', eventId],
-		queryFn: () => getEvent(eventId),
+		queryFn: () => getEventById(eventId),
 		retry: false,
 	});
 
 	// REST history
 	const historyData = historyQuery.data?.data;
-	const participantsData = participantsQuery.data?.data;
+	const participantsData = participantsQuery.data ?? [];
 	const eventTitle = eventQuery.data?.title ?? `Event #${eventId}`;
 	const trimmedDraft = draft.trim();
 	// derive message list from history + websocket

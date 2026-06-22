@@ -6,10 +6,23 @@ import EventCard from '@/components/features/events/EventCard';
 import { Button } from '@/components/ui/Button';
 import { useRouter } from "next/navigation";
 
+/**
+ * EventsPage displays a list of the current user's events with tab filtering
+ * between "attending" and "hosting". It supports pagination and navigation to event detail pages.
+ */
 export default function EventsPage() {
 	const [activeTab, setActiveTab] = useState<'attending' | 'hosting'>('attending');
-	const { data: events, isLoading, isError } = useEvents(activeTab);
+	const {
+		data,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		isLoading,
+		isError,
+	} = useEvents(activeTab);
 	const router = useRouter();
+
+	const events = data?.pages.flatMap((page) => page.data || []) ?? [];
 
 	return (
 		<div className="w-full px-xl py-2xl">
@@ -24,26 +37,26 @@ export default function EventsPage() {
 			</div>
 		{ /*Events filter tab*/ }
 			<div className='flex gap-lg border-border mt-2xl mb-lg'>
-				<Button
+				<button
 					onClick={() => setActiveTab('attending')}
-					className={`w-[120px] pb-sm text-sm font-medium transition text-center ${
+					className={`w-30 pb-sm text-sm font-medium transition text-center ${
 						activeTab === 'attending'
-							? 'border-b-2 border-primary text-white font-semibold'
-							: 'text-text-tertiary hover:text-white'
+							? 'border-b-2 border-primary text-primary font-semibold'
+							: 'text-text-primary hover:text-primary'
 					}`}
 				>
 					Attending
-				</Button>
-				<Button
+				</button>
+				<button
 					onClick={() => setActiveTab('hosting')}
-					className={`w-[120px] pb-sm text-sm font-medium transition text-center ${
+					className={`w-30 pb-sm text-sm font-medium transition text-center ${
 						activeTab === 'hosting'
-							? 'border-b-2 border-primary text-white font-semibold'
-							: 'text-text-tertiary hover:text-white'
+							? 'border-b-2 border-primary text-primary font-semibold'
+							: 'text-text-primary hover:text-primary'
 					}`}
 				>
 					Hosting
-				</Button>
+				</button>
 			</div>
 		{ /*Event cards list*/ }
 			{isLoading ? (
@@ -66,6 +79,23 @@ export default function EventsPage() {
 				</div>
 			) : (
 				<div className='text-center py-2xl text-text-tertiary'>No events found</div>
+			)}
+		{ /*Load more button*/ }
+			{hasNextPage && (
+				<div className="flex justify-center mt-2xl">
+					<Button
+						variant="outline"
+						onClick={() => fetchNextPage()}
+						disabled={isFetchingNextPage}
+						className="min-w-50"
+					>
+						{isFetchingNextPage ? "Loading..." : "Load more"}
+					</Button>
+				</div>
+			)}
+		{ /*All pages loaded*/ }
+			{!hasNextPage && events.length > 0 && (
+				<p className="text-center text-text-tertiary mt-xl">No more events</p>
 			)}
 		</div>
 	);

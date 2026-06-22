@@ -68,7 +68,7 @@ export default function EventCard({ data, mode = 'register', onDetail }: EventCa
 	return (
 		<div className="border border-border rounded-lg overflow-hidden flex flex-col bg-surface shadow-sm hover:shadow-md transition-shadow">
 			{/* Cover page: default image */}
-			<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0">
+			<div className="aspect-video max-h-40 bg-surface-container flex items-center justify-center shrink-0">
 				<img src="/images/default-event-cover.jpg" alt="Default cover" className="w-full h-full object-cover"/>
 			</div>
 			{/* Event info */}
@@ -99,7 +99,7 @@ export default function EventCard({ data, mode = 'register', onDetail }: EventCa
 					{isDetailMode ? (
 						<Button
 							onClick={onDetail}
-							className="w-full"
+							className="w-full hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors"
 							variant="outline"
 						>
 							View Detail

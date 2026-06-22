@@ -1,16 +1,18 @@
-import type { CreateEventRequest, EventEntity, EventsResponse } from "@/types/event";
+import type { CreateEventRequest, EventEntity, EventsResponse, GetEventRequest, GetMyEventsRequest } from "@/types/event";
 import type { User } from "@/types/user";
 import { request } from '@/lib/api/client';
 
 // API functions used for home page
 // Get list of events
-export async function getEvents(
-	page: number = 1,
-	page_size: number = 10
-) : Promise<EventsResponse> {
-	return request<EventsResponse>(
-		`/api/events?page=${page}&page_size=${page_size}`
-	);
+export async function getEvents({
+	page = 1,
+	page_size = 10,
+}: GetEventRequest) : Promise<EventsResponse> {
+	const params = new URLSearchParams({
+		page: page.toString(),
+		page_size: page_size.toString(),
+	});
+	return request<EventsResponse>(`/api/events?${params.toString()}`);
 }
 
 // Create a new event
@@ -31,14 +33,18 @@ export async function joinEvent(eventId: number): Promise<void> {
 }
 
 // API functions used for event list page
-// These two endpoints should be negotiated with backend
 // Dont have to catch errors because React Query will handle automatically
-export async function getAttendingEvents(): Promise<EventEntity[]> {
-	return request<EventEntity[]>('/api/events/attending');
-}
-
-export async function getHostingEvents(): Promise<EventEntity[]> {
-	return request<EventEntity[]>('/api/events/hosting');
+export async function getMyEvents({
+	filter,
+	page = 1,
+	page_size = 10,
+}: GetMyEventsRequest): Promise<EventsResponse> {
+	const params = new URLSearchParams({
+		filter,
+		page: page.toString(),
+		page_size: page_size.toString(),
+	});
+	return request<EventsResponse>(`/api/events?${params.toString()}`);
 }
 
 // API functions used for event detail page

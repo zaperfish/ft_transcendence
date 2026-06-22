@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers/Providers";
 
 const inter = Inter({
-  variable: "--font-inter",// CSS variable
+  variable: "--font-inter", // CSS variable
   subsets: ["latin"],
 });
 
@@ -33,10 +34,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
-		<Providers>
-			{children}
-		</Providers>
-	  </body>
+        <Providers>
+          <div className="flex min-h-screen flex-col">
+            <div className="flex-1">{children}</div>
+            <footer className="border-t border-border bg-background px-4 py-4 text-sm text-muted-foreground">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
+                <Link href="/privacy" className="hover:text-foreground">
+                  Privacy Policy
+                </Link>
+                <span className="hidden sm:inline">•</span>
+                <Link href="/terms" className="hover:text-foreground">
+                  Terms of Service
+                </Link>
+              </div>
+            </footer>
+          </div>
+        </Providers>
+      </body>
     </html>
   );
 }

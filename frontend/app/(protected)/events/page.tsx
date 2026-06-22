@@ -6,6 +6,10 @@ import EventCard from '@/components/features/events/EventCard';
 import { Button } from '@/components/ui/Button';
 import { useRouter } from "next/navigation";
 
+/**
+ * EventsPage displays a list of the current user's events with tab filtering
+ * between "attending" and "hosting". It supports pagination and navigation to event detail pages.
+ */
 export default function EventsPage() {
 	const [activeTab, setActiveTab] = useState<'attending' | 'hosting'>('attending');
 	const {
@@ -35,7 +39,7 @@ export default function EventsPage() {
 			<div className='flex gap-lg border-border mt-2xl mb-lg'>
 				<button
 					onClick={() => setActiveTab('attending')}
-					className={`w-[120px] pb-sm text-sm font-medium transition text-center ${
+					className={`w-30 pb-sm text-sm font-medium transition text-center ${
 						activeTab === 'attending'
 							? 'border-b-2 border-primary text-primary font-semibold'
 							: 'text-text-primary hover:text-primary'
@@ -45,7 +49,7 @@ export default function EventsPage() {
 				</button>
 				<button
 					onClick={() => setActiveTab('hosting')}
-					className={`w-[120px] pb-sm text-sm font-medium transition text-center ${
+					className={`w-30 pb-sm text-sm font-medium transition text-center ${
 						activeTab === 'hosting'
 							? 'border-b-2 border-primary text-primary font-semibold'
 							: 'text-text-primary hover:text-primary'

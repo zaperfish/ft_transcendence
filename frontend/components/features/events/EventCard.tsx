@@ -99,7 +99,7 @@ export default function EventCard({ data, mode = 'register', onDetail }: EventCa
 					{isDetailMode ? (
 						<Button
 							onClick={onDetail}
-							className="w-full"
+							className="w-full hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors"
 							variant="outline"
 						>
 							View Detail

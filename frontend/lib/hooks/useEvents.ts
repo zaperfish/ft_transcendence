@@ -8,6 +8,10 @@ const FILTER_MAP = {
 
 const PAGE_SIZE = 10;
 
+/**
+ * Custom hook that fetches paginated events for the current user based on the selected tab.
+ * Returns infinite query data for either events the user is attending or hosting.
+ */
 export function useEvents(tab: 'attending' | 'hosting') {
 	const filter = FILTER_MAP[tab];
 

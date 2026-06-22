@@ -2,8 +2,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { getMyEvents } from "@/lib/api/events";
 
 const FILTER_MAP = {
-	attending: 'joined',
-	hosting: 'owned',
+	attending: 'member',
+	hosting: 'admin',
 } as const;
 
 const PAGE_SIZE = 10;

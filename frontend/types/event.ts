@@ -34,7 +34,7 @@ export interface GetEventRequest {
 }
 
 export interface GetMyEventsRequest {
-	filter: 'joined' | 'owned';
+	filter: 'member' | 'admin';
 	page: number;
 	page_size: number;
 }

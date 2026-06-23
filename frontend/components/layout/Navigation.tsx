@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Bell } from 'lucide-react';
+import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import {
 	DropdownMenu,
@@ -9,7 +9,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/Dropdown-menu';
-import { Button } from "@/components/ui/Button";
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
@@ -32,8 +31,11 @@ export default function navigation() {
 			<div className='flex items-center justify-between w-full'>
 				{/* left: logo + navigation links */}
 				<div className='flex items-center gap-lg'>
-					<Link href='/' className='text-text-primary font-heading text-xl font-bold'>
-					Meetup
+					<Link href='/' className='flex items-center gap-sm'>
+					<Image src='/logo.png' alt='Camaraderie logo' width={32} height={32} className='h-8 w-8' />
+					<span className='text-text-primary font-heading text-xl font-bold'>
+					Camaraderie
+					</span>
 					</Link>
 					<nav className='flex items-center gap-md'>
 						<Link href='/home' className='text-text-secondary hover:text-text-primary transition-colors'>

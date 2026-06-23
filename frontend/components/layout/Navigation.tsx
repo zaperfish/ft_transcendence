@@ -38,11 +38,14 @@ export default function navigation() {
 					</span>
 					</Link>
 					<nav className='flex items-center gap-md'>
-						<Link href='/home' className='text-text-secondary hover:text-text-primary transition-colors'>
+						<Link href='/home' className='text-text-secondary hover:text-primary hover:shadow transition-colors'>
 						Discover
 						</Link>
-						<Link href='/events' className='text-text-secondary hover:text-text-primary transition-colors'>
-						My Events
+						<Link href='/events' className='text-text-secondary hover:text-primary hover:shadow transition-colors'>
+						MyEvents
+						</Link>
+						<Link href='/about' className='text-text-secondary hover:text-primary hover:shadow transition-colors'>
+						About
 						</Link>
 					</nav>
 				</div>

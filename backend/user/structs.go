@@ -13,15 +13,15 @@ type CreateInput struct {
 type CreateUserDTO struct {
     Name string     `json:"name" maxLength:"30" example:"Max" doc:"username"`
     Email string    `json:"email" example:"max@email.com" doc:"email address"`
-    Password string `json:"password" example:"secret" doc:"password"`
-    PasswordConfirm string `json:"password_confirm" example:"secret" doc:"password confirmation"`
+    Password string `json:"password" example:"Secret123" doc:"password"`
+    PasswordConfirm string `json:"password_confirm" example:"Secret123" doc:"password confirmation"`
 }
 
 // login
 
 type UserLoginDTO struct {
     Name string     `json:"name" example:"Max"`
-    Password string `json:"password" example:"secret"`
+    Password string `json:"password" example:"Secret123"`
 }
 
 type LoginUserInput struct {

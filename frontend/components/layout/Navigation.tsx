@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -26,31 +28,56 @@ export default function navigation() {
 		router.push('/login');
 	};
 
+	const navItems = [
+		{ href: '/home', label: 'Discover' },
+		{ href: '/events', label: 'MyEvents' },
+		{ href: '/about', label: 'About' },
+	];
+
 	return (
-		<header className='bg-surface border-b border-border px-lg py-md'>
+		<header className='bg-surface border-b border-border px-4 py-3 lg:px-lg lg:py-md'>
 			<div className='flex items-center justify-between w-full'>
-				{/* left: logo + navigation links */}
-				<div className='flex items-center gap-lg'>
+				{/* left: logo + navigation links (desktop) */}
+				<div className='flex items-center gap-4 lg:gap-lg'>
 					<Link href='/' className='flex items-center gap-sm'>
-					<Image src='/logo.png' alt='Camaraderie logo' width={32} height={32} className='h-8 w-8' />
-					<span className='text-text-primary font-heading text-xl font-bold'>
-					Camaraderie
-					</span>
+						<Image src='/logo.png' alt='Camaraderie logo' width={32} height={32} className='h-8 w-8' />
+						<span className='text-text-primary font-heading text-xl font-bold'>
+						Camaraderie
+						</span>
 					</Link>
-					<nav className='flex items-center gap-md'>
-						<Link href='/home' className='text-text-secondary hover:text-primary hover:shadow transition-colors'>
-						Discover
-						</Link>
-						<Link href='/events' className='text-text-secondary hover:text-primary hover:shadow transition-colors'>
-						MyEvents
-						</Link>
-						<Link href='/about' className='text-text-secondary hover:text-primary hover:shadow transition-colors'>
-						About
-						</Link>
+					{/* NavLinks for desktop */}
+					<nav className='hidden lg:flex items-center gap-md'>
+						{navItems.map((item) => (
+							<Link
+								key={item.href}
+								href={item.href}
+								className='text-text-secondary hover:text-primary hover:shadow transition-colors'
+							>
+							{item.label}
+							</Link>
+						))}
 					</nav>
 				</div>
-				{/* right: user avatar */}
-				<div className='flex items-center gap-md'>
+				{/* right: navigation links (mobile) + user avatar */}
+				<div className='flex items-center gap-2 lg:gap-md'>
+					{/* NavLinks for Mobile (dropdown menu) */}
+					<div className='lg:hidden'>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant='ghost' size='icon'>
+									<Menu className='h-5 w-5'/>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align='end' className='min-w-45'>
+								{navItems.map((item) => (
+									<DropdownMenuItem key={item.href} asChild>
+										<Link href={item.href}>{item.label}</Link>
+									</DropdownMenuItem>
+								))}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
+					{/* User avatar dropdown menu */}
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Avatar className='h-9 w-9 cursor-pointer'>

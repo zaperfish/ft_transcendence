@@ -39,7 +39,7 @@ export default function RootLayout({
       <body className={"font-sans antialiased"}>
         <Providers>
           <div className="flex min-h-screen flex-col">
-            <div className="flex-1">{children}</div>
+            <div className="flex-1 flex items-center justify-center">{children}</div>
             <footer className="border-t border-border bg-background px-4 py-4 text-sm text-muted-foreground">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
                 <Link href="/privacy" className="hover:text-foreground">

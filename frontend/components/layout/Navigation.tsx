@@ -15,7 +15,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
 /**
- * Top-level navigation bar with logo, primary links, notification icon, and user dropdown menu.
+ * Top-level navigation bar with logo, primary links (links for desktop and dropdown menu for mobile), and user dropdown menu.
  *
  * Handles user logout and redirects to different routes.
  */

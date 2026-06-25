@@ -35,7 +35,7 @@ export default function navigation() {
 	];
 
 	return (
-		<header className='bg-surface border-b border-border px-4 py-3 lg:px-lg lg:py-md'>
+		<header className='sticky bg-surface border-b border-border px-4 py-3 lg:px-lg lg:py-md'>
 			<div className='flex items-center justify-between w-full'>
 				{/* left: logo + navigation links (desktop) */}
 				<div className='flex items-center gap-4 lg:gap-lg'>

@@ -19,7 +19,7 @@ export default function LoginPage() {
 
 	return (
 		<div className="rounded-lg bg-surface p-xl shadow-sm">
-			<h1 className="mb-sm text-2xl font-bold text-text-primary">Login to Meetup</h1>
+			<h1 className="mb-sm text-2xl font-bold text-text-primary">Login to Camaraderie</h1>
 			<p className="mb-lg text-text-secondary">Welcome back, please login your account</p>
 			{registered && (
 				<p className="text-success mb-xs">Successfully registered! Please login.</p>

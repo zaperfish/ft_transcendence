@@ -100,19 +100,19 @@ export default function EventDetailPage() {
 	});
 
 	return (
-		<div className="w-full px-xl py-2xl">
+		<div className="w-full px-xl pt-2 pb-8 max-w-6xl mx-auto">
 			{ /* Return button */ }
 			<Button variant="ghost" onClick={() => router.back()}>
 			← Back to MyEvents
 			</Button>
-			{ /* Card for Event information display*/ }
-			<Card className="overflow-hidden">
+			{ /* Card for Event information display */ }
+			<Card className="overflow-hidden pt-0">
 				{/* Cover page: Default image */}
 				<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0">
 					<img src="/images/default-event-cover.jpg" alt="Default cover" className="w-full h-full object-cover" />
 				</div>
 				{/* Event info */}
-				<div className="p-md flex flex-col flex-1">
+				<div className="p-lg flex flex-col flex-1">
 					<div className="flex-1">
 						<h3 className="text-xl font-semibold text-text-primary line-clamp-2 leading-snug">{event.title}</h3>
 						<p className="text-sm text-text-secondary mt-xs overflow-y-auto max-h-18 pr-1">{event.description}</p>

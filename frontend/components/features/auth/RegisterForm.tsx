@@ -25,7 +25,9 @@ const registerSchema = z
 			.string()
 			.min(1, 'Please enter your password')
 			.min(8, 'Password should be at least 8 characters long')
+			.max(128, 'Password should be no more than 128 characters')
 			.regex(/[A-Z]/, 'Password should contain at least an uppercase letter')
+			.regex(/[a-z]/, 'Password should contain at least an lowercase letter')
 			.regex(/\d/, 'Password should contain at least a number'),
 		confirmPassword: z.string().min(1, 'Please confirm your password'),
 	})

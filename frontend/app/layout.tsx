@@ -4,14 +4,17 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers/Providers";
 
+// font-sans is a Tailwind CSS utility class
+// that applies the CSS rule font-family:
+// var(--font-sans)
 const inter = Inter({
-  variable: "--font-inter", // CSS variable
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Meetup App",
-  description: "A modern meetup platform",
+  title: "Camaraderie",
+  description: "A meetup app that connects people around shared purpose",
 };
 
 /**
@@ -32,11 +35,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
+    <html lang="en" className={inter.variable}>
+      <body className={"font-sans antialiased"}>
         <Providers>
           <div className="flex min-h-screen flex-col">
-            <div className="flex-1">{children}</div>
+            <div className="flex-1 flex items-center justify-center">{children}</div>
             <footer className="border-t border-border bg-background px-4 py-4 text-sm text-muted-foreground">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
                 <Link href="/privacy" className="hover:text-foreground">

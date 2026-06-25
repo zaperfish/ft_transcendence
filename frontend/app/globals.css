@@ -2,12 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@plugin "@tailwindcss/typography";
+
 @custom-variant dark (&:is(.dark *));
 
 /* Custom tokens */
 @theme {
-  /* 1. Font setting */
-  --font-sans: var(--font-inter), system-ui, sans-serif;
+  /* 1. Font setting
+  --font-sans: var(--font-inter), system-ui, sans-serif; */
   /* 2. Color setting (exclusive) */
   --color-primary-dim: #1e40af;
 

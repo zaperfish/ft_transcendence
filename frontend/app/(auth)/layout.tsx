@@ -27,10 +27,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode } )
 	if (isLoading)
 		return <div>Loading...</div>
 	return (
-		<div className="flex min-h-screen items-center justify-center p-4">
-			<div className="w-full max-w-144">
-				{children}
-			</div>
+		<div className="w-full max-w-144">
+			{children}
 		</div>
 	);
 }

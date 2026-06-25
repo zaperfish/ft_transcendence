@@ -22,7 +22,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-base font-semibold">Acceptance of terms</h2>
             <p>
-              By using Meetup, you agree to follow these Terms of Service and
+              By using Camaraderie, you agree to follow these Terms of Service and
               use the platform in a lawful and respectful manner.
             </p>
           </section>

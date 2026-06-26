@@ -25,6 +25,10 @@ type EventService interface {
 	AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error
 	RemoveParticipant(ctx context.Context, eventID, userID uint) error
 	ListParticipants(ctx context.Context, eventID uint) ([]user.User, error)
+	CreateEventImage(ctx context.Context, eventID uint, image []byte) error
+	GetEventImage(ctx context.Context, eventID uint) ([]byte, error)
+	UpdateEventImage(ctx context.Context, eventID uint, image []byte) error
+	DeleteEventImage(ctx context.Context, eventID uint) error
 }
 
 type eventServiceImpl struct {
@@ -97,9 +101,9 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 	return &created, nil
 }
 
-func (s *eventServiceImpl) UpdateEvent(ctx context.Context, id uint, updates map[string]any) (*Event, error) {
+func (s *eventServiceImpl) UpdateEvent(ctx context.Context, eventID uint, updates map[string]any) (*Event, error) {
 
-	updated, err := s.repo.Update(ctx, id, updates)
+	updated, err := s.repo.Update(ctx, eventID, updates)
 	if err != nil {
 		return nil, err
 	}
@@ -217,4 +221,17 @@ func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) (
 	}
 
 	return users, nil
+}
+
+
+func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, image []byte) error {
+}
+
+func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, image []byte) error {
+}
+
+func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
+}
+
+func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]byte, error) {
 }

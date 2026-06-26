@@ -231,7 +231,7 @@ func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) (
 }
 
 var imagePathPrefix string = "/var/lib/ft_transcendence/images"
-const maxImageSize = 1048576
+const maxImageSize = 104857600
 
 // This should only work, when no image is associated with the event yet. This is why we can not use s.repo.Update() here as it would overwrite an existing image path. s.repo.CreateImagePath() makes sure to not overwrite an existing path.
 func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
@@ -242,12 +242,13 @@ func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, i
 		return err
 	}
 
-	path := imagePathPrefix + strconv.FormatUint(uint64(eventID), 10) + mtype.Extension()
+	path := imagePathPrefix + "/" + strconv.FormatUint(uint64(eventID), 10) + mtype.Extension()
 	if err := s.repo.CreateImagePath(ctx, eventID, path); err != nil {
 		return err
 	}
 
 	if err := os.WriteFile(path, image, 0600); err != nil {
+		s.repo.DeleteImagePath(ctx, eventID)
 		return err
 	}
 
@@ -321,7 +322,7 @@ func validateImage(image []byte, contentType string, mtype *mimetype.MIME) error
 		return errors.New("Content-type header does not match file type")
 	}
 
-	if contentType != "image/jpeg" && contentType != "image/png" {
+	if contentType != "image/jpeg" {
 		return errors.New("must be image/jpeg or image/png")
 	}
 

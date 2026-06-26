@@ -446,7 +446,7 @@ func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID
 
 func (r *eventRepositoryImpl) CreateImagePath(ctx context.Context, eventID uint, path string) error {
 
-	rows, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ? AND image_path IS NULL", eventID).Update(ctx, "image_path", path)
+	rows, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).Where("image_path IS NULL or image_path = ''").Update(ctx, "image_path", path)
 	if err != nil {
 		return fmt.Errorf("failed to update event: %w", err)
 	}

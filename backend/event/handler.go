@@ -356,7 +356,8 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 		return nil, err
 	}
 
-	if err := h.service.CreateEventImage(ctx, input.EventID, input.Body, input.ContentType); err != nil {
+	if err := h.service.CreateEventImage(ctx, input.EventID, input.RawBody, input.ContentType); err != nil {
+		fmt.Println("CreateEventImage:", err)
 		return nil, err
 	}
 
@@ -365,8 +366,8 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 
 type CreateImageInput struct {
 	EventID uint `path:"id" doc:"Event ID"`
-	ContentType string `header:"Content-Type" doc:"image type" example:"image/jpeg"`
-	Body []byte
+	ContentType	string `header:"Content-Type" doc:"image type"`
+	RawBody []byte
 }
 
 func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*GetImageOutput, error) {

@@ -351,7 +351,7 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 		return nil, err
 	}
 
-	if err := CreateEventImage(ctx, input.EventID, input.Body, input.ContentType); err != nil {
+	if err := h.service.CreateEventImage(ctx, input.EventID, input.Body, input.ContentType); err != nil {
 		return nil, err
 	}
 
@@ -369,7 +369,7 @@ func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*Get
 		return nil, err
 	}
 
-	img, mime, err := GetEventImage(ctx, input.EventID)
+	img, mime, err := h.service.GetEventImage(ctx, input.EventID)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +391,7 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 		return nil, err
 	}
 
-	if err := CreateEventImage(ctx, input.EventID, input.Body, input.ContentType); err != nil {
+	if err := h.service.CreateEventImage(ctx, input.EventID, input.Body, input.ContentType); err != nil {
 		return nil, err
 	}
 
@@ -409,7 +409,7 @@ func (h *EventHandler) DeleteImage(ctx context.Context, input *DeleteImageInput)
 		return nil, err
 	}
 
-	if err := DeleteEventImage(ctx, input.EventID); err != nil {
+	if err := h.service.DeleteEventImage(ctx, input.EventID); err != nil {
 		return nil, err
 	}
 

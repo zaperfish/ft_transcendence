@@ -54,6 +54,7 @@ type GormEventModel struct {
 	LocationName    string    `gorm:"type:varchar(255)"`
 	LocationAddress string    `gorm:"type:varchar(255)"`
 	MaxCapacity     uint      `gorm:"not null;"`
+	ImagePath     	string    `gorm:"type:varchar(255)"`
 }
 
 func (GormEventModel) TableName() string {
@@ -72,6 +73,7 @@ func (m *GormEventModel) ToDomain() *Event {
 		LocationName:    m.LocationName,
 		LocationAddress: m.LocationAddress,
 		MaxCapacity:     m.MaxCapacity,
+		ImagePath:		 m.ImagePath,
 		NumRegistered:   0,
 	}
 }
@@ -443,14 +445,38 @@ func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID
 }
 
 func (r *eventRepositoryImpl) CreateImagePath(ctx context.Context, eventID uint, path string) error {
+
+	rows, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ? AND image_path IS NULL", eventID).Update(ctx, "image_path", path)
+	if err != nil {
+		return fmt.Errorf("failed to update event: %w", err)
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("no event updated")
+	}
+
 	return nil
 }
 
 func (r *eventRepositoryImpl) GetImagePath(ctx context.Context, eventID uint) (string, error) {
-	return "", nil
+	ev, err := r.Get(ctx, eventID)
+	if err != nil {
+		return "", err
+	}
+
+	return ev.ImagePath, nil
 }
 
 func (r *eventRepositoryImpl) DeleteImagePath(ctx context.Context, eventID uint) error {
+	rows, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).Update(ctx, "image_path", "")
+	if err != nil {
+		return fmt.Errorf("failed to update event: %w", err)
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("no event updated")
+	}
+
 	return nil
 }
 

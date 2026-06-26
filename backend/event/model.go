@@ -19,5 +19,5 @@ type Event struct {
 	LocationAddress string
 	MaxCapacity     uint
 	NumRegistered   uint
-	Image   		string
+	ImagePath  		string
 }

@@ -53,7 +53,7 @@ func (e *Event) ToDTO() EventDTO {
 		LocationAddress: e.LocationAddress,
 		MaxCapacity:     e.MaxCapacity,
 		NumRegistered:   e.NumRegistered,
-		HasImage:		 e.Image != "",
+		HasImage:		 e.ImagePath != "",
 	}
 
 	return eventDTO

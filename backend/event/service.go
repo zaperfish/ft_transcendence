@@ -224,14 +224,14 @@ func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) (
 }
 
 
-func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, image []byte) error {
+func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
 }
 
-func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, image []byte) error {
+func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]byte, string, error) {
+}
+
+func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
 }
 
 func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
-}
-
-func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]byte, error) {
 }

@@ -351,7 +351,7 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 		return nil, err
 	}
 
-	if err := CreateEventImage(ctx, input.EventID, input.Body); err != nil {
+	if err := CreateEventImage(ctx, input.EventID, input.Body, input.ContentType); err != nil {
 		return nil, err
 	}
 
@@ -360,6 +360,7 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 
 type CreateImageInput struct {
 	EventID uint `path:"id" doc:"Event ID"`
+	ContentType string `header:"Content-Type"`
 	Body []byte
 }
 
@@ -368,12 +369,12 @@ func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*Get
 		return nil, err
 	}
 
-	img, err := GetEventImage(ctx, input.EventID)
+	img, mime, err := GetEventImage(ctx, input.EventID)
 	if err != nil {
 		return nil, err
 	}
 
-	return GetImageOutput{Body: img}, nil
+	return &GetImageOutput{ContentType: mime, Body: img}, nil
 }
 
 type GetImageInput struct {
@@ -381,6 +382,7 @@ type GetImageInput struct {
 }
 
 type GetImageOutput struct {
+	ContentType string `header:"Content-Type"`
 	Body []byte
 }
 
@@ -389,7 +391,7 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 		return nil, err
 	}
 
-	if err := CreateEventImage(ctx, input.EventID, input.Body); err != nil {
+	if err := CreateEventImage(ctx, input.EventID, input.Body, input.ContentType); err != nil {
 		return nil, err
 	}
 
@@ -398,6 +400,7 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 
 type UpdateImageInput struct {
 	EventID uint `path:"id" doc:"Event ID"`
+	ContentType string `header:"Content-Type"`
 	Body []byte
 }
 

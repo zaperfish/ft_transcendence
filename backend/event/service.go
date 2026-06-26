@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"unsafe"
@@ -227,7 +228,7 @@ func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) (
 	return users, nil
 }
 
-var imagePath string = "/images"
+var imagePathPrefix string = "/images"
 const maxImageSize = 1048576
 
 func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
@@ -238,10 +239,12 @@ func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, i
 		return err
 	}
 
-	filename := imagePath + strconv.FormatUint(uint64(eventID), 10) + mtype.Extension()
-	// write name to database
+	path := imagePathPrefix + strconv.FormatUint(uint64(eventID), 10) + mtype.Extension()
+	if err := s.repo.CreateImagePath(ctx, eventID, path); err != nil {
+		return err
+	}
 
-	if err := os.WriteFile(filename, image, 0600); err != nil {
+	if err := os.WriteFile(path, image, 0600); err != nil {
 		return err
 	}
 
@@ -249,14 +252,60 @@ func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, i
 }
 
 func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]byte, string, error) {
-	return nil, "", nil
+	path, err := s.repo.GetImagePath(ctx, eventID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	image, err := os.ReadFile(path)
+	if err != nil {
+		return nil, "", err
+	}
+
+	mtype := mimetype.Detect(image)
+
+	return image, mtype.String(), nil
 }
 
 func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
+	mtype := mimetype.Detect(image)
+
+	if err := validateImage(image, contentType, mtype); err != nil {
+		return err
+	}
+
+	path, err := s.repo.GetImagePath(ctx, eventID)
+	if err != nil {
+		return err
+	}
+
+	// note: WriteFile() atomically replaces the file at path
+	err = os.WriteFile(path, image, 0600)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
+// when db update succeeds and image deletion fails there will 
 func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
+	path, err := s.repo.GetImagePath(ctx, eventID)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.DeleteImagePath(ctx, eventID)
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(path)
+	if err != nil {
+		log.Printf("failed to delete image: %v: %v\n", path, err)
+		return err
+	}
+
 	return nil
 }
 

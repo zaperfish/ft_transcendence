@@ -33,7 +33,6 @@ type EventRepository interface {
 	GetParticipantEventIDs(ctx context.Context, userID uint) ([]uint, error)
 	CreateImagePath(ctx context.Context, eventID uint, path string) error
 	GetImagePath(ctx context.Context, eventID uint) (string, error)
-	UpdateImagePath(ctx context.Context, eventID uint, path string) error
 	DeleteImagePath(ctx context.Context, eventID uint) error
 }
 
@@ -449,10 +448,6 @@ func (r *eventRepositoryImpl) CreateImagePath(ctx context.Context, eventID uint,
 
 func (r *eventRepositoryImpl) GetImagePath(ctx context.Context, eventID uint) (string, error) {
 	return "", nil
-}
-
-func (r *eventRepositoryImpl) UpdateImagePath(ctx context.Context, eventID uint, path string) error {
-	return nil
 }
 
 func (r *eventRepositoryImpl) DeleteImagePath(ctx context.Context, eventID uint) error {

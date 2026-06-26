@@ -119,6 +119,9 @@ func (s *eventServiceImpl) UpdateEvent(ctx context.Context, eventID uint, update
 }
 
 func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error {
+	if err := s.DeleteEventImage(ctx, eventID); err != nil {
+		log.Printf("DeleteEventImage: %v\n", err)
+	}
 	return s.repo.Delete(ctx, eventID)
 }
 

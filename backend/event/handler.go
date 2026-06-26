@@ -345,6 +345,79 @@ func (h *EventHandler) ListParticipants(ctx context.Context, input *ListParticip
 	}, nil
 }
 
+// images
+func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput) (*struct{}, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+	if err := CreateEventImage(ctx, input.EventID, input.Body); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+type CreateImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+	Body []byte
+}
+
+func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*GetImageOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+	img, err := GetEventImage(ctx, input.EventID)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetImageOutput{Body: img}, nil
+}
+
+type GetImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+}
+
+type GetImageOutput struct {
+	Body []byte
+}
+
+func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput) (*struct{}, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+	if err := CreateEventImage(ctx, input.EventID, input.Body); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+type UpdateImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+	Body []byte
+}
+
+func (h *EventHandler) DeleteImage(ctx context.Context, input *DeleteImageInput) (*struct{}, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+	if err := DeleteEventImage(ctx, input.EventID); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+type DeleteImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+}
+
+// helper
 func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) error {
 	userID, err := auth.UidFromCtx(ctx)
 	if err != nil {
@@ -358,49 +431,4 @@ func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) 
 		return huma.Error401Unauthorized("must be admin")
 	}
 	return nil
-}
-
-// images
-func (h *EventHandler) CreateEventImage(ctx context.Context, input *CreateImageInput) (*CreateImageInput, error) {
-	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
-		return nil, err
-	}
-
-}
-
-type CreateImageInput struct {
-	EventID uint `path:"id" doc:"Event ID"`
-}
-
-func (h *EventHandler) UpdateEventImage(ctx context.Context, input *UpdateImageInput) (*UpdateImageInput, error) {
-	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
-		return nil, err
-	}
-
-}
-
-type CreateImageInput struct {
-	EventID uint `path:"id" doc:"Event ID"`
-}
-
-func (h *EventHandler) DeleteEventImage(ctx context.Context, input *DeleteImageInput) (*DeleteImageInput, error) {
-	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
-		return nil, err
-	}
-
-}
-
-type DeleteImageInput struct {
-	EventID uint `path:"id" doc:"Event ID"`
-}
-
-func (h *EventHandler) GetEventImage(ctx context.Context, input *GetImageInput) (*GetImageInput, error) {
-	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
-		return nil, err
-	}
-
-}
-
-type GetImageInput struct {
-	EventID uint `path:"id" doc:"Event ID"`
 }

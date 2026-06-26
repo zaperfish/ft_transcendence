@@ -106,6 +106,48 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		DefaultStatus: http.StatusOK,
 	}, eventHandler.ListParticipants)
 
+	// images
+	huma.Register(api, huma.Operation{
+		OperationID:   "create-event-image",
+		Method:        http.MethodPost,
+		Path:          "/api/events/{id}/image",
+		Summary:       "Create event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusCreated,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
+	}, eventHandler.CreateEventImage)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "update-event-image",
+		Method:        http.MethodPatch,
+		Path:          "/api/events/{id}/image",
+		Summary:       "Update event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
+	}, eventHandler.UpdateEventImage)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "delete-event-image",
+		Method:        http.MethodDelete,
+		Path:          "/api/events/{id}/image",
+		Summary:       "Delete event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
+	}, eventHandler.DeleteEventImage)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "get-event-image",
+		Method:        http.MethodGet,
+		Path:          "/api/events/{id}/image",
+		Summary:       "Get event",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
+	}, eventHandler.GetEventImage)
+
+	// public api
 	v1 := huma.NewGroup(api, "/api/v1")
 	v1.UseMiddleware(apikey.ApiKeyVerifier(api, db))
 

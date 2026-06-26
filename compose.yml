@@ -41,6 +41,8 @@ services:
       JWT_KEY: ${JWT_KEY}
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES}
       CONTAINER_RUNTIME: true
+    volumes:
+      - media:/var/lib/ft_transcendence/images
 
   prometheus:
     container_name: ft_transcendence_prometheus
@@ -74,6 +76,7 @@ services:
       - pgdata:/var/lib/postgresql
 
 volumes:
+  media:
   pgdata:
   caddy_data:
   prometheus_data:

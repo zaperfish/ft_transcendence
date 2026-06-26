@@ -4,6 +4,7 @@ import (
 	// Std
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	// Intern
@@ -31,6 +32,7 @@ type EventDTO struct {
 	LocationAddress string        `json:"location_address" doc:"Address of the location"`
 	MaxCapacity     uint          `json:"max_capacity" doc:"Maximum number of people the event supports"`
 	NumRegistered   uint          `json:"num_registered" doc:"Number of people who registered for this event"`
+	HasImage		bool		  `json:"has_image" doc:"Denotes if event has a custom image or not"`
 	Self            *EventSelfDTO `json:"self,omitempty" doc:"Information about the authenticated user if authenticated"`
 }
 
@@ -52,6 +54,7 @@ func (e *Event) ToDTO() EventDTO {
 		LocationAddress: e.LocationAddress,
 		MaxCapacity:     e.MaxCapacity,
 		NumRegistered:   e.NumRegistered,
+		HasImage:		 e.ImagePath != "",
 	}
 
 	return eventDTO
@@ -97,6 +100,10 @@ func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to create event", err)
 	}
+	if created == nil {
+		fmt.Println(nil)
+	}
+	fmt.Println(created)
 
 	return &CreateEventOutput{Body: created.ToDTO()}, nil
 }
@@ -343,6 +350,83 @@ func (h *EventHandler) ListParticipants(ctx context.Context, input *ListParticip
 	}, nil
 }
 
+// images
+func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput) (*struct{}, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+	if err := h.service.CreateEventImage(ctx, input.EventID, input.RawBody, input.ContentType); err != nil {
+		fmt.Println("CreateEventImage:", err)
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+type CreateImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+	ContentType	string `header:"Content-Type" doc:"image type"`
+	RawBody []byte `contentType:"image/png"`
+}
+
+func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*GetImageOutput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+	img, mime, err := h.service.GetEventImage(ctx, input.EventID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GetImageOutput{ContentType: mime, Body: img}, nil
+}
+
+type GetImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+}
+
+type GetImageOutput struct {
+	ContentType string `header:"Content-Type"`
+	Body []byte `contentType:"image/png"`
+}
+
+func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput) (*struct{}, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+	if err := h.service.UpdateEventImage(ctx, input.EventID, input.RawBody, input.ContentType); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+type UpdateImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+	ContentType	string `header:"Content-Type" doc:"image type"`
+	RawBody []byte `contentType:"image/png"`
+}
+
+func (h *EventHandler) DeleteImage(ctx context.Context, input *DeleteImageInput) (*struct{}, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+	if err := h.service.DeleteEventImage(ctx, input.EventID); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+type DeleteImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+}
+
+// helper
 func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) error {
 	userID, err := auth.UidFromCtx(ctx)
 	if err != nil {

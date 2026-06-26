@@ -102,10 +102,62 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Method:        http.MethodGet,
 		Path:          "/api/events/{id}/participants",
 		Summary:       "List participants",
-		Tags:          []string{"Events"},
+		Tags:          []string{"Events", "Images"},
 		DefaultStatus: http.StatusOK,
 	}, eventHandler.ListParticipants)
 
+	// images
+	huma.Register(api, huma.Operation{
+		OperationID:   "create-event-image",
+		Method:        http.MethodPost,
+		Path:          "/api/events/{id}/image",
+		Summary:       "Create event image",
+		RequestBody:   &huma.RequestBody{
+            Content: map[string]*huma.MediaType{
+                "image/png":  {},
+            },
+        },
+		Tags:          []string{"Events", "Images"},
+		DefaultStatus: http.StatusCreated,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
+	}, eventHandler.CreateImage)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "get-event-image",
+		Method:        http.MethodGet,
+		Path:          "/api/events/{id}/image",
+		Summary:       "Get event image",
+		Tags:          []string{"Events", "Images"},
+		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
+	}, eventHandler.GetImage)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "update-event-image",
+		Method:        http.MethodPatch,
+		Path:          "/api/events/{id}/image",
+		Summary:       "Update event image",
+		RequestBody:   &huma.RequestBody{
+            Content: map[string]*huma.MediaType{
+                "image/png":  {},
+            },
+        },
+		Tags:          []string{"Events", "Images"},
+		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
+	}, eventHandler.UpdateImage)
+
+	huma.Register(api, huma.Operation{
+		OperationID:   "delete-event-image",
+		Method:        http.MethodDelete,
+		Path:          "/api/events/{id}/image",
+		Summary:       "Delete event image",
+		Tags:          []string{"Events"},
+		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
+	}, eventHandler.DeleteImage)
+
+	// public api
 	v1 := huma.NewGroup(api, "/api/v1")
 	v1.UseMiddleware(apikey.ApiKeyVerifier(api, db))
 

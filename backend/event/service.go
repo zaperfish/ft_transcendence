@@ -5,6 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"unsafe"
 
 	// Internal
 	"ft_transcendence/backend/errs"
@@ -12,6 +16,7 @@ import (
 
 	// External
 	"gorm.io/gorm"
+	"github.com/gabriel-vasile/mimetype"
 )
 
 type EventService interface {
@@ -25,6 +30,10 @@ type EventService interface {
 	AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error
 	RemoveParticipant(ctx context.Context, eventID, userID uint) error
 	ListParticipants(ctx context.Context, eventID uint) ([]user.User, error)
+	CreateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error
+	GetEventImage(ctx context.Context, eventID uint) ([]byte, string, error)
+	UpdateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error
+	DeleteEventImage(ctx context.Context, eventID uint) error
 }
 
 type eventServiceImpl struct {
@@ -78,15 +87,17 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 			return err
 		}
 
-		created, err := s.repo.Create(ctx, e)
+		ev, err := s.repo.Create(ctx, e)
 		if err != nil {
 			return err
 		}
 
-		err = s.repo.CreateParticipantAs(ctx, tx, created.ID, userID, "admin")
+		err = s.repo.CreateParticipantAs(ctx, tx, ev.ID, userID, "admin")
 		if err != nil {
 			return err
 		}
+
+		created = *ev
 
 		return nil
 
@@ -97,9 +108,9 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 	return &created, nil
 }
 
-func (s *eventServiceImpl) UpdateEvent(ctx context.Context, id uint, updates map[string]any) (*Event, error) {
+func (s *eventServiceImpl) UpdateEvent(ctx context.Context, eventID uint, updates map[string]any) (*Event, error) {
 
-	updated, err := s.repo.Update(ctx, id, updates)
+	updated, err := s.repo.Update(ctx, eventID, updates)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +119,9 @@ func (s *eventServiceImpl) UpdateEvent(ctx context.Context, id uint, updates map
 }
 
 func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error {
+	if err := s.DeleteEventImage(ctx, eventID); err != nil {
+		log.Printf("DeleteEventImage: %v\n", err)
+	}
 	return s.repo.Delete(ctx, eventID)
 }
 
@@ -217,4 +231,103 @@ func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) (
 	}
 
 	return users, nil
+}
+
+var imagePathPrefix string = "/var/lib/ft_transcendence/images"
+const maxImageSize = 104857600
+
+// This should only work, when no image is associated with the event yet. This is why we can not use s.repo.Update() here as it would overwrite an existing image path. s.repo.CreateImagePath() makes sure to not overwrite an existing path.
+func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
+
+	mtype := mimetype.Detect(image)
+
+	if err := validateImage(image, contentType, mtype); err != nil {
+		return err
+	}
+
+	path := imagePathPrefix + "/" + strconv.FormatUint(uint64(eventID), 10) + mtype.Extension()
+	if err := s.repo.CreateImagePath(ctx, eventID, path); err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(path, image, 0600); err != nil {
+		s.repo.DeleteImagePath(ctx, eventID)
+		return err
+	}
+
+	return nil
+}
+
+func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]byte, string, error) {
+	path, err := s.repo.GetImagePath(ctx, eventID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	image, err := os.ReadFile(path)
+	if err != nil {
+		return nil, "", err
+	}
+
+	mtype := mimetype.Detect(image)
+
+	return image, mtype.String(), nil
+}
+
+func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
+	mtype := mimetype.Detect(image)
+
+	if err := validateImage(image, contentType, mtype); err != nil {
+		return err
+	}
+
+	path, err := s.repo.GetImagePath(ctx, eventID)
+	if err != nil {
+		return err
+	}
+
+	// note: WriteFile() atomically replaces the file at path
+	err = os.WriteFile(path, image, 0600)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// when db update succeeds and image deletion fails there will 
+func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
+	path, err := s.repo.GetImagePath(ctx, eventID)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.DeleteImagePath(ctx, eventID)
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(path)
+	if err != nil {
+		log.Printf("failed to delete image: %v: %v\n", path, err)
+		return err
+	}
+
+	return nil
+}
+
+func validateImage(image []byte, contentType string, mtype *mimetype.MIME) error {
+	if unsafe.Sizeof(image) > maxImageSize {
+		return errors.New("file too large")
+	}
+
+	if !mtype.Is(contentType) {
+		return errors.New("Content-type header does not match file type")
+	}
+
+	if contentType != "image/jpeg" {
+		return errors.New("must be image/png")
+	}
+
+	return nil
 }

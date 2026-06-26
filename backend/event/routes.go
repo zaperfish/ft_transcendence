@@ -112,7 +112,6 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Method:        http.MethodPost,
 		Path:          "/api/events/{id}/image",
 		Summary:       "Create event image",
-		Description:   "accepts image/jpeg and image/png",
 		RequestBody:   &huma.RequestBody{
             Content: map[string]*huma.MediaType{
                 "image/png":  {},
@@ -138,7 +137,11 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Method:        http.MethodPatch,
 		Path:          "/api/events/{id}/image",
 		Summary:       "Update event image",
-		Description:   "accepts image/jpeg and image/png",
+		RequestBody:   &huma.RequestBody{
+            Content: map[string]*huma.MediaType{
+                "image/png":  {},
+            },
+        },
 		Tags:          []string{"Events", "Images"},
 		DefaultStatus: http.StatusOK,
 		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},

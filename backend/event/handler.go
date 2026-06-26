@@ -367,7 +367,7 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 type CreateImageInput struct {
 	EventID uint `path:"id" doc:"Event ID"`
 	ContentType	string `header:"Content-Type" doc:"image type"`
-	RawBody []byte
+	RawBody []byte `contentType:"image/png"`
 }
 
 func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*GetImageOutput, error) {
@@ -389,7 +389,7 @@ type GetImageInput struct {
 
 type GetImageOutput struct {
 	ContentType string `header:"Content-Type"`
-	Body []byte
+	Body []byte `contentType:"image/png"`
 }
 
 func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput) (*struct{}, error) {
@@ -397,7 +397,7 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 		return nil, err
 	}
 
-	if err := h.service.CreateEventImage(ctx, input.EventID, input.Body, input.ContentType); err != nil {
+	if err := h.service.UpdateEventImage(ctx, input.EventID, input.RawBody, input.ContentType); err != nil {
 		return nil, err
 	}
 
@@ -406,8 +406,8 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 
 type UpdateImageInput struct {
 	EventID uint `path:"id" doc:"Event ID"`
-	ContentType string `header:"Content-Type"`
-	Body []byte
+	ContentType	string `header:"Content-Type" doc:"image type"`
+	RawBody []byte `contentType:"image/png"`
 }
 
 func (h *EventHandler) DeleteImage(ctx context.Context, input *DeleteImageInput) (*struct{}, error) {

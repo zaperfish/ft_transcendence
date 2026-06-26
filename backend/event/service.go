@@ -323,7 +323,7 @@ func validateImage(image []byte, contentType string, mtype *mimetype.MIME) error
 	}
 
 	if contentType != "image/jpeg" {
-		return errors.New("must be image/jpeg or image/png")
+		return errors.New("must be image/png")
 	}
 
 	return nil

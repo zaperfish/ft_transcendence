@@ -228,7 +228,7 @@ func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) (
 	return users, nil
 }
 
-var imagePathPrefix string = "/images"
+var imagePathPrefix string = "/var/lib/ft_transcendence/images"
 const maxImageSize = 1048576
 
 // This should only work, when no image is associated with the event yet. This is why we can not use s.repo.Update() here as it would overwrite an existing image path. s.repo.CreateImagePath() makes sure to not overwrite an existing path.

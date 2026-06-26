@@ -325,7 +325,7 @@ func validateImage(image []byte, contentType string, mtype *mimetype.MIME) error
 		return errors.New("Content-type header does not match file type")
 	}
 
-	if contentType != "image/jpeg" {
+	if contentType != "image/png" {
 		return errors.New("must be image/png")
 	}
 

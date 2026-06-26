@@ -5,6 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
+	"unsafe"
 
 	// Internal
 	"ft_transcendence/backend/errs"
@@ -12,6 +15,7 @@ import (
 
 	// External
 	"gorm.io/gorm"
+	"github.com/gabriel-vasile/mimetype"
 )
 
 type EventService interface {
@@ -25,9 +29,9 @@ type EventService interface {
 	AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error
 	RemoveParticipant(ctx context.Context, eventID, userID uint) error
 	ListParticipants(ctx context.Context, eventID uint) ([]user.User, error)
-	CreateEventImage(ctx context.Context, eventID uint, image []byte) error
-	GetEventImage(ctx context.Context, eventID uint) ([]byte, error)
-	UpdateEventImage(ctx context.Context, eventID uint, image []byte) error
+	CreateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error
+	GetEventImage(ctx context.Context, eventID uint) ([]byte, string, error)
+	UpdateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error
 	DeleteEventImage(ctx context.Context, eventID uint) error
 }
 
@@ -223,15 +227,41 @@ func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) (
 	return users, nil
 }
 
+var imagePath string = "/images"
+const maxImageSize = 1048576
 
 func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		return errors.New("must be image/jpeg or image/png")
+	}
+
+	if unsafe.Sizeof(image) > maxImageSize {
+		return errors.New("file too large")
+	}
+
+	mtype := mimetype.Detect(image)
+	if !mtype.Is(contentType) {
+		return errors.New("Content-type header does not match file type")
+	}
+
+	filename := imagePath + strconv.FormatUint(uint64(eventID), 10) + mtype.Extension()
+	// write name to database
+
+	if err := os.WriteFile(filename, image, 0600); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]byte, string, error) {
+	return nil, "", nil
 }
 
 func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
+	return nil
 }
 
 func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
+	return nil
 }

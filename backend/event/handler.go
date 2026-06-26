@@ -31,6 +31,7 @@ type EventDTO struct {
 	LocationAddress string        `json:"location_address" doc:"Address of the location"`
 	MaxCapacity     uint          `json:"max_capacity" doc:"Maximum number of people the event supports"`
 	NumRegistered   uint          `json:"num_registered" doc:"Number of people who registered for this event"`
+	HasImage		bool		  `json:"has_image" doc:"Denotes if event has a custom image or not"`
 	Self            *EventSelfDTO `json:"self,omitempty" doc:"Information about the authenticated user if authenticated"`
 }
 
@@ -52,6 +53,7 @@ func (e *Event) ToDTO() EventDTO {
 		LocationAddress: e.LocationAddress,
 		MaxCapacity:     e.MaxCapacity,
 		NumRegistered:   e.NumRegistered,
+		HasImage:		 e.Image != "",
 	}
 
 	return eventDTO
@@ -356,4 +358,49 @@ func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) 
 		return huma.Error401Unauthorized("must be admin")
 	}
 	return nil
+}
+
+// images
+func (h *EventHandler) CreateEventImage(ctx context.Context, input *CreateImageInput) (*CreateImageInput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+}
+
+type CreateImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+}
+
+func (h *EventHandler) UpdateEventImage(ctx context.Context, input *UpdateImageInput) (*UpdateImageInput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+}
+
+type CreateImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+}
+
+func (h *EventHandler) DeleteEventImage(ctx context.Context, input *DeleteImageInput) (*DeleteImageInput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+}
+
+type DeleteImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
+}
+
+func (h *EventHandler) GetEventImage(ctx context.Context, input *GetImageInput) (*GetImageInput, error) {
+	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
+		return nil, err
+	}
+
+}
+
+type GetImageInput struct {
+	EventID uint `path:"id" doc:"Event ID"`
 }

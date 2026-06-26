@@ -231,17 +231,11 @@ var imagePath string = "/images"
 const maxImageSize = 1048576
 
 func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
-	if contentType != "image/jpeg" && contentType != "image/png" {
-		return errors.New("must be image/jpeg or image/png")
-	}
-
-	if unsafe.Sizeof(image) > maxImageSize {
-		return errors.New("file too large")
-	}
 
 	mtype := mimetype.Detect(image)
-	if !mtype.Is(contentType) {
-		return errors.New("Content-type header does not match file type")
+
+	if err := validateImage(image, contentType, mtype); err != nil {
+		return err
 	}
 
 	filename := imagePath + strconv.FormatUint(uint64(eventID), 10) + mtype.Extension()
@@ -263,5 +257,21 @@ func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, i
 }
 
 func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
+	return nil
+}
+
+func validateImage(image []byte, contentType string, mtype *mimetype.MIME) error {
+	if unsafe.Sizeof(image) > maxImageSize {
+		return errors.New("file too large")
+	}
+
+	if !mtype.Is(contentType) {
+		return errors.New("Content-type header does not match file type")
+	}
+
+	if contentType != "image/jpeg" && contentType != "image/png" {
+		return errors.New("must be image/jpeg or image/png")
+	}
+
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	// Std
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	// Intern
@@ -99,6 +100,10 @@ func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to create event", err)
 	}
+	if created == nil {
+		fmt.Println(nil)
+	}
+	fmt.Println(created)
 
 	return &CreateEventOutput{Body: created.ToDTO()}, nil
 }
@@ -360,7 +365,7 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 
 type CreateImageInput struct {
 	EventID uint `path:"id" doc:"Event ID"`
-	ContentType string `header:"Content-Type"`
+	ContentType string `header:"Content-Type" doc:"image type" example:"image/jpeg"`
 	Body []byte
 }
 

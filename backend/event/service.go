@@ -87,15 +87,17 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 			return err
 		}
 
-		created, err := s.repo.Create(ctx, e)
+		ev, err := s.repo.Create(ctx, e)
 		if err != nil {
 			return err
 		}
 
-		err = s.repo.CreateParticipantAs(ctx, tx, created.ID, userID, "admin")
+		err = s.repo.CreateParticipantAs(ctx, tx, ev.ID, userID, "admin")
 		if err != nil {
 			return err
 		}
+
+		created = *ev
 
 		return nil
 

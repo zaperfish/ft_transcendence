@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -17,13 +17,19 @@ interface EventChatRoomProps {
 
 type SocketStatus = 'connecting' | 'open' | 'closed' | 'error';
 
+const autoScrollWindowSize = 10;
+
 export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 	const { user } = useAuth();
 	const [draft, setDraft] = useState('');
 	const [socketStatus, setSocketStatus] = useState<SocketStatus>('connecting');
 	const [liveMessages, setLiveMessages] = useState<ChatMessage[]>([]);
 	const socketRef = useRef<WebSocket | null>(null);
-	const messagesEndRef = useRef<HTMLDivElement | null>(null);
+	const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+	const messageRefs = useRef<Array<HTMLDivElement | null>>([]);
+	const shouldAutoScrollRef = useRef(true);
+	const previousMessageCountRef = useRef(0);
+	const previousLastMessageIDRef = useRef<number | null>(null);
 
 	const historyQuery = useQuery({
 		queryKey: ['chat-history', eventId],
@@ -70,6 +76,8 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 		closed: 'Disconnected. Existing messages are still available, but sending is disabled.',
 		error: 'The chat connection failed. Existing messages are still available, but sending is disabled.',
 	}[socketStatus];
+	const connectionStatusDotClass =
+		socketStatus === 'open' ? 'bg-success' : 'bg-error';
 
 	const participantNamesById = useMemo(
 		() =>
@@ -84,10 +92,52 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 	);
 
 	const historyError = historyQuery.error instanceof ApiError ? historyQuery.error : null;
+	const lastMessage = chatMessages[chatMessages.length - 1] ?? null;
+
+	const isViewingLastMessages = useCallback(() => {
+		const container = messagesContainerRef.current;
+
+		if (container === null || chatMessages.length <= autoScrollWindowSize) {
+			return true;
+		}
+
+		const thresholdIndex = chatMessages.length - autoScrollWindowSize;
+		const thresholdMessage = messageRefs.current[thresholdIndex];
+
+		if (thresholdMessage === null || thresholdMessage === undefined) {
+			return true;
+		}
+
+		const containerRect = container.getBoundingClientRect();
+		const thresholdRect = thresholdMessage.getBoundingClientRect();
+
+		return thresholdRect.top <= containerRect.bottom;
+	}, [chatMessages.length]);
+
+	const handleMessagesScroll = useCallback(() => {
+		shouldAutoScrollRef.current = isViewingLastMessages();
+	}, [isViewingLastMessages]);
 
 	useEffect(() => {
-		messagesEndRef.current?.scrollIntoView({ block: 'end' });
-	}, [chatMessages]);
+		messageRefs.current = messageRefs.current.slice(0, chatMessages.length);
+
+		const container = messagesContainerRef.current;
+		const isInitialLoad = previousMessageCountRef.current === 0;
+		const hasNewLastMessage = previousLastMessageIDRef.current !== lastMessage?.id;
+		const shouldAutoScroll =
+			isInitialLoad ||
+			(hasNewLastMessage && shouldAutoScrollRef.current);
+
+		if (shouldAutoScroll && container !== null) {
+			container.scrollTop = container.scrollHeight;
+			shouldAutoScrollRef.current = true;
+		} else {
+			shouldAutoScrollRef.current = isViewingLastMessages();
+		}
+
+		previousMessageCountRef.current = chatMessages.length;
+		previousLastMessageIDRef.current = lastMessage?.id ?? null;
+	}, [chatMessages.length, isViewingLastMessages, lastMessage]);
 
 	useEffect(() => {
 		if (!historyQuery.isSuccess) {
@@ -180,7 +230,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 
 	if (historyQuery.isLoading) {
 		return (
-			<div className="flex min-h-[calc(100vh-12rem)] w-full items-center justify-center rounded-lg border border-border bg-surface shadow-sm">
+			<div className="flex min-h-0 flex-1 items-center justify-center rounded-none border-y border-border bg-surface shadow-sm md:rounded-lg md:border md:shadow-sm">
 				<p className="text-sm text-text-secondary">Loading chat...</p>
 			</div>
 		);
@@ -188,7 +238,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 
 	if (historyError?.status === 403) {
 		return (
-			<div className="flex min-h-[calc(100vh-12rem)] w-full flex-col items-center justify-center rounded-lg border border-border bg-surface px-xl text-center shadow-sm">
+			<div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-none border-y border-border bg-surface px-xl text-center shadow-sm md:rounded-lg md:border md:shadow-sm">
 				<h1 className="text-2xl font-heading font-bold text-text-primary">
 					Access denied
 				</h1>
@@ -201,7 +251,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 
 	if (historyError?.status === 404) {
 		return (
-			<div className="flex min-h-[calc(100vh-12rem)] w-full flex-col items-center justify-center rounded-lg border border-border bg-surface px-xl text-center shadow-sm">
+			<div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-none border-y border-border bg-surface px-xl text-center shadow-sm md:rounded-lg md:border md:shadow-sm">
 				<h1 className="text-2xl font-heading font-bold text-text-primary">
 					Event not found
 				</h1>
@@ -214,7 +264,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 
 	if (historyQuery.isError) {
 		return (
-			<div className="flex min-h-[calc(100vh-12rem)] w-full flex-col items-center justify-center rounded-lg border border-border bg-surface px-xl text-center shadow-sm">
+			<div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-none border-y border-border bg-surface px-xl text-center shadow-sm md:rounded-lg md:border md:shadow-sm">
 				<h1 className="text-2xl font-heading font-bold text-text-primary">
 					Failed to load chat
 				</h1>
@@ -226,26 +276,30 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 	}
 
 	return (
-		<div className="flex min-h-[calc(100vh-12rem)] w-full flex-col">
-			<div className="mb-md">
+		<div className="flex h-full min-h-0 flex-1 w-full flex-col overflow-hidden">
+			<div className="mb-md px-md pt-xl">
 				<h1 className="text-2xl font-heading font-bold text-text-primary">
-					Event Chat
-				</h1>
-				<p className="mt-xs text-sm text-text-secondary">
 					{eventTitle}
+				</h1>
+				<p className="mt-xs flex items-center gap-sm text-xs text-text-tertiary">
+					<span className={`inline-block size-2 rounded-full ${connectionStatusDotClass}`} />
+					{connectionMessage}
 				</p>
-				<p className="mt-xs text-xs text-text-tertiary">{connectionMessage}</p>
 			</div>
 
-			<div className="flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-surface shadow-sm">
-				<div className="min-h-0 flex-1 overflow-y-auto px-lg py-lg">
+			<div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-none border-y border-border bg-surface shadow-sm md:rounded-lg md:border">
+				<div
+					ref={messagesContainerRef}
+					onScroll={handleMessagesScroll}
+					className="min-h-0 flex-1 overflow-y-auto px-lg py-lg"
+				>
 					{chatMessages.length === 0 ? (
 						<div className="flex h-full items-center justify-center">
 							<p className="text-sm text-text-tertiary">No messages yet.</p>
 						</div>
 					) : (
 						<div className="space-y-md">
-							{chatMessages.map((message) => {
+							{chatMessages.map((message, index) => {
 								const isCurrentUserMessage = currentUserID === message.user_id;
 								const participant = participantsById.get(message.user_id);
 								const senderName =
@@ -259,6 +313,9 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 								return (
 									<div
 										key={message.id}
+										ref={(element) => {
+											messageRefs.current[index] = element;
+										}}
 										className={isCurrentUserMessage ? 'flex justify-end' : 'flex justify-start'}
 									>
 										<div
@@ -321,7 +378,6 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 									</div>
 								);
 							})}
-							<div ref={messagesEndRef} />
 						</div>
 					)}
 				</div>

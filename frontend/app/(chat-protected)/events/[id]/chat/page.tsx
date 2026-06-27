@@ -13,5 +13,9 @@ export default async function EventChatPage({
 		notFound();
 	}
 
-	return <EventChatRoom eventId={eventId} />;
+	return (
+		<div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+			<EventChatRoom eventId={eventId} />
+		</div>
+	);
 }

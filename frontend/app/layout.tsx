@@ -36,11 +36,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className={"font-sans antialiased"}>
+      <body className={"h-dvh overflow-hidden font-sans antialiased"}>
         <Providers>
-          <div className="flex min-h-screen flex-col">
-            <div className="flex-1 flex items-center justify-center">{children}</div>
-            <footer className="border-t border-border bg-background px-4 py-4 text-sm text-muted-foreground">
+          <div className="flex h-dvh flex-col overflow-hidden">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              {children}
+            </div>
+            <footer className="shrink-0 border-t border-border bg-background px-4 py-4 text-sm text-muted-foreground">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
                 <Link href="/privacy" className="hover:text-foreground">
                   Privacy Policy

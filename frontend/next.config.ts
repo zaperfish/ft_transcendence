@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   async rewrites() {
@@ -13,4 +14,18 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const pwaConfig = {
+	dest: "public",
+	cacheOnFrontEndNav: true,
+	aggressiveFrontEndNavCaching: true,
+	reloadOnOnline: true,
+	workboxOptions: {
+		disableDevLogs: true,
+	},
+};
+
+const config = process.env.NODE_ENV === 'production'
+  ? withPWA({ ...nextConfig, ...pwaConfig })
+  : nextConfig;
+
+export default config;

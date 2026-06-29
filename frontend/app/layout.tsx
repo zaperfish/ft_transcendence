@@ -15,6 +15,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Camaraderie",
   description: "A meetup app that connects people around shared purpose",
+  manifest: '/manifest.json',
 };
 
 /**

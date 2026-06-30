@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
@@ -279,7 +280,12 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 		<div className="flex h-full min-h-0 flex-1 w-full flex-col overflow-hidden">
 			<div className="mb-md px-md pt-xl">
 				<h1 className="text-2xl font-heading font-bold text-text-primary">
-					{eventTitle}
+					<Link
+						href={`/events/${eventId}`}
+						className="transition-colors hover:text-primary"
+					>
+						{eventTitle}
+					</Link>
 				</h1>
 				<p className="mt-xs flex items-center gap-sm text-xs text-text-tertiary">
 					<span className={`inline-block size-2 rounded-full ${connectionStatusDotClass}`} />

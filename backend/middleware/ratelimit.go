@@ -62,11 +62,11 @@ func RateLimiterMiddleware(store *LimiterStore) func(http.Handler) http.Handler 
 			// 	store.UserLimiters[userID] = rate.NewLimiter(5, 20)
 			// }
 
-			limiter, exists := store.IpLimiters[ip]
-			if !exists {
-				limiter = rate.NewLimiter(2, 5)
-				store.IpLimiters[ip] = limiter
-			}
+				limiter, exists := store.IpLimiters[ip]
+				if !exists {
+					limiter = rate.NewLimiter(5, 20)
+					store.IpLimiters[ip] = limiter
+				}
 
 			if !limiter.Allow() {
 				http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)

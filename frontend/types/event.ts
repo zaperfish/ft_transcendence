@@ -47,3 +47,13 @@ export interface PaginatedResponse<T> {
 }
 
 export type EventsResponse = PaginatedResponse<EventEntity>;
+
+export interface EventParticipant {
+	id: number;
+	name: string;
+	email: string;
+}
+
+export interface EventParticipantsResponse {
+	data: EventParticipant[];
+}

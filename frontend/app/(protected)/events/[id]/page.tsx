@@ -83,6 +83,14 @@ export default function EventDetailPage() {
 		}
 	};
 
+	const handleOpenChatroom = () => {
+		window.open(
+			`/events/${numericId}/chat`,
+			'_blank',
+			'noopener,noreferrer,width=960,height=720'
+		);
+	};
+
 	if (eventLoading || participantsLoading)
 		return <div className="text-center py-2xl text-text-secondary">Loading...</div>
 	if (!event)
@@ -140,7 +148,7 @@ export default function EventDetailPage() {
 			{ /* Card for operation enabling*/ }
 			<Card className="p-lg space-y-md">
 				{ /* Open chatroom */ }
-				<Button className="w-full bg-primary text-white">
+				<Button className="w-full bg-primary text-white" onClick={handleOpenChatroom}>
 					<MessageSquareIcon className="size-4 mr-2" />
 					Open Event Chatroom
 				</Button>

@@ -83,6 +83,10 @@ export default function EventDetailPage() {
 		}
 	};
 
+	const handleBackToEvents = () => {
+		router.push('/events');
+	};
+
 	const handleOpenChatroom = () => {
 		window.open(
 			`/events/${numericId}/chat`,
@@ -110,7 +114,7 @@ export default function EventDetailPage() {
 	return (
 		<div className="w-full px-xl pt-2 pb-8 max-w-6xl mx-auto">
 			{ /* Return button */ }
-			<Button variant="ghost" onClick={() => router.back()}>
+			<Button variant="ghost" onClick={handleBackToEvents}>
 			← Back to MyEvents
 			</Button>
 			{ /* Card for Event information display */ }

@@ -93,7 +93,7 @@ export function ImageUpload({ onChange, error }: ImageUploadProps) {
 					</p>
 				</div>
 			</div>
-			{displayError && <p className="text-sm text-error">{error}</p>}
+			{displayError && <p className="text-sm text-error">{displayError}</p>}
 		</div>
 	);
 }

@@ -28,8 +28,11 @@ export default function HomePage() {
 	};
 
 	// Refresh and update home page when a new event is created
-	const handleEventCreated = () => {
+	const handleEventCreated = (warning?: string) => {
 		queryClient.invalidateQueries({ queryKey: ["events"] });
+		if (warning) {
+			alert(warning);
+		}
 	};
 
 	const {

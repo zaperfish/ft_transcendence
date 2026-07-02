@@ -9,7 +9,7 @@ import { ImageUpload } from '@/components/ui/ImageUpload';
 interface CreateEventFormProps {
 	open: boolean;
 	onClose: () => void;
-	onSuccess?: () => void;
+	onSuccess?: (warning?: string) => void;
 }
 
 /**
@@ -49,15 +49,17 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 		try {
 			const createdEvent = await createEvent(formattedData);
 			const eventId = createdEvent.id;
+			let warning: string | undefined;
 
 			if (imageFile) {
 				try {
 					await uploadEventImage(eventId, imageFile);
 				} catch (uploadErr) {
 					console.warn('Failed to upload image', uploadErr);
+					warning = "Failed to upload cover page, but you can upload later in detail page."
 				}
 			}
-			onSuccess?.();
+			onSuccess?.(warning);
 			onClose();
 			reset();
 			setImageFile(null);
@@ -250,7 +252,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						Cancel
 						</Button>
 						<Button type='submit' disabled={isSubmitting}>
-							{isSubmitting ? "Submitting..." : "submit"}
+							{isSubmitting ? "Submitting..." : "Submit"}
 						</Button>
 					</div>
 					</form>

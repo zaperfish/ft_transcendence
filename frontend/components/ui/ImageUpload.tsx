@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 
 interface ImageUploadProps {
 	onChange: (file: File | null) => void;
@@ -11,6 +11,7 @@ export function ImageUpload({ onChange, error }: ImageUploadProps) {
 	const [preview, setPreview] = useState<string | null>(null);
 	const [filename, setFilename] = useState<string>('');
 	const [localError, setLocalError] = useState<string>('');
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const handleFileChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +46,10 @@ export function ImageUpload({ onChange, error }: ImageUploadProps) {
 		setFilename('');
 		setLocalError('');
 		onChange(null);
+		// Reset ref to allow change event even if same file selected more than once
+		if (fileInputRef.current) {
+			fileInputRef.current.value = '';
+		}
 	};
 
 	const displayError = error || localError;
@@ -77,6 +82,7 @@ export function ImageUpload({ onChange, error }: ImageUploadProps) {
 				)}
 				<div className="flex-1 ">
 					<input
+						ref={fileInputRef}
 						type="file"
 						accept="image/png"
 						onChange={handleFileChange}

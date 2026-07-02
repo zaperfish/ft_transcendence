@@ -1,6 +1,6 @@
 import type { CreateEventRequest, EventEntity, EventsResponse, GetEventRequest, GetMyEventsRequest } from "@/types/event";
 import type { User } from "@/types/user";
-import { request } from '@/lib/api/client';
+import { request, ApiError } from '@/lib/api/client';
 
 // API functions used for home page
 // Get list of events
@@ -95,4 +95,25 @@ export async function leaveEvent(id: number): Promise<void> {
 	return request<void>(`/api/me/events/${id}/leave`, {
 		method: "DELETE",
 	});
+}
+
+// User upload image when creating event
+// Not using request() because it doesnt return json
+export async function uploadEventImage(eventId: number, file: File): Promise<void> {
+	const response = await fetch(`/api/events/${eventId}/image`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': file.type,
+		},
+		body: file,
+		credentials: 'include',
+	});
+
+	if (!response.ok) {
+		if (response.status === 401 && typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+			window.location.href = '/login';
+		}
+		throw new ApiError(response.status, 'Image upload failed');
+	}
+	return;
 }

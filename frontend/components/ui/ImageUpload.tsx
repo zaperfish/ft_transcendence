@@ -50,7 +50,7 @@ export function ImageUpload({ onChange, error }: ImageUploadProps) {
 	const displayError = error || localError;
 
 	return (
-		<div className="space-ysm">
+		<div className="space-y-sm">
 			<label className="block text-sm font-medium text-text-primary">
 				Cover page of event
 			</label>
@@ -72,10 +72,10 @@ export function ImageUpload({ onChange, error }: ImageUploadProps) {
 					</div>
 				) : (
 					<div className="w-32 h-32 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-text-tertiary">
-						No image uploaded
+						No image
 					</div>
 				)}
-				<div className="flex-1">
+				<div className="flex-1 ">
 					<input
 						type="file"
 						accept="image/png"

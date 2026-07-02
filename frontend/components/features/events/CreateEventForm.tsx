@@ -2,8 +2,9 @@ import type { CreateEventRequest } from '@/types/event';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react'
 import { ApiError } from '@/lib/api/client';
-import { createEvent } from '@/lib/api/events';
+import { createEvent, uploadEventImage } from '@/lib/api/events';
 import { Button } from '@/components/ui/Button';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 
 interface CreateEventFormProps {
 	open: boolean;
@@ -30,6 +31,8 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 		},
 	});
 	const [serverError, setServerError] = useState<string | null>(null);
+	const [imageFile, setImageFile] = useState<File | null>(null);
+	const [imageError, setImageError] = useState<string>('');
 
 	if (!open)
 		return null;
@@ -44,10 +47,21 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 		};
 
 		try {
-			await createEvent(formattedData);
+			const createdEvent = await createEvent(formattedData);
+			const eventId = createdEvent.id;
+
+			if (imageFile) {
+				try {
+					await uploadEventImage(eventId, imageFile);
+				} catch (uploadErr) {
+					console.warn('Failed to upload image', uploadErr);
+				}
+			}
 			onSuccess?.();
 			onClose();
 			reset();
+			setImageFile(null);
+			setImageError('');
 		} catch (err) {
 			if (err instanceof ApiError) {
 				setServerError(`Request failed (code ${err.status}): ${err.message}`);
@@ -60,9 +74,10 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 	};
 
 	return (
-		 <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-			<div className='bg-surface rounded-lg shadow-lg max-w-175 w-full mx-auto'>
-				<div className='p-2xl'>
+			<div className="fixed inset-0 z-50 overflow-y-auto bg-background/80 backdrop-blur-sm">
+				<div className="flex min-h-full items-start justify-center px-md py-8">
+					<div className='bg-surface rounded-lg shadow-lg max-w-175 w-full mx-auto max-h-[calc(100vh-4rem)] overflow-y-auto'>
+						<div className='p-2xl'>
 					<h2 className='text-2xl font-heading font-bold text-text-primary mb-xl'>Create a new event</h2>
 					<form onSubmit={handleSubmit(onSubmit)} className='space-y-lg'>
 					{/* Title - required, 3 - 100 characters */}
@@ -210,6 +225,14 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 							/>
 							{errors.max_capacity && <p className='text-error text-sm'>{errors.max_capacity.message}</p>}
 						</div>
+					{/* Image of cover page - required, PNG no more than 5MB */}
+						<ImageUpload
+							onChange={(file) => {
+								setImageFile(file);
+								setImageError('');
+							}}
+							error={imageError}
+						/>
 					{/* Server error display */}
 					{serverError && (
 						<div className='bg-error/10 border border-error/30 rounded-md p-md'>
@@ -231,8 +254,9 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</Button>
 					</div>
 					</form>
+						</div>
+					</div>
 				</div>
 			</div>
-		</div>
 	);
 }

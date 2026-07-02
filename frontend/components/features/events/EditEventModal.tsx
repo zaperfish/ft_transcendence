@@ -60,9 +60,10 @@ export default function EditEventModal({
 
 	// Reuse CreateEventForm with some edits
 	return (
-		 <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-			<div className='bg-surface rounded-lg shadow-lg max-w-175 w-full mx-auto'>
-				<div className='p-2xl'>
+			<div className="fixed inset-0 z-50 overflow-y-auto bg-background/80 backdrop-blur-sm">
+				<div className="flex min-h-full items-start justify-center px-md py-8">
+					<div className='bg-surface rounded-lg shadow-lg max-w-175 w-full mx-auto max-h-[calc(100vh-4rem)] overflow-y-auto'>
+						<div className='p-2xl'>
 					<h2 className='text-2xl font-heading font-bold text-text-primary mb-xl'>Update your event</h2>
 					<form onSubmit={handleSubmit(onSubmit)} className='space-y-lg'>
 					{/* Title - required, 3 - 100 characters */}
@@ -225,8 +226,9 @@ export default function EditEventModal({
 						</Button>
 					</div>
 					</form>
+						</div>
+					</div>
 				</div>
 			</div>
-		</div>
 	);
 }

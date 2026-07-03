@@ -55,8 +55,14 @@ export default function HomePage() {
 		initialPageParam: 1,
 	});
 
-	// Avoid crash when backend returns empty page.data
-	const events = data?.pages.flatMap((page) => page.data || []) ?? [];
+	// Using [] to avoid crash when backend returns empty page.data
+	// Add image interface and then pass it to src to retrieve img automatically by browser
+	const events = data?.pages.flatMap((page) =>
+		(page.data || []).map((event) => ({
+			...event,
+			image: `/api/events/${event.id}/image`
+		}))
+	) ?? [];
 
 	if (isLoading)
 		return <div className="text-center py-2xl text-text-secondary">Loading...</div>

@@ -5,6 +5,8 @@ import { useState } from "react";
 import { joinEvent } from "@/lib/api/events";
 import { useQueryClient } from "@tanstack/react-query";
 
+const DEFAULT_IMAGE = '/images/default-event-cover.jpg';
+
 interface EventCardProps {
 	data: EventEntity;
 	mode?: 'register' | 'detail';
@@ -69,7 +71,15 @@ export default function EventCard({ data, mode = 'register', onDetail }: EventCa
 		<div className="border border-border rounded-lg overflow-hidden flex flex-col bg-surface shadow-sm hover:shadow-md transition-shadow">
 			{/* Cover page: default image */}
 			<div className="aspect-video max-h-40 bg-surface-container flex items-center justify-center shrink-0">
-				<img src="/images/default-event-cover.jpg" alt="Default cover" className="w-full h-full object-cover"/>
+				<img
+					src={data.image}
+					alt={data.title}
+					className="w-full h-full object-cover"
+					onError={(e) => {
+						e.currentTarget.onerror = null;
+						e.currentTarget.src = DEFAULT_IMAGE;
+					}}
+				/>
 			</div>
 			{/* Event info */}
 			<div className="p-md flex flex-col flex-1">

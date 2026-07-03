@@ -56,8 +56,8 @@ export function ImageUpload({ onChange, error }: ImageUploadProps) {
 
 	return (
 		<div className="space-y-sm">
-			<label className="block text-sm font-medium text-text-primary">
-				Cover page of event
+			<label className="block text-sm font-medium text-text-secondary">
+				Cover page
 			</label>
 			<div className="flex items-center gap-md">
 				{preview ? (

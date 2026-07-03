@@ -5,6 +5,7 @@ import { ApiError } from '@/lib/api/client';
 import { createEvent, uploadEventImage } from '@/lib/api/events';
 import { Button } from '@/components/ui/Button';
 import { ImageUpload } from '@/components/ui/ImageUpload';
+import { FormLabel } from '@/components/ui/FormLabel';
 
 interface CreateEventFormProps {
 	open: boolean;
@@ -90,8 +91,9 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 					<form onSubmit={handleSubmit(onSubmit)} className='space-y-lg'>
 					{/* Title - required, 3 - 100 characters */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Title</label>
+							<FormLabel htmlFor='title-input'>Title</FormLabel>
 							<input
+								id="title-input"
 								{...register("title", {
 									required: "Please enter event title",
 									minLength: {
@@ -110,8 +112,9 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Description - required, 10 - 500 characters */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Description</label>
+							<FormLabel htmlFor='Description-input'>Description</FormLabel>
 							<textarea
+								id="Description-input"
 								{...register("description", {
 									required: "Please enter event description",
 									minLength: {
@@ -131,9 +134,10 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Start time - required, datetime-local format */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Start time</label>
+							<FormLabel htmlFor='start-time-input'>Start time</FormLabel>
 							<input
 								type="datetime-local"
+								id='start-time-input'
 								{...register("start_time", {
 									required: "Please enter start time of event",
 									validate: (value) => {
@@ -151,9 +155,10 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Duration - required, 15 - 480 mins */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Duration(min)</label>
+							<FormLabel htmlFor='duration-input'>Duration (min)</FormLabel>
 							<input
 								type="number"
+								id='duration-input'
 								{...register("duration", {
 									required: "Please enter duration of event",
 									min: {
@@ -173,8 +178,9 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Location name - required, 3 - 100 characters */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Location name</label>
+							<FormLabel htmlFor='location-name-input'>Location name</FormLabel>
 							<input
+								id='location-name-input'
 								{...register("location_name", {
 									required: "Please enter location name of event",
 									minLength: {
@@ -193,8 +199,9 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Location address - required, 5 - 200 characters */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Location address</label>
+							<FormLabel htmlFor='location-address-input'>Location address</FormLabel>
 							<input
+								id='location-address-input'
 								{...register("location_address", {
 									required: "Please enter location address of event",
 									minLength: {
@@ -213,9 +220,10 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Max capacity - required, 1 - 10000 people */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Max capacity(people)</label>
+							<FormLabel htmlFor='max-capacity-input'>Max capacity (people)</FormLabel>
 							<input
 								type="number"
+								id='max-capacity-input'
 								{...register("max_capacity", {
 									required: "Please enter max capacity of event",
 									min: {

@@ -1,6 +1,6 @@
 import type { CreateEventRequest } from '@/types/event';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { ApiError } from '@/lib/api/client';
 import { createEvent, uploadEventImage } from '@/lib/api/events';
 import { Button } from '@/components/ui/Button';
@@ -33,6 +33,12 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 	const [serverError, setServerError] = useState<string | null>(null);
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imageError, setImageError] = useState<string>('');
+
+	// Stabilize reference and avoid recreating incline function when component renders
+	const handleImageChange = useCallback((file: File | null) => {
+		setImageFile(file);
+		setImageError('');
+	}, []);
 
 	if (!open)
 		return null;
@@ -229,10 +235,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Image of cover page - required, PNG no more than 5MB */}
 						<ImageUpload
-							onChange={(file) => {
-								setImageFile(file);
-								setImageError('');
-							}}
+							onChange={handleImageChange}
 							error={imageError}
 						/>
 					{/* Server error display */}

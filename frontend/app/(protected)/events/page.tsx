@@ -22,7 +22,12 @@ export default function EventsPage() {
 	} = useEvents(activeTab);
 	const router = useRouter();
 
-	const events = data?.pages.flatMap((page) => page.data || []) ?? [];
+	const events = data?.pages.flatMap((page) =>
+		(page.data || []).map((event) => ({
+			...event,
+			image: `/api/events/${event.id}/image`
+		}))
+	) ?? [];
 
 	return (
 		<div className="w-full px-xl py-2xl">

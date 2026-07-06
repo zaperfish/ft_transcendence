@@ -16,7 +16,7 @@ interface EventCardProps {
 /**
  * EventCard component used for both 'register' and 'detail' mode.
  *
- * It displays a single event's details (title, description, date, time, location, capacity)
+ * It displays a single event's details (cover page, title, description, date, time, location, capacity)
  * and in 'register' mode provides a registration button with optimistic UI updates and error handling
  * and in 'detail' mode provides a button redirecting user to event detail page.
  */

@@ -7,6 +7,12 @@ interface ImageUploadProps {
 	error?: string;
 }
 
+/**
+ * ImageUpload is a reusable file upload component for event cover images.
+ * It handles file selection, preview generation, validation (PNG format, max 5MB),
+ * and provides a clear button to reset the selection. The selected file is passed
+ * to the parent via the onChange callback.
+ */
 export function ImageUpload({ onChange, error }: ImageUploadProps) {
 	const [preview, setPreview] = useState<string | null>(null);
 	const [filename, setFilename] = useState<string>('');

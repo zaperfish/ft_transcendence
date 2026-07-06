@@ -18,6 +18,7 @@ interface CreateEventFormProps {
  * It includes validation for all fields (title, description, start time, duration, location, capacity),
  * handles date formatting to RFC 3339, submits the event to the API,
  * and manages server errors and loading states.
+ * It also enables user preview and upload image as cover page using a seperate API.
  */
 export default function CreateEventForm({ open, onClose, onSuccess }: CreateEventFormProps) {
 	const { register, handleSubmit, reset, formState: { errors, isSubmitting }, } = useForm<CreateEventRequest>({

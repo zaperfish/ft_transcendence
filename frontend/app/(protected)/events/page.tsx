@@ -79,6 +79,7 @@ export default function EventsPage() {
 							key={event.id}
 							data={event}
 							mode='detail'
+							layout='horizontal'
 							onDetail={() => router.push(`/events/${event.id}`)} />
 					))}
 				</div>

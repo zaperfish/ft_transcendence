@@ -11,6 +11,7 @@ interface EventCardProps {
 	data: EventEntity;
 	mode?: 'register' | 'detail';
 	onDetail?: () => void;
+	layout?: 'vertical' | 'horizontal';
 }
 
 /**
@@ -20,7 +21,7 @@ interface EventCardProps {
  * and in 'register' mode provides a registration button with optimistic UI updates and error handling
  * and in 'detail' mode provides a button redirecting user to event detail page.
  */
-export default function EventCard({ data, mode = 'register', onDetail }: EventCardProps) {
+export default function EventCard({ data, mode = 'register', onDetail, layout = 'vertical' }: EventCardProps) {
 	const [isRegistering, setIsRegistering] = useState(false);
 	// Avoid crash when backend returns undefined self
 	const isRegistered = data.self?.is_participant ?? false;
@@ -66,11 +67,23 @@ export default function EventCard({ data, mode = 'register', onDetail }: EventCa
 	};
 
 	const isDetailMode = mode === 'detail';
+	const isHorizontal = layout === 'horizontal';
 
 	return (
-		<div className="border border-border rounded-lg overflow-hidden flex flex-col bg-surface shadow-sm hover:shadow-md transition-shadow">
-			{/* Cover page: default image */}
-			<div className="aspect-video max-h-40 bg-surface-container flex items-center justify-center shrink-0">
+		<div className={`
+			border border-border rounded-lg overflow-hidden
+			flex flex-col bg-surface shadow-sm hover:shadow-md
+			transition-shadow
+			${isHorizontal ? 'sm:flex-row' : ''}
+		`}>
+			{/* Cover page */}
+			<div className={`
+				bg-surface-container overflow-hidden shrink-0
+				${isHorizontal
+					? 'w-full sm:w-60 h-60 sm:h-auto'
+					: 'aspect-video max-h-40 w-full'
+				}
+			`}>
 				<img
 					src={data.image}
 					alt={data.title}

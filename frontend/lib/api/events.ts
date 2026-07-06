@@ -117,3 +117,23 @@ export async function uploadEventImage(eventId: number, file: File): Promise<voi
 	}
 	return;
 }
+
+// User update image when event is created already
+export async function updateEventImage(eventId: number, file: File): Promise<void> {
+	const response = await fetch(`/api/events/${eventId}/image`, {
+		method: 'PATCH',
+		headers: {
+			'Content-Type': file.type,
+		},
+		body: file,
+		credentials: 'include',
+	});
+
+	if (!response.ok) {
+		if (response.status === 401 && typeof window !== 'undefined' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+			window.location.href = '/login';
+		}
+		throw new ApiError(response.status, 'Image update failed');
+	}
+	return;
+}

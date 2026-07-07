@@ -43,6 +43,10 @@ export default function EventDetailPage() {
 		queryFn: () => getEventParticipants(numericId),
 	});
 
+	const coverSrc = event?.has_image
+		? `/api/events/${event.id}/image`
+		: '/images/default-event-cover.jpg';
+
 	const isCreator = event?.self?.role === 'admin';
 	const isParticipant = event?.self?.role === 'member';
 
@@ -138,6 +142,8 @@ export default function EventDetailPage() {
 		try {
 			await updateEventImage(numericId, file);
 			setCoverRefreshKey(prev => prev + 1);
+			// Update coverSrc if this is the first time uploading image
+			queryClient.invalidateQueries({ queryKey: ['event', numericId] });
 		} catch (err) {
 			alert("Failed to update cover page, please retry");
 		} finally {
@@ -160,7 +166,7 @@ export default function EventDetailPage() {
 				<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0 relative">
 					<img
 						key={coverRefreshKey}
-						src={`/api/events/${numericId}/image`}
+						src={coverSrc}
 						alt={`${event.title} cover`}
 						className="w-full h-full object-cover"
 						onError={(e) => {

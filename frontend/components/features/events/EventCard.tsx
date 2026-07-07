@@ -5,20 +5,23 @@ import { useState } from "react";
 import { joinEvent } from "@/lib/api/events";
 import { useQueryClient } from "@tanstack/react-query";
 
+const DEFAULT_IMAGE = '/images/default-event-cover.jpg';
+
 interface EventCardProps {
 	data: EventEntity;
 	mode?: 'register' | 'detail';
 	onDetail?: () => void;
+	layout?: 'vertical' | 'horizontal';
 }
 
 /**
  * EventCard component used for both 'register' and 'detail' mode.
  *
- * It displays a single event's details (title, description, date, time, location, capacity)
+ * It displays a single event's details (cover page, title, description, date, time, location, capacity)
  * and in 'register' mode provides a registration button with optimistic UI updates and error handling
  * and in 'detail' mode provides a button redirecting user to event detail page.
  */
-export default function EventCard({ data, mode = 'register', onDetail }: EventCardProps) {
+export default function EventCard({ data, mode = 'register', onDetail, layout = 'vertical' }: EventCardProps) {
 	const [isRegistering, setIsRegistering] = useState(false);
 	// Avoid crash when backend returns undefined self
 	const isRegistered = data.self?.is_participant ?? false;
@@ -64,12 +67,32 @@ export default function EventCard({ data, mode = 'register', onDetail }: EventCa
 	};
 
 	const isDetailMode = mode === 'detail';
+	const isHorizontal = layout === 'horizontal';
 
 	return (
-		<div className="border border-border rounded-lg overflow-hidden flex flex-col bg-surface shadow-sm hover:shadow-md transition-shadow">
-			{/* Cover page: default image */}
-			<div className="aspect-video max-h-40 bg-surface-container flex items-center justify-center shrink-0">
-				<img src="/images/default-event-cover.jpg" alt="Default cover" className="w-full h-full object-cover"/>
+		<div className={`
+			border border-border rounded-lg overflow-hidden
+			flex flex-col bg-surface shadow-sm hover:shadow-md
+			transition-shadow
+			${isHorizontal ? 'sm:flex-row' : ''}
+		`}>
+			{/* Cover page */}
+			<div className={`
+				bg-surface-container overflow-hidden shrink-0
+				${isHorizontal
+					? 'w-full sm:w-60 h-60 sm:h-auto'
+					: 'aspect-video max-h-40 w-full'
+				}
+			`}>
+				<img
+					src={data.image}
+					alt={data.title}
+					className="w-full h-full object-cover"
+					onError={(e) => {
+						e.currentTarget.onerror = null;
+						e.currentTarget.src = DEFAULT_IMAGE;
+					}}
+				/>
 			</div>
 			{/* Event info */}
 			<div className="p-md flex flex-col flex-1">

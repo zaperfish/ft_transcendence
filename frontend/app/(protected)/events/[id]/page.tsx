@@ -2,19 +2,19 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEventById, getEventParticipants, deleteEvent, removeParticipant, leaveEvent } from "@/lib/api/events";
+import { getEventById, getEventParticipants, deleteEvent, removeParticipant, leaveEvent, updateEventImage } from "@/lib/api/events";
 import { useAuth } from "@/lib/hooks/useAuth";
 import EditEventModal from "@/components/features/events/EditEventModal";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
-import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon, MessageSquareIcon, EditIcon, XIcon } from "lucide-react";
+import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon, MessageSquareIcon, EditIcon, XIcon, PencilIcon } from "lucide-react";
 
 /**
  * EventDetailPage displays detailed information for a single event,
- * including its title, description, date, location, and participant list.
- * It provides actions for event creators (edit, delete, remove participants)
+ * including its cover page, title, description, date, location, and participant list.
+ * It provides actions for event creators (edit info, modify cover page, delete event, remove participants)
  * and for participants (unregister), with support for real-time updates via React Query.
  */
 export default function EventDetailPage() {
@@ -24,7 +24,12 @@ export default function EventDetailPage() {
 	const router = useRouter();
 	const { user } = useAuth();
 	const queryClient = useQueryClient();
+	// Use ref to operate hidden file input in DOM
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
+	const [isCoverUploading, setIsCoverUploading] = useState(false);
+	// Logic of getting new image when updated
+	const [coverRefreshKey, setCoverRefreshKey] = useState(0);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
 	const { data: event, isLoading: eventLoading } = useQuery({
@@ -111,6 +116,38 @@ export default function EventDetailPage() {
 		minute: "2-digit",
 	});
 
+	const handleCoverButtonClick = () => {
+		fileInputRef.current?.click();
+	};
+
+	const handleCoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		// Validate image type
+		if (file.type !== "image/png") {
+			alert('Support only image/png type');
+			return;
+		}
+		// Validate image size
+		if (file.size > 5 * 1024 * 1024) {
+			alert('Image file cannot be more than 5MB');
+			return;
+		}
+		setIsCoverUploading(true);
+		try {
+			await updateEventImage(numericId, file);
+			setCoverRefreshKey(prev => prev + 1);
+		} catch (err) {
+			alert("Failed to update cover page, please retry");
+		} finally {
+			setIsCoverUploading(false);
+			if (fileInputRef.current) {
+				fileInputRef.current.value = '';
+			}
+		}
+	};
+
 	return (
 		<div className="w-full px-xl pt-2 pb-8 max-w-6xl mx-auto">
 			{ /* Return button */ }
@@ -119,9 +156,43 @@ export default function EventDetailPage() {
 			</Button>
 			{ /* Card for Event information display */ }
 			<Card className="overflow-hidden pt-0">
-				{/* Cover page: Default image */}
-				<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0">
-					<img src="/images/default-event-cover.jpg" alt="Default cover" className="w-full h-full object-cover" />
+				{/* Cover page */}
+				<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0 relative">
+					<img
+						key={coverRefreshKey}
+						src={`/api/events/${numericId}/image`}
+						alt={`${event.title} cover`}
+						className="w-full h-full object-cover"
+						onError={(e) => {
+						e.currentTarget.onerror = null;
+						e.currentTarget.src = "/images/default-event-cover.jpg";
+						}}
+					/>
+					{/* Button for modifying image */}
+					{isCreator && (
+						<>
+							<Button
+								type="button"
+								onClick={handleCoverButtonClick}
+								disabled={isCoverUploading}
+								className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition"
+								title="Change cover page"
+							>
+							{isCoverUploading ? (
+								<span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+							) : (
+								<PencilIcon className="size-4"/>
+							)}
+							</Button>
+							<input
+								ref={fileInputRef}
+								type="file"
+								accept="image/png"
+								onChange={handleCoverFileChange}
+								className="hidden"
+							/>
+						</>
+					)}
 				</div>
 				{/* Event info */}
 				<div className="p-lg flex flex-col flex-1">

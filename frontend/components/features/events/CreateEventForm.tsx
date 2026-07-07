@@ -1,14 +1,16 @@
 import type { CreateEventRequest } from '@/types/event';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { ApiError } from '@/lib/api/client';
-import { createEvent } from '@/lib/api/events';
+import { createEvent, uploadEventImage } from '@/lib/api/events';
 import { Button } from '@/components/ui/Button';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import { FormLabel } from '@/components/ui/FormLabel';
 
 interface CreateEventFormProps {
 	open: boolean;
 	onClose: () => void;
-	onSuccess?: () => void;
+	onSuccess?: (warning?: string) => void;
 }
 
 /**
@@ -16,6 +18,7 @@ interface CreateEventFormProps {
  * It includes validation for all fields (title, description, start time, duration, location, capacity),
  * handles date formatting to RFC 3339, submits the event to the API,
  * and manages server errors and loading states.
+ * It also enables user preview and upload image as cover page using a seperate API.
  */
 export default function CreateEventForm({ open, onClose, onSuccess }: CreateEventFormProps) {
 	const { register, handleSubmit, reset, formState: { errors, isSubmitting }, } = useForm<CreateEventRequest>({
@@ -30,6 +33,14 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 		},
 	});
 	const [serverError, setServerError] = useState<string | null>(null);
+	const [imageFile, setImageFile] = useState<File | null>(null);
+	const [imageError, setImageError] = useState<string>('');
+
+	// Stabilize reference and avoid recreating incline function when component renders
+	const handleImageChange = useCallback((file: File | null) => {
+		setImageFile(file);
+		setImageError('');
+	}, []);
 
 	if (!open)
 		return null;
@@ -44,10 +55,23 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 		};
 
 		try {
-			await createEvent(formattedData);
-			onSuccess?.();
+			const createdEvent = await createEvent(formattedData);
+			const eventId = createdEvent.id;
+			let warning: string | undefined;
+
+			if (imageFile) {
+				try {
+					await uploadEventImage(eventId, imageFile);
+				} catch (uploadErr) {
+					console.warn('Failed to upload image', uploadErr);
+					warning = "Failed to upload cover page, but you can upload later in detail page."
+				}
+			}
+			onSuccess?.(warning);
 			onClose();
 			reset();
+			setImageFile(null);
+			setImageError('');
 		} catch (err) {
 			if (err instanceof ApiError) {
 				setServerError(`Request failed (code ${err.status}): ${err.message}`);
@@ -60,15 +84,17 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 	};
 
 	return (
-		 <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-			<div className='bg-surface rounded-lg shadow-lg max-w-175 w-full mx-auto'>
-				<div className='p-2xl'>
+			<div className="fixed inset-0 z-50 overflow-y-auto bg-background/80 backdrop-blur-sm">
+				<div className="flex min-h-full items-start justify-center px-md py-8">
+					<div className='bg-surface rounded-lg shadow-lg max-w-175 w-full mx-auto max-h-[calc(100vh-4rem)] overflow-y-auto'>
+						<div className='p-2xl'>
 					<h2 className='text-2xl font-heading font-bold text-text-primary mb-xl'>Create a new event</h2>
 					<form onSubmit={handleSubmit(onSubmit)} className='space-y-lg'>
 					{/* Title - required, 3 - 100 characters */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Title</label>
+							<FormLabel htmlFor='title-input'>Title</FormLabel>
 							<input
+								id="title-input"
 								{...register("title", {
 									required: "Please enter event title",
 									minLength: {
@@ -87,8 +113,9 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Description - required, 10 - 500 characters */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Description</label>
+							<FormLabel htmlFor='Description-input'>Description</FormLabel>
 							<textarea
+								id="Description-input"
 								{...register("description", {
 									required: "Please enter event description",
 									minLength: {
@@ -108,9 +135,10 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Start time - required, datetime-local format */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Start time</label>
+							<FormLabel htmlFor='start-time-input'>Start time</FormLabel>
 							<input
 								type="datetime-local"
+								id='start-time-input'
 								{...register("start_time", {
 									required: "Please enter start time of event",
 									validate: (value) => {
@@ -128,9 +156,10 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Duration - required, 15 - 480 mins */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Duration(min)</label>
+							<FormLabel htmlFor='duration-input'>Duration (min)</FormLabel>
 							<input
 								type="number"
+								id='duration-input'
 								{...register("duration", {
 									required: "Please enter duration of event",
 									min: {
@@ -150,8 +179,9 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Location name - required, 3 - 100 characters */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Location name</label>
+							<FormLabel htmlFor='location-name-input'>Location name</FormLabel>
 							<input
+								id='location-name-input'
 								{...register("location_name", {
 									required: "Please enter location name of event",
 									minLength: {
@@ -170,8 +200,9 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Location address - required, 5 - 200 characters */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Location address</label>
+							<FormLabel htmlFor='location-address-input'>Location address</FormLabel>
 							<input
+								id='location-address-input'
 								{...register("location_address", {
 									required: "Please enter location address of event",
 									minLength: {
@@ -190,9 +221,10 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						</div>
 					{/* Max capacity - required, 1 - 10000 people */}
 						<div className='space-y-sm'>
-							<label className='block text-sm font-medium text-text-secondary'>Max capacity(people)</label>
+							<FormLabel htmlFor='max-capacity-input'>Max capacity (people)</FormLabel>
 							<input
 								type="number"
+								id='max-capacity-input'
 								{...register("max_capacity", {
 									required: "Please enter max capacity of event",
 									min: {
@@ -210,6 +242,11 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 							/>
 							{errors.max_capacity && <p className='text-error text-sm'>{errors.max_capacity.message}</p>}
 						</div>
+					{/* Image of cover page - required, PNG no more than 5MB */}
+						<ImageUpload
+							onChange={handleImageChange}
+							error={imageError}
+						/>
 					{/* Server error display */}
 					{serverError && (
 						<div className='bg-error/10 border border-error/30 rounded-md p-md'>
@@ -227,12 +264,13 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 						Cancel
 						</Button>
 						<Button type='submit' disabled={isSubmitting}>
-							{isSubmitting ? "Submitting..." : "submit"}
+							{isSubmitting ? "Submitting..." : "Submit"}
 						</Button>
 					</div>
 					</form>
+						</div>
+					</div>
 				</div>
 			</div>
-		</div>
 	);
 }

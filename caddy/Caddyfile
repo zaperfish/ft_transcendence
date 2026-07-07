@@ -2,23 +2,34 @@
 # Unset the the variable instead if you want the default value.
 # https://caddyserver.com/docs/caddyfile/concepts#environment-variables
 {$DOMAINS:http://localhost https://localhost} {
-    handle /api/* {
-        reverse_proxy backend:{$BACKEND_PORT}    
-    }
+	handle /api/* {
+		reverse_proxy backend:{$BACKEND_PORT}
+	}
 
-    handle /openapi.json {
-        reverse_proxy backend:{$BACKEND_PORT}
-    }
+	handle /openapi.json {
+		reverse_proxy backend:{$BACKEND_PORT}
+	}
 
-    handle /docs {
-        reverse_proxy backend:{$BACKEND_PORT}
-    }
+	handle /docs {
+		reverse_proxy backend:{$BACKEND_PORT}
+	}
 
-    handle /health {
-        respond "OK" 200
-    }
+	handle /health {
+		respond "OK" 200
+	}
 
-    handle {
-        reverse_proxy frontend:{$FRONTEND_PORT}
-    }
+	handle /grafana* {
+		route {
+			@plainHttp protocol http
+			redir @plainHttp https://localhost:{$CADDY_HTTPS_HOST_PORT:7443}{uri}
+
+			redir /grafana /grafana/
+
+			reverse_proxy grafana:3000
+		}
+	}
+
+	handle {
+		reverse_proxy frontend:{$FRONTEND_PORT}
+	}
 }

@@ -26,6 +26,8 @@ export interface EventEntity {
 		is_participant: boolean;
 		role: 'admin' | 'member' | 'none';
 	}
+	// Backend does not return image, using interface api instead
+	image?: string;
 }
 
 export interface GetEventRequest {
@@ -47,3 +49,13 @@ export interface PaginatedResponse<T> {
 }
 
 export type EventsResponse = PaginatedResponse<EventEntity>;
+
+export interface EventParticipant {
+	id: number;
+	name: string;
+	email: string;
+}
+
+export interface EventParticipantsResponse {
+	data: EventParticipant[];
+}

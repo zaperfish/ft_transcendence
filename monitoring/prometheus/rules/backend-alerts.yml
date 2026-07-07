@@ -1,0 +1,38 @@
+groups:
+  - name: backend-alerts
+    rules:
+      - alert: BackendDown
+        expr: up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Backend is down
+          description: Prometheus cannot scrape the backend metrics endpoint.
+
+      - alert: BackendRestartedRecently
+        expr: changes(process_start_time_seconds{job="backend"}[15m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: Backend restarted recently
+          description: The backend process start time changed within the last 15 minutes.
+
+      - alert: BackendRepeatedRestarts
+        expr: changes(process_start_time_seconds{job="backend"}[30m]) > 1
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: Backend restarted repeatedly
+          description: The backend process restarted more than once within the last 30 minutes.
+
+      - alert: BackendHighGoroutines
+        expr: go_goroutines{job="backend"} > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Backend goroutine count is high
+          description: The backend goroutine count has stayed above 100 for 5 minutes.

@@ -28,6 +28,7 @@ export interface EventEntity {
 	}
 	// Backend does not return image, using interface api instead
 	image?: string;
+	has_image: boolean;
 }
 
 export interface GetEventRequest {

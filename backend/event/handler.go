@@ -371,10 +371,6 @@ type CreateImageInput struct {
 }
 
 func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*GetImageOutput, error) {
-	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
-		return nil, err
-	}
-
 	img, mime, err := h.service.GetEventImage(ctx, input.EventID)
 	if err != nil {
 		return nil, err

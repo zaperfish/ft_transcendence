@@ -18,15 +18,15 @@ import Navigation from "@/components/layout/Navigation";
  * @param props.children - The protected page content to render after authentication is confirmed.
  * @returns A layout with navigation and children, or a loading/redirect state.
  */
-export default function ProtectedLayout({  children }: Readonly<{
+export default function ProtectedLayout({ children }: Readonly<{
   children: React.ReactNode;
 }>) {
-	const { isAuthenticated, isLoading } = useAuth();
+	const { isAuthenticated, isLoading, isOnline } = useAuth();
 	const router = useRouter();
 
 	useEffect(() => {
 		if (!isLoading && !isAuthenticated) {
-			router.push('/login');
+			router.replace('/login');
 		}
 	}, [isLoading, isAuthenticated, router]);
 	if (isLoading)

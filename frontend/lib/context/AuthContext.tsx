@@ -3,6 +3,7 @@
 import { createContext, useState, useEffect, ReactNode } from "react";
 import type { User } from '@/types/user';
 import { login as apiLogin, logout as apiLogout } from '@/lib/api/auth';
+import { ApiError } from '@/lib/api/client';
 import { getCurrentUser } from "../api/user";
 import { useRouter } from 'next/navigation';
 
@@ -59,7 +60,7 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	const saveAuthToCache = (user: User) => {
 		try {
 			localStorage.setItem('auth_cache', JSON.stringify(user))
-		} catch (error) {
+		} catch {
 			console.log('Failed to cache auth data');
 		}
 	};
@@ -69,7 +70,7 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 		try {
 			const cached = localStorage.getItem('auth_cache');
 			return cached ? JSON.parse(cached) : null;
-		} catch (error) {
+		} catch {
 			console.log('Failed to load cached auth data');
 			return null;
 		}
@@ -79,7 +80,7 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	const clearAuthCache = () => {
 		try {
 			localStorage.removeItem('auth_cache');
-		} catch (error) {
+		} catch {
 			console.log('Failed to clear cached auth data');
 		}
 	};
@@ -105,12 +106,17 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 				}
 			} catch (error) {
 				// Avoid triggering Next.js error overlay with console.error
-				console.log('User not logged in or session expired');
-				const cachedUser = loadAuthFromCache();
-				if (cachedUser) {
-					setUser(cachedUser);
-					console.log('Fallback to cached user data');
+				if (error instanceof ApiError && error.status === 0) {
+					console.log('User not logged in or session expired');
+					const cachedUser = loadAuthFromCache();
+					if (cachedUser) {
+						setUser(cachedUser);
+						console.log('Fallback to cached user data');
+					} else {
+						setUser(null);
+					}
 				} else {
+					clearAuthCache();
 					setUser(null);
 				}
 			}

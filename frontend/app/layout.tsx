@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers/Providers";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
 
 // font-sans is a Tailwind CSS utility class
 // that applies the CSS rule font-family:
@@ -39,6 +40,7 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className={"h-dvh overflow-hidden font-sans antialiased"}>
         <Providers>
+          <OfflineBanner />
           <div className="flex h-dvh flex-col overflow-hidden">
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               {children}

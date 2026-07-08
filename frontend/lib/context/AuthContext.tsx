@@ -13,6 +13,7 @@ interface AuthContextType {
 	user: User | null;
 	isAuthenticated: boolean;
 	isLoading: boolean;
+	isOnline: boolean,
 	login: (credentials: { name: string; password: string }) => Promise<void>;
 	logout: () => Promise<void>;
 }
@@ -24,6 +25,7 @@ export const AuthContext = createContext<AuthContextType>({
 	user: null,
 	isAuthenticated: false,
 	isLoading: true,
+	isOnline: false,
 	login: async () => {},
 	logout: async () => {},
 });
@@ -85,21 +87,42 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	useEffect(() => {
 		const initAuth = async () => {
 			try {
-				const currentUser = await getCurrentUser();
-				setUser(currentUser);
+				// If online, get user from server and save to cache
+				if (isOnline) {
+					const currentUser = await getCurrentUser();
+					setUser(currentUser);
+					saveAuthToCache(currentUser);
+				} else {
+				// If offline, get user from localStorage
+					const cachedUser = loadAuthFromCache();
+					if (cachedUser) {
+						setUser(cachedUser);
+						console.log('Loaded user from cache(offline)');
+					} else {
+						console.log('No cached user data found');
+						setUser(null);
+					}
+				}
 			} catch (error) {
 				// Avoid triggering Next.js error overlay with console.error
 				console.log('User not logged in or session expired');
-				setUser(null);
+				const cachedUser = loadAuthFromCache();
+				if (cachedUser) {
+					setUser(cachedUser);
+					console.log('Fallback to cached user data');
+				} else {
+					setUser(null);
+				}
 			}
 			setIsLoading(false);
 		};
 		initAuth();
-	}, []);
+	}, [isOnline]);
 
 	const login = async (credentials: { name: string; password: string }) => {
 		const user = await apiLogin(credentials);
 		setUser(user);
+		saveAuthToCache(user);
 	};
 
 	const logout = async () => {
@@ -109,11 +132,12 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 			console.error("Failed to logout", error);
 		}
 		setUser(null);
+		clearAuthCache();
 		router.push('/login');
 	};
 
 	return (
-		<AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
+		<AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, isOnline, login, logout }}>
 			{children}
 		</AuthContext.Provider>
 	);

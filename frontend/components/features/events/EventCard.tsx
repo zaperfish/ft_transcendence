@@ -15,11 +15,12 @@ interface EventCardProps {
 }
 
 /**
- * EventCard component used for both 'register' and 'detail' mode.
+ * EventCard component used for both 'register' and 'detail' mode as well as 'vertical' and 'horizontal' display.
  *
  * It displays a single event's details (cover page, title, description, date, time, location, capacity)
  * and in 'register' mode provides a registration button with optimistic UI updates and error handling
- * and in 'detail' mode provides a button redirecting user to event detail page.
+ * and in 'detail' mode provides a button redirecting user to event detail page;
+ * and 'vertical' display is defaultly used in homepage, 'horizontal' display used in myEvents page.
  */
 export default function EventCard({ data, mode = 'register', onDetail, layout = 'vertical' }: EventCardProps) {
 	const [isRegistering, setIsRegistering] = useState(false);

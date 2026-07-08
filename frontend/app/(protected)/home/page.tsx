@@ -60,7 +60,9 @@ export default function HomePage() {
 	const events = data?.pages.flatMap((page) =>
 		(page.data || []).map((event) => ({
 			...event,
-			image: `/api/events/${event.id}/image`
+			image: event.has_image
+				? `/api/events/${event.id}/image`
+				: '/images/default-event-cover.jpg',
 		}))
 	) ?? [];
 

@@ -38,6 +38,49 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const router = useRouter();
+	// Get initial network state (considering both client side and server side)
+	const [isOnline, setIsOnline] = useState(typeof window !== 'undefined' ? navigator.onLine : true);
+
+	// Add tracker of online && offline states
+	useEffect(() => {
+		const handleOnline = () => setIsOnline(true);
+		const handleOffline = () => setIsOnline(false);
+		window.addEventListener('online', handleOnline);
+		window.addEventListener('offline', handleOffline);
+		return () => {
+			window.removeEventListener('online', handleOnline);
+			window.removeEventListener('offline', handleOffline);
+		};
+	}, []);
+
+	// Save User to localStorage
+	const saveAuthToCache = (user: User) => {
+		try {
+			localStorage.setItem('auth_cache', JSON.stringify(user))
+		} catch (error) {
+			console.log('Failed to cache auth data');
+		}
+	};
+
+	// Get User from localStorage
+	const loadAuthFromCache = () : User | null => {
+		try {
+			const cached = localStorage.getItem('auth_cache');
+			return cached ? JSON.parse(cached) : null;
+		} catch (error) {
+			console.log('Failed to load cached auth data');
+			return null;
+		}
+	};
+
+	// Clear User cache
+	const clearAuthCache = () => {
+		try {
+			localStorage.removeItem('auth_cache');
+		} catch (error) {
+			console.log('Failed to clear cached auth data');
+		}
+	};
 
 	useEffect(() => {
 		const initAuth = async () => {

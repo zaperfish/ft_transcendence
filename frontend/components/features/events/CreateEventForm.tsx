@@ -6,6 +6,7 @@ import { createEvent, uploadEventImage } from '@/lib/api/events';
 import { Button } from '@/components/ui/Button';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { FormLabel } from '@/components/ui/FormLabel';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 interface CreateEventFormProps {
 	open: boolean;
@@ -45,7 +46,14 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 	if (!open)
 		return null;
 
+	const { isOnline } = useAuth();
+
 	const onSubmit = async (data: CreateEventRequest) => {
+		if (!isOnline) {
+			alert('Cannot create new event when you are offline, please retry later');
+			return;
+		}
+
 		setServerError(null);
 
 		// change datetime-local to RFC 3339 format, e.g.2026-11-20T10:05:00.000Z

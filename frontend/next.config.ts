@@ -22,19 +22,19 @@ const pwaConfig = {
 	workboxOptions: {
 		disableDevLogs: true,
 		runtimeCaching: [
-			{
-				// Cache /api/me endpoint
-				urlPattern: /^https?:\/\/.*\/api\/me$/,
-				handler: 'NetworkFirst' as const,
-				options: {
-					cacheName: 'api-auth-cache',
-					networkTimeoutSeconds: 10,
-					expiration: {
-						maxEntries: 1,
-						maxAgeSeconds: 24 * 60 * 60,
-					},
-				},
-			},
+			// {
+			// 	// Cache /api/me endpoint
+			// 	urlPattern: /^https?:\/\/.*\/api\/me$/,
+			// 	handler: 'NetworkFirst' as const,
+			// 	options: {
+			// 		cacheName: 'api-auth-cache',
+			// 		networkTimeoutSeconds: 10,
+			// 		expiration: {
+			// 			maxEntries: 1,
+			// 			maxAgeSeconds: 24 * 60 * 60,
+			// 		},
+			// 	},
+			// },
 			// Cache all GET requests starting with /api/
 			{
 			urlPattern: ({ url, request }: { url: URL; request: Request }) =>

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useState, useEffect, ReactNode, useCallback } from "react";
 import type { User } from '@/types/user';
 import { login as apiLogin, logout as apiLogout } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
@@ -42,19 +42,54 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	const [isLoading, setIsLoading] = useState(true);
 	const router = useRouter();
 	// Get initial network state (considering both client side and server side)
-	const [isOnline, setIsOnline] = useState(typeof window !== 'undefined' ? navigator.onLine : true);
+	const [isOnline, setIsOnline] = useState(
+		typeof window !== 'undefined' ? navigator.onLine : true
+	);
+
+	// navigator.onLine can be unreliable, using ping to check network
+	const checkRealOnline = useCallback(async () => {
+		if (!navigator.onLine) {
+			setIsOnline(false);
+			return false;
+		}
+
+		try {
+			const controller = new AbortController();
+			// Abort signal if not responded in 3 seconds
+			const timeoutId = setTimeout(() => controller.abort(), 3000);
+			const response = await fetch('/health', {
+				cache: 'no-store',
+				signal: controller.signal,
+			});
+			clearTimeout(timeoutId);
+			const reallyOnline = response.ok && response.headers.get('X-Network-Status') !== 'offline';
+			setIsOnline(reallyOnline);
+			console.log('Real online status: ', reallyOnline);
+			return reallyOnline;
+		} catch {
+			setIsOnline(false);
+			console.log('Network check failed, it is offline now');
+			return false;
+		}
+	}, []);
 
 	// Add tracker of online && offline states
 	useEffect(() => {
-		const handleOnline = () => setIsOnline(true);
-		const handleOffline = () => setIsOnline(false);
+		const handleOnline = async () => {
+			console.log('Browser "online" fired');
+			await checkRealOnline();
+		};
+		const handleOffline = () => {
+			console.log('Browser "offline" fired');
+			setIsOnline(false);
+		}
 		window.addEventListener('online', handleOnline);
 		window.addEventListener('offline', handleOffline);
 		return () => {
 			window.removeEventListener('online', handleOnline);
 			window.removeEventListener('offline', handleOffline);
 		};
-	}, []);
+	}, [checkRealOnline]);
 
 	// Save User to localStorage
 	const saveAuthToCache = (user: User) => {
@@ -88,8 +123,9 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	useEffect(() => {
 		const initAuth = async () => {
 			try {
+				const reallyOnline = await checkRealOnline();
 				// If online, get user from server and save to cache
-				if (isOnline) {
+				if (reallyOnline) {
 					const currentUser = await getCurrentUser();
 					setUser(currentUser);
 					saveAuthToCache(currentUser);
@@ -123,7 +159,7 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 			setIsLoading(false);
 		};
 		initAuth();
-	}, [isOnline]);
+	}, [checkRealOnline]);
 
 	const login = async (credentials: { name: string; password: string }) => {
 		const user = await apiLogin(credentials);

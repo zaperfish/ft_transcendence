@@ -12,6 +12,7 @@ interface EventCardProps {
 	mode?: 'register' | 'detail';
 	onDetail?: () => void;
 	layout?: 'vertical' | 'horizontal';
+	disabled?: boolean;
 }
 
 /**
@@ -22,7 +23,13 @@ interface EventCardProps {
  * and in 'detail' mode provides a button redirecting user to event detail page;
  * and 'vertical' display is defaultly used in homepage, 'horizontal' display used in myEvents page.
  */
-export default function EventCard({ data, mode = 'register', onDetail, layout = 'vertical' }: EventCardProps) {
+export default function EventCard({
+	data,
+	mode = 'register',
+	onDetail,
+	layout = 'vertical',
+	disabled = false,
+ }: EventCardProps) {
 	const [isRegistering, setIsRegistering] = useState(false);
 	// Avoid crash when backend returns undefined self
 	const isRegistered = data.self?.is_participant ?? false;
@@ -76,6 +83,7 @@ export default function EventCard({ data, mode = 'register', onDetail, layout = 
 			flex flex-col bg-surface shadow-sm hover:shadow-md
 			transition-shadow
 			${isHorizontal ? 'sm:flex-row' : ''}
+			${disabled ? 'pointer-events-none opacity-60' : ''}
 		`}>
 			{/* Cover page */}
 			<div className={`
@@ -123,6 +131,7 @@ export default function EventCard({ data, mode = 'register', onDetail, layout = 
 					{isDetailMode ? (
 						<Button
 							onClick={onDetail}
+							disabled={disabled}
 							className="w-full hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors"
 							variant="outline"
 						>
@@ -131,7 +140,7 @@ export default function EventCard({ data, mode = 'register', onDetail, layout = 
 					) : (
 						<Button
 							onClick={handleRegister}
-							disabled={isRegistering || isRegistered}
+							disabled={disabled || isRegistering || isRegistered}
 							className={`w-full ${
 								isRegistered
 									? "bg-success text-white cursor-not-allowed"

@@ -126,6 +126,7 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	useEffect(() => {
 		const initAuth = async () => {
 			try {
+				// Avoid requesting /api/me in register/login/public page to avoid 401
 				if (isAuthPage) {
 					const cachedUser = loadAuthFromCache();
 					if (cachedUser) {

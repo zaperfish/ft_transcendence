@@ -139,7 +139,7 @@ const pwaConfig = {
 			// Cache HTML in page navigation（requests without _rsc ）
 			{
 				urlPattern: ({ url, request }: { url: URL; request: Request }) =>
-					/^\/(home|events|about|settings|privacy|terms)?$/.test(url.pathname) &&
+					/^\/(home|events|about|settings|privacy|terms|login|register)?$/.test(url.pathname) &&
 					request.headers.get('Accept')?.includes('text/html'),
 				handler: 'NetworkFirst' as const,
 				options: {

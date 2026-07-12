@@ -76,9 +76,9 @@ const pwaConfig = {
 					handlerDidError: async () => {
 					// Return a json response when offline and no cache available
 					return new Response(
-						JSON.stringify({ error: 'You are offline. Data unavailable.' }),
+						JSON.stringify({ offline: true, data: [], page: 1, page_size: 10, total: 0 }),
 						{
-						status: 503,
+						status: 200,
 						headers: { 'Content-Type': 'application/json' },
 						}
 					);
@@ -147,6 +147,15 @@ const pwaConfig = {
 					networkTimeoutSeconds: 10,
 					expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 },
 					plugins: [
+						// Allow cache even if nextjs has cache-control header
+						{
+							cacheWillUpdate: async ({ response }: { response: Response }) => {
+							if (response.status === 200) {
+								return response;
+							}
+							return null;
+							},
+						},
 						{
 							handlerDidError: async () => {
 								const offlineHtml = `<!DOCTYPE html>

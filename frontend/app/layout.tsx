@@ -40,8 +40,8 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className={"h-dvh overflow-hidden font-sans antialiased"}>
         <Providers>
-          <OfflineBanner />
           <div className="flex h-dvh flex-col overflow-hidden">
+            <OfflineBanner />
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               {children}
             </div>

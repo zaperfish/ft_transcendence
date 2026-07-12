@@ -5,7 +5,7 @@ import type { User } from '@/types/user';
 import { login as apiLogin, logout as apiLogout } from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
 import { getCurrentUser } from "../api/user";
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 /**
  * Define Auth context interface
@@ -41,6 +41,9 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const router = useRouter();
+	const pathname = usePathname();
+	const isAuthPage = pathname === '/login' || pathname === '/register';
+	const isPublicPage = pathname === '/privacy' || pathname === '/terms';
 	// Get initial network state (considering both client side and server side)
 	const [isOnline, setIsOnline] = useState(
 		typeof window !== 'undefined' ? navigator.onLine : true
@@ -123,21 +126,42 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	useEffect(() => {
 		const initAuth = async () => {
 			try {
-				const reallyOnline = await checkRealOnline();
-				// If online, get user from server and save to cache
-				if (reallyOnline) {
-					const currentUser = await getCurrentUser();
-					setUser(currentUser);
-					saveAuthToCache(currentUser);
-				} else {
-				// If offline, get user from localStorage
+				if (isAuthPage) {
 					const cachedUser = loadAuthFromCache();
 					if (cachedUser) {
 						setUser(cachedUser);
-						console.log('Loaded user from cache(offline)');
 					} else {
-						console.log('No cached user data found');
 						setUser(null);
+					}
+				} else if (isPublicPage) {
+					const cachedUser = loadAuthFromCache();
+					if (cachedUser) {
+						setUser(cachedUser);
+					} else {
+						setUser(null);
+					}
+				} else {
+					const reallyOnline = await checkRealOnline();
+					// If online, get user from server and save to cache
+					if (reallyOnline) {
+						const currentUser = await getCurrentUser();
+						if (currentUser) {
+							setUser(currentUser);
+							saveAuthToCache(currentUser);
+						} else {
+							clearAuthCache();
+							setUser(null);
+						}
+					} else {
+						// If offline, get user from localStorage
+						const cachedUser = loadAuthFromCache();
+						if (cachedUser) {
+							setUser(cachedUser);
+							console.log('Loaded user from cache(offline)');
+						} else {
+							console.log('No cached user data found');
+							setUser(null);
+						}
 					}
 				}
 			} catch (error) {
@@ -159,7 +183,7 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 			setIsLoading(false);
 		};
 		initAuth();
-	}, [checkRealOnline]);
+	}, [checkRealOnline, isAuthPage, isPublicPage]);
 
 	const login = async (credentials: { name: string; password: string }) => {
 		const user = await apiLogin(credentials);

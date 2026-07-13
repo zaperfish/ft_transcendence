@@ -77,9 +77,9 @@ type PatchPasswordInput struct {
 }
 
 type PatchPasswordDTO struct {
-    NewPassword string `json:"newpassword" example:"newsecret" doc:"new password"`
-    ConfirmPassword string `json:"confirm_password" example:"newsecret" doc:"confirm password"`
-    CurrentPassword string `json:"current_password" example:"secret" doc:"current password"`
+    NewPassword string `json:"newpassword" example:"Newsecret123" doc:"new password"`
+    ConfirmPassword string `json:"confirm_password" example:"Newsecret123" doc:"confirm password"`
+    CurrentPassword string `json:"current_password" example:"Secret123" doc:"current password"`
 }
 
 // delete

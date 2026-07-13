@@ -4,6 +4,7 @@ import (
     // Std
 	"context"
 	"errors"
+	"net/http"
 
     // Internal
 	"ft_transcendence/backend/auth"
@@ -102,7 +103,11 @@ func (h *MeHandler) handlePatchPasswordMe(ctx context.Context, in *PatchMePasswo
 
 // delete me
 
-func (h *MeHandler) handleDeleteMe(ctx context.Context, in *struct{}) (*struct{}, error) {
+type DeleteMeOutput struct {
+	SetCookie http.Cookie 		`header:"Set-Cookie"`
+}
+
+func (h *MeHandler) handleDeleteMe(ctx context.Context, in *struct{}) (*DeleteMeOutput, error) {
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
@@ -115,7 +120,12 @@ func (h *MeHandler) handleDeleteMe(ctx context.Context, in *struct{}) (*struct{}
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
-    return nil, nil
+
+    out := &DeleteMeOutput {
+		SetCookie: auth.MakeLogoutCookie(),
+    }
+
+    return out, nil
 }
 
 // join event

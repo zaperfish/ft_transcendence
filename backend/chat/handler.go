@@ -113,6 +113,7 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	defer conn.CloseNow()
+	conn.SetReadLimit(maxWebSocketMessagePayloadSize)
 
 	client := &Client{
 		userID: userID,

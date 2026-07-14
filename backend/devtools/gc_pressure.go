@@ -10,8 +10,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/go-chi/chi/v5"
 )
 
 const (
@@ -42,16 +40,7 @@ type gcPressureResponse struct {
 	ActiveLoads  int    `json:"active_loads"`
 }
 
-// RegisterRoutes exposes local demo routes that are disabled unless explicitly enabled.
-func RegisterRoutes(r chi.Router) {
-	if os.Getenv(enableGCPressureEnv) != "true" {
-		return
-	}
-
-	r.Post("/api/debug/gc-pressure", handleGCPressure)
-	log.Println("GC pressure debug route enabled at POST /api/debug/gc-pressure")
-}
-
+// handleGCPressure starts a temporary heap allocation from query parameters.
 func handleGCPressure(w http.ResponseWriter, r *http.Request) {
 	sizeMB := boundedQueryInt(r, "size_mb", defaultGCPressureSizeMB, 1, maxGCPressureSizeMB)
 	holdSeconds := boundedQueryInt(r, "hold_seconds", defaultGCHoldSeconds, 1, maxGCHoldSeconds)
@@ -80,6 +69,7 @@ func handleGCPressure(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(response)
 }
 
+// boundedQueryInt reads an integer query parameter and clamps it within the allowed range.
 func boundedQueryInt(r *http.Request, name string, defaultValue int, minValue int, maxValue int) int {
 	raw := r.URL.Query().Get(name)
 	if raw == "" {
@@ -99,6 +89,7 @@ func boundedQueryInt(r *http.Request, name string, defaultValue int, minValue in
 	return value
 }
 
+// allocateMemory allocates and touches a byte slice so it is visible to the runtime and OS.
 func allocateMemory(sizeMB int) []byte {
 	chunk := make([]byte, sizeMB*bytesPerMB)
 	for offset := 0; offset < len(chunk); offset += os.Getpagesize() {
@@ -107,6 +98,7 @@ func allocateMemory(sizeMB int) []byte {
 	return chunk
 }
 
+// releaseMemoryAfter removes a tracked allocation after its hold duration and forces a GC cycle.
 func releaseMemoryAfter(allocationID uint64, holdDuration time.Duration) {
 	time.Sleep(holdDuration)
 

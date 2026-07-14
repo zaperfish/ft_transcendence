@@ -4,7 +4,6 @@ import (
 	// Std
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	// Intern
@@ -97,13 +96,21 @@ func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput)
 	}
 
 	created, err := h.service.CreateEventWithAdmin(ctx, &event, userID)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error())
+	}
+	if errors.Is(err, errs.ErrConflict) {
+		return nil, huma.Error409Conflict(err.Error())
+	}
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError("handler: failed to create event", err)
+		return nil, err
 	}
-	if created == nil {
-		fmt.Println(nil)
-	}
-	fmt.Println(created)
 
 	return &CreateEventOutput{Body: created.ToDTO()}, nil
 }
@@ -356,8 +363,14 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 		return nil, err
 	}
 
-	if err := h.service.CreateEventImage(ctx, input.EventID, input.RawBody, input.ContentType); err != nil {
-		fmt.Println("CreateEventImage:", err)
+	err := h.service.CreateEventImage(ctx, input.EventID, input.RawBody, input.ContentType)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error());
+	}
+	if errors.Is(err, errs.ErrInternal) {
+		return nil, huma.Error500InternalServerError(err.Error());
+	}
+	if err != nil {
 		return nil, err
 	}
 
@@ -372,6 +385,12 @@ type CreateImageInput struct {
 
 func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*GetImageOutput, error) {
 	img, mime, err := h.service.GetEventImage(ctx, input.EventID)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error());
+	}
+	if errors.Is(err, errs.ErrInternal) {
+		return nil, huma.Error500InternalServerError(err.Error());
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +412,17 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 		return nil, err
 	}
 
-	if err := h.service.UpdateEventImage(ctx, input.EventID, input.RawBody, input.ContentType); err != nil {
+	err := h.service.UpdateEventImage(ctx, input.EventID, input.RawBody, input.ContentType)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error());
+	}
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error());
+	}
+	if errors.Is(err, errs.ErrInternal) {
+		return nil, huma.Error500InternalServerError(err.Error());
+	}
+	if err != nil {
 		return nil, err
 	}
 
@@ -410,9 +439,12 @@ func (h *EventHandler) DeleteImage(ctx context.Context, input *DeleteImageInput)
 	if err := confirmAdminPriviliges(ctx, h, input.EventID); err != nil {
 		return nil, err
 	}
-
-	if err := h.service.DeleteEventImage(ctx, input.EventID); err != nil {
-		return nil, err
+	err := h.service.DeleteEventImage(ctx, input.EventID)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error());
+	}
+	if errors.Is(err, errs.ErrInternal) {
+		return nil, huma.Error500InternalServerError(err.Error());
 	}
 
 	return nil, nil

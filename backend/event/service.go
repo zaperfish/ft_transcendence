@@ -71,11 +71,11 @@ func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, e
 func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, userID uint) (*Event, error) {
 
 	if len(e.Title) < 3 {
-		return nil, errors.New("title must be at least 3 characters")
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, "title must be at least 3 characters")
 	}
 
 	if e.Duration <= 0 {
-		return nil, errors.New("duration must be greater than 0")
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, "duration must be greater than 0")
 	}
 
 	var created Event
@@ -102,7 +102,7 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 		return nil
 
 	}); err != nil {
-		return nil, err
+		return nil, errs.ErrorDB(err)
 	}
 
 	return &created, nil
@@ -242,17 +242,17 @@ func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, i
 	mtype := mimetype.Detect(image)
 
 	if err := validateImage(image, contentType, mtype); err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrInvalidInput, err.Error())
 	}
 
 	path := imagePathPrefix + "/" + strconv.FormatUint(uint64(eventID), 10) + mtype.Extension()
 	if err := s.repo.CreateImagePath(ctx, eventID, path); err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrInternal, err.Error())
 	}
 
 	if err := os.WriteFile(path, image, 0600); err != nil {
 		s.repo.DeleteImagePath(ctx, eventID)
-		return err
+		return errs.NewCamaError(errs.ErrInternal, err.Error())
 	}
 
 	return nil
@@ -261,12 +261,12 @@ func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, i
 func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]byte, string, error) {
 	path, err := s.repo.GetImagePath(ctx, eventID)
 	if err != nil {
-		return nil, "", err
+		return nil, "", errs.NewCamaError(errs.ErrNotFound, err.Error())
 	}
 
 	image, err := os.ReadFile(path)
 	if err != nil {
-		return nil, "", err
+		return nil, "", errs.NewCamaError(errs.ErrInternal, err.Error())
 	}
 
 	mtype := mimetype.Detect(image)
@@ -278,18 +278,18 @@ func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, i
 	mtype := mimetype.Detect(image)
 
 	if err := validateImage(image, contentType, mtype); err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrInvalidInput, err.Error())
 	}
 
 	path, err := s.repo.GetImagePath(ctx, eventID)
 	if err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrNotFound, err.Error())
 	}
 
 	// note: WriteFile() atomically replaces the file at path
 	err = os.WriteFile(path, image, 0600)
 	if err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrInternal, err.Error())
 	}
 
 	return nil
@@ -299,18 +299,17 @@ func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, i
 func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
 	path, err := s.repo.GetImagePath(ctx, eventID)
 	if err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrInvalidInput, err.Error())
 	}
 
 	err = s.repo.DeleteImagePath(ctx, eventID)
 	if err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrInternal, err.Error())
 	}
 
 	err = os.Remove(path)
 	if err != nil {
-		log.Printf("failed to delete image: %v: %v\n", path, err)
-		return err
+		return errs.NewCamaError(errs.ErrInternal, err.Error())
 	}
 
 	return nil

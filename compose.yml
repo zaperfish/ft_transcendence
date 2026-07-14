@@ -12,8 +12,6 @@ services:
       CADDY_HTTPS_HOST_PORT: ${CADDY_HTTPS_HOST_PORT:-7443}
       FRONTEND_PORT: ${FRONTEND_INTERNAL_PORT}
       BACKEND_PORT: ${BACKEND_INTERNAL_PORT}
-      GRAFANA_BASIC_AUTH_USER: ${GRAFANA_BASIC_AUTH_USER:?set GRAFANA_BASIC_AUTH_USER}
-      GRAFANA_BASIC_AUTH_PASSWORD_HASH: ${GRAFANA_BASIC_AUTH_PASSWORD_HASH:?set GRAFANA_BASIC_AUTH_PASSWORD_HASH}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - ./caddy/scalar.html:/srv/index.html
@@ -43,6 +41,7 @@ services:
       JWT_ALGORITHM: ${JWT_ALGORITHM}
       JWT_KEY: ${JWT_KEY}
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES}
+      ENABLE_GC_PRESSURE_TEST: ${ENABLE_GC_PRESSURE_TEST:-false}
       CONTAINER_RUNTIME: true
     volumes:
       - media:/var/lib/ft_transcendence/images
@@ -65,14 +64,8 @@ services:
     depends_on:
       - prometheus
     environment:
-      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:?set GRAFANA_ROOT_URL}
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-https://localhost:7443/grafana/}
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
-      GF_AUTH_ANONYMOUS_ENABLED: "false"
-      GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_USERS_VIEWERS_CAN_EDIT: "false"
-      GF_SECURITY_COOKIE_SECURE: "true"
-      GF_SECURITY_COOKIE_SAMESITE: strict
-      GF_SECURITY_SECRET_KEY: ${GRAFANA_SECRET_KEY:?set GRAFANA_SECRET_KEY}
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:?set GRAFANA_ADMIN_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}
     volumes:

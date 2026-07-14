@@ -20,10 +20,14 @@ import { useRouter } from 'next/navigation';
  * Handles user logout and redirects to different routes.
  */
 export default function navigation() {
-	const { user, logout } = useAuth();
+	const { user, logout, isOnline } = useAuth();
 	const router = useRouter();
 
 	const handleLogout = async () => {
+		if (!isOnline) {
+			alert('Logout is unavailable when you are offline, please retry later.');
+			return;
+		}
 		await logout();
 		router.push('/login');
 	};
@@ -93,7 +97,15 @@ export default function navigation() {
 								Settings
 								</Link>
 							</DropdownMenuItem>
-							<DropdownMenuItem onClick={handleLogout} className='cursor-pointer text-error hover:text-error/80!'>
+							<DropdownMenuItem
+								onClick={handleLogout}
+								className={
+									`cursor-pointer text-error hover:text-error/80! ${
+										!isOnline ? 'opacity-50 cursor-not-allowed' : ''
+									}`
+								}
+								aria-disabled={!isOnline}
+							>
 							Logout
 							</DropdownMenuItem>
 						</DropdownMenuContent>

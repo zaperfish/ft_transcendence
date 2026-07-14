@@ -4,7 +4,6 @@ import (
 	// Std
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	// Intern
@@ -97,13 +96,21 @@ func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput)
 	}
 
 	created, err := h.service.CreateEventWithAdmin(ctx, &event, userID)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error())
+	}
+	if errors.Is(err, errs.ErrConflict) {
+		return nil, huma.Error409Conflict(err.Error())
+	}
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError("handler: failed to create event", err)
+		return nil, err
 	}
-	if created == nil {
-		fmt.Println(nil)
-	}
-	fmt.Println(created)
 
 	return &CreateEventOutput{Body: created.ToDTO()}, nil
 }

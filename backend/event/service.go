@@ -71,11 +71,11 @@ func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, e
 func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, userID uint) (*Event, error) {
 
 	if len(e.Title) < 3 {
-		return nil, errors.New("title must be at least 3 characters")
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, "title must be at least 3 characters")
 	}
 
 	if e.Duration <= 0 {
-		return nil, errors.New("duration must be greater than 0")
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, "duration must be greater than 0")
 	}
 
 	var created Event
@@ -102,7 +102,7 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 		return nil
 
 	}); err != nil {
-		return nil, err
+		return nil, errs.ErrorDB(err)
 	}
 
 	return &created, nil

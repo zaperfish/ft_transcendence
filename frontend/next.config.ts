@@ -16,8 +16,6 @@ const nextConfig: NextConfig = {
 
 const pwaConfig = {
 	dest: "public",
-	// cacheOnFrontEndNav: true,
-	// aggressiveFrontEndNavCaching: true,
 	reloadOnOnline: true,
 	workboxOptions: {
 		disableDevLogs: true,
@@ -239,28 +237,6 @@ const pwaConfig = {
 				],
 				},
 			},
-			// {
-			// urlPattern: /^\/api\/.*/,
-			// handler: 'NetworkFirst' as const,
-			// options: {
-			// 	cacheName: 'api-cache',
-			// 	networkTimeoutSeconds: 10,
-			// 	expiration: {
-			// 	maxEntries: 50,
-			// 	maxAgeSeconds: 5 * 60,
-			// 	},
-			// 	plugins: [
-			// 	{
-			// 		handlerDidError: async () => {
-			// 		return new Response(JSON.stringify({ error: 'Offline - data unavailable' }), {
-			// 			status: 503,
-			// 			headers: { 'Content-Type': 'application/json' },
-			// 		});
-			// 		},
-			// 	},
-			// 	],
-			// },
-			// },
 		]
 	},
 };

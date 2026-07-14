@@ -22,7 +22,6 @@ const PAGE_SIZE = 7
  */
 export default function HomePage() {
 	const { isOnline } = useAuth();
-	console.log('isOnline:', isOnline);
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const queryClient = useQueryClient();
 

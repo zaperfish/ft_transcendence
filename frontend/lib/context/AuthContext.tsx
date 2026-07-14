@@ -67,11 +67,9 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 			clearTimeout(timeoutId);
 			const reallyOnline = response.ok && response.headers.get('X-Network-Status') !== 'offline';
 			setIsOnline(reallyOnline);
-			console.log('Real online status: ', reallyOnline);
 			return reallyOnline;
 		} catch {
 			setIsOnline(false);
-			console.log('Network check failed, it is offline now');
 			return false;
 		}
 	}, []);
@@ -79,11 +77,9 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	// Add tracker of online && offline states
 	useEffect(() => {
 		const handleOnline = async () => {
-			console.log('Browser "online" fired');
 			await checkRealOnline();
 		};
 		const handleOffline = () => {
-			console.log('Browser "offline" fired');
 			setIsOnline(false);
 		}
 		window.addEventListener('online', handleOnline);
@@ -158,9 +154,7 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 						const cachedUser = loadAuthFromCache();
 						if (cachedUser) {
 							setUser(cachedUser);
-							console.log('Loaded user from cache(offline)');
 						} else {
-							console.log('No cached user data found');
 							setUser(null);
 						}
 					}
@@ -168,11 +162,9 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 			} catch (error) {
 				// Avoid triggering Next.js error overlay with console.error
 				if (error instanceof ApiError && error.status === 0) {
-					console.log('User not logged in or session expired');
 					const cachedUser = loadAuthFromCache();
 					if (cachedUser) {
 						setUser(cachedUser);
-						console.log('Fallback to cached user data');
 					} else {
 						setUser(null);
 					}

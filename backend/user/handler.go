@@ -4,7 +4,6 @@ import (
     // Std
 	"context"
 	"errors"
-	"strconv"
 
     // Internal
 	"ft_transcendence/backend/auth"
@@ -65,42 +64,6 @@ func (h *UserHandler) handleLogoutUser(ctx context.Context, in *struct{}) (*Logo
     }
 
     return out, nil
-}
-
-
-// get token
-
-// type TokenDTO struct {
-// 	JWT	string
-// }
-type TokenOutput struct {
-	JWT string
-}
-
-func (h *UserHandler) handleGetToken(ctx context.Context, in *struct{}) (*TokenOutput, error) {
-	dummyUser := CreateUserDTO{
-		Name:				"dummy",
-		Email:				"dummy@dummy.com",
-		Password:			"dummy",
-		PasswordConfirm:	"dummy",
-	}
-	_, err := h.s.CreateUser(ctx, dummyUser)
-	if errors.Is(err, errs.ErrInvalidInput) {
-		return nil, huma.Error400BadRequest(err.Error())
-	}
-	if err != nil && !errors.Is(err, errs.ErrConflict) {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-	u, err := h.s.GetUserByName(ctx, "dummy")
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-	jwt, err := auth.MakeJWT(strconv.FormatUint(uint64(u.ID), 10))
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-
-	return &TokenOutput{JWT: jwt}, nil
 }
 
 // get

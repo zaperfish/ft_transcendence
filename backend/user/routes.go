@@ -39,16 +39,6 @@ func RegisterPublicRoutes(api huma.API, h UserHandler) {
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Authentification"},
     }, h.handleLogoutUser)
-
-    huma.Register(api, huma.Operation{
-        OperationID:    "get-session-token",
-        Method:         http.MethodGet,
-        Path:           "/api/auth/token",
-		Summary:		"Get a JWT session token",
-		Description:	"Creates user \"dummy\" \"dummy@dummy.com\" and/or returns a jwt session token for them (this endpoint should be removed in production)",
-        DefaultStatus:  http.StatusCreated,
-        Tags:           []string{"Authentification"},
-    }, h.handleGetToken)
 }
 
 func RegisterProtectedRoutes(api huma.API, h UserHandler) {

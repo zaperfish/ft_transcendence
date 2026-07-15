@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	// Internal
 	"ft_transcendence/backend/errs"
@@ -52,11 +53,15 @@ type EventWithUserContext struct {
 
 func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, error) {
 	if len(e.Title) < 3 {
-		return nil, errors.New("title must be at least 3 characters")
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, "title must be at least 3 characters")
 	}
 
 	if e.Duration <= 0 {
-		return nil, errors.New("duration must be greater than 0")
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, "duration must be greater than 0")
+	}
+
+	if e.StartTime.Before(time.Now()) {
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, "start time can not be in the past")
 	}
 
 	created, err := s.repo.Create(ctx, e)
@@ -75,6 +80,10 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 
 	if e.Duration <= 0 {
 		return nil, errs.NewCamaError(errs.ErrInvalidInput, "duration must be greater than 0")
+	}
+
+	if e.StartTime.Before(time.Now()) {
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, "start time can not be in the past")
 	}
 
 	var created Event
@@ -108,6 +117,13 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 }
 
 func (s *eventServiceImpl) UpdateEvent(ctx context.Context, eventID uint, updates map[string]any) (*Event, error) {
+
+	if updates["start_time"] != nil {
+		t, ok := updates["start_time"].(time.Time)
+		if ok && t.Before(time.Now()) {
+			return nil, errs.NewCamaError(errs.ErrInvalidInput, "start time can not be in the past")
+		}
+	}
 
 	updated, err := s.repo.Update(ctx, eventID, updates)
 	if err != nil {

@@ -67,7 +67,7 @@ type CreateEventInput struct {
 	Body struct {
 		Title           string    `json:"title"            minLength:"3"  maxLength:"100" example:"Go Meetup Berlin"                    doc:"Title of the event"`
 		Description     string    `json:"description"      minLength:"10" maxLength:"500" example:"A monthly meetup for Go developers"  doc:"Description of the event"`
-		StartTime       time.Time `json:"start_time"                                      example:"2026-06-15T18:00:00Z"                doc:"Start time of the event"`
+		StartTime       time.Time `json:"start_time"                                      example:"2027-06-15T18:00:00Z"                doc:"Start time of the event"`
 		Duration        int       `json:"duration"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    string    `json:"location_name"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
@@ -120,7 +120,7 @@ type UpdateEventInput struct {
 	Body struct {
 		Title           *string    `json:"title,omitempty"            minLength:"3"  maxLength:"100" example:"Go Meetup Berlin"                    doc:"Title of the event"`
 		Description     *string    `json:"description,omitempty"      minLength:"10" maxLength:"500" example:"A monthly meetup for Go developers"  doc:"Description of the event"`
-		StartTime       *time.Time `json:"start_time,omitempty"                                      example:"2026-06-15T18:00:00Z"                doc:"Start time of the event"`
+		StartTime       *time.Time `json:"start_time,omitempty"                                      example:"2027-06-15T18:00:00Z"                doc:"Start time of the event"`
 		Duration        *int       `json:"duration,omitempty"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
 		LocationName    *string    `json:"location_name,omitempty"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress *string    `json:"location_address,omitempty" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
@@ -162,6 +162,9 @@ func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput)
 	}
 
 	updated, err := h.service.UpdateEvent(ctx, input.ID, updates)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error());
+	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to update event", err)
 	}

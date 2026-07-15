@@ -30,5 +30,6 @@ export function useEvents(tab: 'attending' | 'hosting') {
 			return page < maxPage ? page + 1 : undefined;
 		},
 		initialPageParam: 1,
+		networkMode: 'offlineFirst', // in Offline mode reading cache data
 	});
 }

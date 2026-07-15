@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 
 interface LoginFormProps {
 	onSuccess?: () => void;
+	disabled?: boolean;
 }
 
 // Define the schema of validating login data
@@ -31,7 +32,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
  * calls the login API via the auth context, handles authentication errors,
  * and invokes the onSuccess callback upon successful login.
  */
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function LoginForm({ onSuccess, disabled = false }: LoginFormProps) {
 	const { login } = useAuth();
 	const {
 		register,
@@ -48,6 +49,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 	});
 
 	const onSubmit = async (data: LoginFormData) => {
+		if (disabled) {
+			setError('root', { message: 'You are offline. Please try again later.' });
+			return;
+		}
+
 		try {
 			await login({
 				name: data.username,
@@ -93,7 +99,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 			{errors.root && (
 				<p className='text-sm text-error mt-xs'>{errors.root.message}</p>
 			)}
-			<Button type='submit' disabled={isSubmitting}>
+			<Button type='submit' disabled={isSubmitting || disabled}>
 				{isSubmitting ? "Loading..." : "Login"}
 			</Button>
 		</form>

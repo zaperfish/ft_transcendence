@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { useAuth } from "@/lib/hooks/useAuth";
 import CreateEventCard from "@/components/features/events/CreateEventCard";
 import CreateEventForm from "@/components/features/events/CreateEventForm";
 import EventCard from "@/components/features/events/EventCard";
@@ -14,12 +15,21 @@ const PAGE_SIZE = 7
  * HomePage is the main landing page that displays a grid of event cards,
  * includes a "Create Event" card to open the creation modal, and supports
  * infinite scrolling pagination for loading more events.
+ *
+ * Enable offline mode: create event and register disabled;
+ * when cached data exist, query uses cache instead of sending request;
+ * when no cached data, fetch status is paused until network continues.
  */
 export default function HomePage() {
+	const { isOnline } = useAuth();
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const queryClient = useQueryClient();
 
 	const handleOpenForm = () => {
+		if (!isOnline) {
+			alert('Cannot create event when offline, please try later');
+			return;
+		}
 		setIsFormOpen(true);
 	};
 
@@ -42,6 +52,7 @@ export default function HomePage() {
 		isFetchingNextPage,
 		isLoading,
 		isError,
+		fetchStatus,
 	} = useInfiniteQuery({
 		queryKey: ["events"],
 		queryFn: async ({ pageParam = 1 }) => {
@@ -53,6 +64,7 @@ export default function HomePage() {
 			return page < maxPage ? page + 1 : undefined;
 		},
 		initialPageParam: 1,
+		networkMode: 'offlineFirst',
 	});
 
 	// Using [] to avoid crash when backend returns empty page.data
@@ -66,8 +78,10 @@ export default function HomePage() {
 		}))
 	) ?? [];
 
-	if (isLoading)
-		return <div className="text-center py-2xl text-text-secondary">Loading...</div>
+	if (isLoading && !isOnline)
+		return <div className="text-center py-2xl text-text-secondary">Loading...Checking network connection...</div>
+	if (fetchStatus === 'paused' && !isOnline)
+		return <div className="text-center py-2xl text-text-secondary">You are offline, no cached data...Please retry after you are online.</div>
 	if (isError)
 		return <div className="text-center py-2xl text-error">Failed to load events...</div>
 
@@ -87,7 +101,7 @@ export default function HomePage() {
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-lg">
 				<CreateEventCard onClick={handleOpenForm}/>
 				{events.map((event) => (
-					<EventCard key={event.id} data={event} />
+					<EventCard key={event.id} data={event} disabled={!isOnline}/>
 				))}
 			</div>
 		{ /*Load more button*/ }
@@ -96,7 +110,7 @@ export default function HomePage() {
 					<Button
 						variant="outline"
 						onClick={() => fetchNextPage()}
-						disabled={isFetchingNextPage}
+						disabled={isFetchingNextPage || !isOnline}
 						className="min-w-50"
 					>
 						{isFetchingNextPage ? "Loading..." : "Load more"}

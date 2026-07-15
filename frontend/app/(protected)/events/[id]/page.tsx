@@ -22,7 +22,7 @@ export default function EventDetailPage() {
 	const eventId = params.id as string;
 	const numericId = Number(eventId);
 	const router = useRouter();
-	const { user } = useAuth();
+	const { user, isOnline } = useAuth();
 	const queryClient = useQueryClient();
 	// Use ref to operate hidden file input in DOM
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,15 +32,25 @@ export default function EventDetailPage() {
 	const [coverRefreshKey, setCoverRefreshKey] = useState(0);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-	const { data: event, isLoading: eventLoading } = useQuery({
+	const checkOffline = (action: string) => {
+		if (!isOnline) {
+			alert(`You are offline. ${action} is not available.`);
+			return true;
+		}
+		return false;
+	};
+
+	const { data: event, isLoading: eventLoading, fetchStatus: eventFetchStatus } = useQuery({
 		queryKey: ['event', numericId],
 		queryFn: () => getEventById(numericId),
+		networkMode: 'offlineFirst',
 	});
 
 	// Define as empty array if undefined to avoid crash
-	const { data: participants = [], isLoading: participantsLoading } = useQuery({
+	const { data: participants = [], isLoading: participantsLoading, fetchStatus: participantsFetchStatus } = useQuery({
 		queryKey: ['participants', numericId],
 		queryFn: () => getEventParticipants(numericId),
+		networkMode: 'offlineFirst',
 	});
 
 	const coverSrc = event?.has_image
@@ -75,18 +85,21 @@ export default function EventDetailPage() {
 	});
 
 	const handleLeaveEvent = () => {
+		if (checkOffline('Unregister')) return;
 		if (confirm('Do you want to unregister?')) {
 			leaveMutation.mutate();
 		}
 	};
 
 	const handleRemoveParticipant = (userId: number, userName: string) => {
+		if (checkOffline('Remove participants')) return;
 		if (confirm(`Do you want to remove ${userName}?`)) {
 			removeMutation.mutate(userId);
 		}
 	};
 
 	const handleDeleteEvent = () => {
+		if (checkOffline('Delete event')) return;
 		if (confirm('Do you want to delete the event?')) {
 			deleteMutation.mutate();
 		}
@@ -97,6 +110,7 @@ export default function EventDetailPage() {
 	};
 
 	const handleOpenChatroom = () => {
+		if (checkOffline('Open chatroom')) return;
 		window.open(
 			`/events/${numericId}/chat`,
 			'_blank',
@@ -104,10 +118,19 @@ export default function EventDetailPage() {
 		);
 	};
 
+	const handleEditClick = () => {
+		if (checkOffline('Edit event')) return;
+		setIsEditModalOpen(true);
+
+	};
+
 	if (eventLoading || participantsLoading)
 		return <div className="text-center py-2xl text-text-secondary">Loading...</div>
 	if (!event)
 		return <div className="text-center py-2xl text-error">Failed to load events...</div>
+	if ((eventFetchStatus === 'paused' || participantsFetchStatus === 'paused')
+	&& !isOnline)
+		return <div className="text-center py-2xl text-text-secondary">You are offline, no cached data...Please retry after you are online.</div>
 
 	const eventDate = new Date(event.start_time);
 	const dateStr = eventDate.toLocaleDateString("en-US", {
@@ -121,10 +144,17 @@ export default function EventDetailPage() {
 	});
 
 	const handleCoverButtonClick = () => {
+		if (checkOffline('Change cover')) return;
 		fileInputRef.current?.click();
 	};
 
 	const handleCoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (checkOffline('Upload image')) {
+			if (fileInputRef.current) {
+				fileInputRef.current.value = '';
+				return;
+			}
+		}
 		const file = e.target.files?.[0];
 		if (!file) return;
 
@@ -181,7 +211,7 @@ export default function EventDetailPage() {
 								type="button"
 								onClick={handleCoverButtonClick}
 								disabled={isCoverUploading}
-								className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition"
+								className={`absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
 								title="Change cover page"
 							>
 							{isCoverUploading ? (
@@ -229,7 +259,10 @@ export default function EventDetailPage() {
 			{ /* Card for operation enabling*/ }
 			<Card className="p-lg space-y-md">
 				{ /* Open chatroom */ }
-				<Button className="w-full bg-primary text-white" onClick={handleOpenChatroom}>
+				<Button
+					className={`w-full bg-primary text-white ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
+					onClick={handleOpenChatroom}
+				>
 					<MessageSquareIcon className="size-4 mr-2" />
 					Open Event Chatroom
 				</Button>
@@ -238,9 +271,9 @@ export default function EventDetailPage() {
 					<>
 						{ /* Edit event information */ }
 						<Button
-							onClick={() => setIsEditModalOpen(true)}
+							onClick={handleEditClick}
 							variant="outline"
-							className="w-full"
+							className={`w-full ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
 						>
 							<EditIcon className="size-4 mr-2" />
 							Modify Event Information
@@ -249,7 +282,7 @@ export default function EventDetailPage() {
 						<Button
 							onClick={handleDeleteEvent}
 							variant="outline"
-							className="w-full text-error border-error hover:bg-error/10"
+							className={`w-full text-error border-error hover:bg-error/10 ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
 							disabled={deleteMutation.isPending}
 						>
 							{deleteMutation.isPending ? 'deleting..' : 'Delete Event'}
@@ -261,7 +294,7 @@ export default function EventDetailPage() {
 					<Button
 						onClick={handleLeaveEvent}
 						variant="outline"
-						className="w-full text-error border-error hover:bg-error/10"
+						className={`w-full text-error border-error hover:bg-error/10 ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
 						disabled={leaveMutation.isPending}
 					>
 						{leaveMutation.isPending ? 'unregistering..' : 'Unregister'}
@@ -293,7 +326,7 @@ export default function EventDetailPage() {
 							{isCreator && participant.id !== user?.id && (
 								<Button
 									onClick={() => handleRemoveParticipant(participant.id, participant.name)}
-									className="text-error bg-white hover:bg-error/10 p-1 rounded-md transition-colors"
+									className={`text-error bg-white hover:bg-error/10 p-1 rounded-md transition-colors ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
 								>
 									<XIcon className="size-4" />
 								</Button>

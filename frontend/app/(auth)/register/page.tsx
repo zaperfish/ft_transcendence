@@ -2,7 +2,7 @@
 
 import { RegisterForm } from "@/components/features/auth/RegisterForm";
 import { useAuth } from "@/lib/hooks/useAuth";
-
+import { toast } from "sonner";
 
 /**
  * The registration page component.
@@ -32,7 +32,7 @@ export default function RegisterPage() {
 					onClick={(e) => {
 						if (!isOnline) {
 							e.preventDefault();
-							alert("You are currently offline. Login is unvailable.")
+							toast.error("You are currently offline. Login is unvailable.")
 						}
 					}}
 					className={`text-primary hover:underline ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''

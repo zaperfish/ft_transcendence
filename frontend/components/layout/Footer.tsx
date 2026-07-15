@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { toast } from "sonner";
 
 export function Footer() {
 	const { isOnline } = useAuth();
@@ -10,7 +11,7 @@ export function Footer() {
 		href: "#",
 		onClick: (e: React.MouseEvent) => {
 			e.preventDefault();
-			alert("You are currently offline. This page is unvailable.");
+			toast.error("You are currently offline. This page is unvailable.");
 		},
 		className: 'hover:underline opacity-50 cursor-not-allowed',
 		'aria-disabled': true,

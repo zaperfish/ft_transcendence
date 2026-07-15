@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { FormLabel } from '@/components/ui/FormLabel';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface CreateEventFormProps {
 	open: boolean;
@@ -50,7 +51,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 
 	const onSubmit = async (data: CreateEventRequest) => {
 		if (!isOnline) {
-			alert('Cannot create new event when you are offline, please retry later');
+			toast.error('Cannot create new event when you are offline, please retry later');
 			return;
 		}
 

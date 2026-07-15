@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
 import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon, MessageSquareIcon, EditIcon, XIcon, PencilIcon } from "lucide-react";
+import { toast } from "sonner";
 
 /**
  * EventDetailPage displays detailed information for a single event,
@@ -34,7 +35,7 @@ export default function EventDetailPage() {
 
 	const checkOffline = (action: string) => {
 		if (!isOnline) {
-			alert(`You are offline. ${action} is not available.`);
+			toast.error(`You are offline. ${action} is not available.`);
 			return true;
 		}
 		return false;
@@ -160,12 +161,12 @@ export default function EventDetailPage() {
 
 		// Validate image type
 		if (file.type !== "image/png") {
-			alert('Support only image/png type');
+			toast.error('Support only image/png type');
 			return;
 		}
 		// Validate image size
 		if (file.size > 5 * 1024 * 1024) {
-			alert('Image file cannot be more than 5MB');
+			toast.error('Image file cannot be more than 5MB');
 			return;
 		}
 		setIsCoverUploading(true);
@@ -175,7 +176,7 @@ export default function EventDetailPage() {
 			// Update coverSrc if this is the first time uploading image
 			queryClient.invalidateQueries({ queryKey: ['event', numericId] });
 		} catch (err) {
-			alert("Failed to update cover page, please retry");
+			toast.error("Failed to update cover page, please retry");
 		} finally {
 			setIsCoverUploading(false);
 			if (fileInputRef.current) {

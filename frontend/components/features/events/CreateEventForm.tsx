@@ -37,6 +37,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 	const [serverError, setServerError] = useState<string | null>(null);
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imageError, setImageError] = useState<string>('');
+	const { isOnline } = useAuth();
 
 	// Stabilize reference and avoid recreating incline function when component renders
 	const handleImageChange = useCallback((file: File | null) => {
@@ -46,8 +47,6 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 
 	if (!open)
 		return null;
-
-	const { isOnline } = useAuth();
 
 	const onSubmit = async (data: CreateEventRequest) => {
 		if (!isOnline) {

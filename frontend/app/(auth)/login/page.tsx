@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { LoginForm } from "@/components/features/auth/LoginForm";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { toast } from "sonner";
 
 /**
  * The login page component.
@@ -42,7 +43,7 @@ export default function LoginPage() {
 					onClick={(e) => {
 						if (!isOnline) {
 							e.preventDefault();
-							alert("You are currently offline. Registration is unvailable.")
+							toast.error("You are currently offline. Registration is unvailable.")
 						}
 					}}
 					className={`text-primary hover:underline ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''

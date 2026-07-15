@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "@/components/providers/Providers";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { Footer } from "@/components/layout/Footer";
+import { Toaster } from 'sonner';
 
 // font-sans is a Tailwind CSS utility class
 // that applies the CSS rule font-family:
@@ -48,6 +49,7 @@ export default function RootLayout({
 			<Footer />
           </div>
         </Providers>
+		<Toaster position="top-center" richColors closeButton />
       </body>
     </html>
   );

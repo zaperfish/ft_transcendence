@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { FormLabel } from '@/components/ui/FormLabel';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface CreateEventFormProps {
 	open: boolean;
@@ -36,6 +37,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 	const [serverError, setServerError] = useState<string | null>(null);
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imageError, setImageError] = useState<string>('');
+	const { isOnline } = useAuth();
 
 	// Stabilize reference and avoid recreating incline function when component renders
 	const handleImageChange = useCallback((file: File | null) => {
@@ -46,11 +48,9 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 	if (!open)
 		return null;
 
-	const { isOnline } = useAuth();
-
 	const onSubmit = async (data: CreateEventRequest) => {
 		if (!isOnline) {
-			alert('Cannot create new event when you are offline, please retry later');
+			toast.error('Cannot create new event when you are offline, please retry later');
 			return;
 		}
 

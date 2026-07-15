@@ -8,6 +8,7 @@ import EventCard from "@/components/features/events/EventCard";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { getEvents } from "@/lib/api/events";
+import { toast } from "sonner";
 
 const PAGE_SIZE = 7
 
@@ -27,7 +28,7 @@ export default function HomePage() {
 
 	const handleOpenForm = () => {
 		if (!isOnline) {
-			alert('Cannot create event when offline, please try later');
+			toast.error('Cannot create event when offline, please try later');
 			return;
 		}
 		setIsFormOpen(true);
@@ -41,7 +42,7 @@ export default function HomePage() {
 	const handleEventCreated = (warning?: string) => {
 		queryClient.invalidateQueries({ queryKey: ["events"] });
 		if (warning) {
-			alert(warning);
+			toast.warning(warning);
 		}
 	};
 

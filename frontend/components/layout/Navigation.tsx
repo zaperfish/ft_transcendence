@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/Dropdown-menu';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 /**
  * Top-level navigation bar with logo, primary links (links for desktop and dropdown menu for mobile), and user dropdown menu.
@@ -25,7 +26,7 @@ export default function navigation() {
 
 	const handleLogout = async () => {
 		if (!isOnline) {
-			alert('Logout is unavailable when you are offline, please retry later.');
+			toast.error('Logout is unavailable when you are offline, please retry later.');
 			return;
 		}
 		await logout();

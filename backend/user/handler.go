@@ -135,19 +135,3 @@ func (h *UserHandler) handleGetUsers(ctx context.Context, in *GetUsersInput) (*U
     }
 	return &out, nil
 }
-
-// patch password
-
-func (h *UserHandler) handlePatchPassword(ctx context.Context, in *PatchPasswordInput) (*UserOutput, error) {
-	u, err := h.s.PatchPassword(ctx, in.ID, in.Body)
-	if errors.Is(err, errs.ErrNotFound) {
-        return nil, huma.Error404NotFound(err.Error())
-	}
-	if errors.Is(err, errs.ErrConflict) || errors.Is(err, errs.ErrInvalidInput) {
-        return nil, huma.Error400BadRequest(err.Error())
-	}
-	if err != nil {
-        return nil, huma.Error500InternalServerError(err.Error())
-	}
-	return &UserOutput{Body: *u}, nil
-}

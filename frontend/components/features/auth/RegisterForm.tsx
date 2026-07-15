@@ -45,6 +45,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
  * validates input using Zod schema, submits data to the registration API,
  * and handles errors such as duplicate credentials or network issues.
  */
+
 export function RegisterForm() {
 	const router = useRouter();
 	const {

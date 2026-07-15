@@ -165,16 +165,3 @@ func (h *UserHandler) handlePatchPassword(ctx context.Context, in *PatchPassword
 	}
 	return &UserOutput{Body: *u}, nil
 }
-
-// delete
-
-func (h *UserHandler) handleDeleteUser(ctx context.Context, in *DeleteUserInput) (*struct{}, error) {
-	err := h.s.DeleteUser(ctx, in.ID)
-	if errors.Is(err, errs.ErrNotFound) {
-		return nil, huma.Error404NotFound(err.Error())
-	}
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-    return nil, nil
-}

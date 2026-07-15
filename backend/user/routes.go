@@ -90,13 +90,4 @@ func RegisterProtectedRoutes(api huma.API, h UserHandler) {
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handlePatchPassword)
-
-    huma.Register(api, huma.Operation{
-        OperationID:    "delete-user-by-id",
-        Method:         http.MethodDelete,
-        Path:           "/api/users/{id}",
-		Summary:		"Delete a user",
-        DefaultStatus:  http.StatusNoContent,
-        Tags:           []string{"Users"},
-    }, h.handleDeleteUser)
 }

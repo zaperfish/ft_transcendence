@@ -328,9 +328,12 @@ func (r *eventRepositoryImpl) CreateParticipantAs(ctx context.Context, tx *gorm.
 		db = tx
 	}
 
-	_, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
+	event, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to find event: %w", err)
+	}
+	if event.StartTime.Before(time.Now()) {
+		return fmt.Errorf("event expired: %w", err)
 	}
 
 	_, err = gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)

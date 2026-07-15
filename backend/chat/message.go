@@ -13,7 +13,7 @@ type Message struct {
 
 	EventID uint   `gorm:"not null;index"`
 	UserID  uint   `gorm:"not null;index"`
-	Content string `gorm:"not null;check:length(content) >= 1"`
+	Content string `gorm:"not null;check:chk_messages_content_length,char_length(content) >= 1 AND char_length(content) <= 2000 AND octet_length(content) <= 8000"`
 }
 
 type MessageDTO struct {

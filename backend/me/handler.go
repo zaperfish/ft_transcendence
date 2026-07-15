@@ -4,6 +4,7 @@ import (
     // Std
 	"context"
 	"errors"
+	"net/http"
 
     // Internal
 	"ft_transcendence/backend/auth"
@@ -46,13 +47,24 @@ func (h *MeHandler) handleGetMe(ctx context.Context, in *struct{}) (*user.UserOu
 
 // patch me
 
-func (h *MeHandler) handlePatchMe(ctx context.Context, in *user.PatchUserInput) (*user.UserOutput, error) {
+type PatchMeDTO struct {
+    Email *string    `json:"email,omitempty" example:"max@email.com" doc:"email address"`
+}
+
+type PatchMeInput struct {
+	Body PatchMeDTO
+}
+
+func (h *MeHandler) handlePatchMe(ctx context.Context, in *PatchMeInput) (*user.UserOutput, error) {
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
 	}
 
-	u, err := h.su.PatchUser(ctx, id, in.Body)
+	patch := user.PatchUserDTO{
+		Email: in.Body.Email,
+	}
+	u, err := h.su.PatchUser(ctx, id, patch)
 	if errors.Is(err, errs.ErrNotFound) {
 		return nil, huma.Error404NotFound(err.Error())
 	}
@@ -65,7 +77,11 @@ func (h *MeHandler) handlePatchMe(ctx context.Context, in *user.PatchUserInput) 
 
 // patch password me
 
-func (h *MeHandler) handlePatchPasswordMe(ctx context.Context, in *user.PatchPasswordInput) (*user.UserOutput, error) {
+type PatchMePasswordInput struct {
+	Body user.PatchPasswordDTO
+}
+
+func (h *MeHandler) handlePatchPasswordMe(ctx context.Context, in *PatchMePasswordInput) (*user.UserOutput, error) {
 
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
@@ -87,7 +103,11 @@ func (h *MeHandler) handlePatchPasswordMe(ctx context.Context, in *user.PatchPas
 
 // delete me
 
-func (h *MeHandler) handleDeleteMe(ctx context.Context, in *struct{}) (*struct{}, error) {
+type DeleteMeOutput struct {
+	SetCookie http.Cookie 		`header:"Set-Cookie"`
+}
+
+func (h *MeHandler) handleDeleteMe(ctx context.Context, in *struct{}) (*DeleteMeOutput, error) {
 	id, err := auth.UidFromCtx(ctx)
 	if err != nil {
 		return nil, huma.Error404NotFound(errs.ErrNotFound.Error())
@@ -100,7 +120,12 @@ func (h *MeHandler) handleDeleteMe(ctx context.Context, in *struct{}) (*struct{}
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
-    return nil, nil
+
+    out := &DeleteMeOutput {
+		SetCookie: auth.MakeLogoutCookie(),
+    }
+
+    return out, nil
 }
 
 // join event

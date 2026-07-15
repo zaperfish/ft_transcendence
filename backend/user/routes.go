@@ -74,15 +74,6 @@ func RegisterProtectedRoutes(api huma.API, h UserHandler) {
     }, h.handleGetUsers)
 
     huma.Register(api, huma.Operation{
-        OperationID:    "patch-user",
-        Method:         http.MethodPatch,
-        Path:           "/api/users/{id}",
-        Summary:        "Update a user",
-        DefaultStatus:  http.StatusOK,
-        Tags:           []string{"Users"},
-    }, h.handlePatchUser)
-
-    huma.Register(api, huma.Operation{
         OperationID:    "patch-user-password",
         Method:         http.MethodPatch,
         Path:           "/api/users/{id}/password",

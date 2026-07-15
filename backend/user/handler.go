@@ -136,20 +136,6 @@ func (h *UserHandler) handleGetUsers(ctx context.Context, in *GetUsersInput) (*U
 	return &out, nil
 }
 
-// patch
-
-func (h *UserHandler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*UserOutput, error) {
-	u, err := h.s.PatchUser(ctx, in.ID, in.Body)
-	if errors.Is(err, errs.ErrNotFound) {
-		return nil, huma.Error404NotFound(err.Error())
-	}
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-
-	return &UserOutput{Body: *u}, nil
-}
-
 // patch password
 
 func (h *UserHandler) handlePatchPassword(ctx context.Context, in *PatchPasswordInput) (*UserOutput, error) {

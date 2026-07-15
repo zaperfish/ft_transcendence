@@ -39,16 +39,6 @@ func RegisterPublicRoutes(api huma.API, h UserHandler) {
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Authentification"},
     }, h.handleLogoutUser)
-
-    huma.Register(api, huma.Operation{
-        OperationID:    "get-session-token",
-        Method:         http.MethodGet,
-        Path:           "/api/auth/token",
-		Summary:		"Get a JWT session token",
-		Description:	"Creates user \"dummy\" \"dummy@dummy.com\" and/or returns a jwt session token for them (this endpoint should be removed in production)",
-        DefaultStatus:  http.StatusCreated,
-        Tags:           []string{"Authentification"},
-    }, h.handleGetToken)
 }
 
 func RegisterProtectedRoutes(api huma.API, h UserHandler) {
@@ -72,31 +62,4 @@ func RegisterProtectedRoutes(api huma.API, h UserHandler) {
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Users"},
     }, h.handleGetUsers)
-
-    huma.Register(api, huma.Operation{
-        OperationID:    "patch-user",
-        Method:         http.MethodPatch,
-        Path:           "/api/users/{id}",
-        Summary:        "Update a user",
-        DefaultStatus:  http.StatusOK,
-        Tags:           []string{"Users"},
-    }, h.handlePatchUser)
-
-    huma.Register(api, huma.Operation{
-        OperationID:    "patch-user-password",
-        Method:         http.MethodPatch,
-        Path:           "/api/users/{id}/password",
-        Summary:        "Update a user's password",
-        DefaultStatus:  http.StatusOK,
-        Tags:           []string{"Users"},
-    }, h.handlePatchPassword)
-
-    huma.Register(api, huma.Operation{
-        OperationID:    "delete-user-by-id",
-        Method:         http.MethodDelete,
-        Path:           "/api/users/{id}",
-		Summary:		"Delete a user",
-        DefaultStatus:  http.StatusNoContent,
-        Tags:           []string{"Users"},
-    }, h.handleDeleteUser)
 }

@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"unsafe"
 
 	// Internal
 	"ft_transcendence/backend/errs"
@@ -316,7 +315,7 @@ func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) e
 }
 
 func validateImage(image []byte, contentType string, mtype *mimetype.MIME) error {
-	if unsafe.Sizeof(image) > maxImageSize {
+	if len(image) > maxImageSize {
 		return errors.New("file too large")
 	}
 

@@ -4,7 +4,6 @@ import (
     // Std
 	"context"
 	"errors"
-	"strconv"
 
     // Internal
 	"ft_transcendence/backend/auth"
@@ -67,42 +66,6 @@ func (h *UserHandler) handleLogoutUser(ctx context.Context, in *struct{}) (*Logo
     return out, nil
 }
 
-
-// get token
-
-// type TokenDTO struct {
-// 	JWT	string
-// }
-type TokenOutput struct {
-	JWT string
-}
-
-func (h *UserHandler) handleGetToken(ctx context.Context, in *struct{}) (*TokenOutput, error) {
-	dummyUser := CreateUserDTO{
-		Name:				"dummy",
-		Email:				"dummy@dummy.com",
-		Password:			"dummy",
-		PasswordConfirm:	"dummy",
-	}
-	_, err := h.s.CreateUser(ctx, dummyUser)
-	if errors.Is(err, errs.ErrInvalidInput) {
-		return nil, huma.Error400BadRequest(err.Error())
-	}
-	if err != nil && !errors.Is(err, errs.ErrConflict) {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-	u, err := h.s.GetUserByName(ctx, "dummy")
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-	jwt, err := auth.MakeJWT(strconv.FormatUint(uint64(u.ID), 10))
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-
-	return &TokenOutput{JWT: jwt}, nil
-}
-
 // get
 
 func (h *UserHandler) handleGetUser(ctx context.Context, in *GetUserInput) (*UserOutput, error) {
@@ -134,47 +97,4 @@ func (h *UserHandler) handleGetUsers(ctx context.Context, in *GetUsersInput) (*U
         },
     }
 	return &out, nil
-}
-
-// patch
-
-func (h *UserHandler) handlePatchUser(ctx context.Context, in *PatchUserInput) (*UserOutput, error) {
-	u, err := h.s.PatchUser(ctx, in.ID, in.Body)
-	if errors.Is(err, errs.ErrNotFound) {
-		return nil, huma.Error404NotFound(err.Error())
-	}
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-
-	return &UserOutput{Body: *u}, nil
-}
-
-// patch password
-
-func (h *UserHandler) handlePatchPassword(ctx context.Context, in *PatchPasswordInput) (*UserOutput, error) {
-	u, err := h.s.PatchPassword(ctx, in.ID, in.Body)
-	if errors.Is(err, errs.ErrNotFound) {
-        return nil, huma.Error404NotFound(err.Error())
-	}
-	if errors.Is(err, errs.ErrConflict) || errors.Is(err, errs.ErrInvalidInput) {
-        return nil, huma.Error400BadRequest(err.Error())
-	}
-	if err != nil {
-        return nil, huma.Error500InternalServerError(err.Error())
-	}
-	return &UserOutput{Body: *u}, nil
-}
-
-// delete
-
-func (h *UserHandler) handleDeleteUser(ctx context.Context, in *DeleteUserInput) (*struct{}, error) {
-	err := h.s.DeleteUser(ctx, in.ID)
-	if errors.Is(err, errs.ErrNotFound) {
-		return nil, huma.Error404NotFound(err.Error())
-	}
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
-    return nil, nil
 }

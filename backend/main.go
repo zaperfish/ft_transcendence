@@ -11,6 +11,7 @@ import (
 	"ft_transcendence/backend/auth"
 	"ft_transcendence/backend/chat"
 	"ft_transcendence/backend/db"
+	"ft_transcendence/backend/devtools"
 	"ft_transcendence/backend/event"
 	"ft_transcendence/backend/eventusers"
 	"ft_transcendence/backend/me"
@@ -126,6 +127,7 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 
 	// Generate and return the Prometheus metrics payload at /metrics
 	r.Handle("/metrics", promhttp.Handler())
+	devtools.RegisterRoutes(r)
 
 	apikey.RegisterRoutes(api, db)
 	event.RegisterRoutes(api, db)

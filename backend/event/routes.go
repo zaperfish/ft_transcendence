@@ -79,15 +79,6 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 	}, eventHandler.ListEvents)
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "add-participant",
-		Method:        http.MethodPost,
-		Path:          "/api/events/{id}/participants",
-		Summary:       "Add participant",
-		Tags:          []string{"Events"},
-		DefaultStatus: http.StatusOK,
-	}, eventHandler.AddParticipant)
-
-	huma.Register(api, huma.Operation{
 		OperationID:   "remove-participant",
 		Method:        http.MethodDelete,
 		Path:          "/api/events/{eventID}/participants/{userID}",

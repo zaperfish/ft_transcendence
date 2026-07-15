@@ -42,3 +42,8 @@ next-env.d.ts
 
 # specification
 spec/
+
+# PWA-generated files
+public/sw.js
+public/workbox-*.js
+public/swe-worker-*.js

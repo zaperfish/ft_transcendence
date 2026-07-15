@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useEvents } from '@/lib/hooks/useEvents';
 import EventCard from '@/components/features/events/EventCard';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +12,7 @@ import { useRouter } from "next/navigation";
  * between "attending" and "hosting". It supports pagination and navigation to event detail pages.
  */
 export default function EventsPage() {
+	const { isOnline } = useAuth();
 	const [activeTab, setActiveTab] = useState<'attending' | 'hosting'>('attending');
 	const {
 		data,
@@ -19,6 +21,7 @@ export default function EventsPage() {
 		isFetchingNextPage,
 		isLoading,
 		isError,
+		fetchStatus, // Used for 'paused' when offline and no cache
 	} = useEvents(activeTab);
 	const router = useRouter();
 
@@ -30,6 +33,9 @@ export default function EventsPage() {
 				: '/images/default-event-cover.jpg',
 		}))
 	) ?? [];
+
+	if (fetchStatus === 'paused' && !isOnline)
+		return <div className="text-center py-2xl text-text-secondary">You are offline, no cached data...Please retry after you are online.</div>
 
 	return (
 		<div className="w-full px-xl py-2xl">
@@ -82,7 +88,8 @@ export default function EventsPage() {
 							data={event}
 							mode='detail'
 							layout='horizontal'
-							onDetail={() => router.push(`/events/${event.id}`)} />
+							disabled={!isOnline}
+							onDetail={isOnline ? () => router.push(`/events/${event.id}`) : undefined} />
 					))}
 				</div>
 			) : (
@@ -94,7 +101,7 @@ export default function EventsPage() {
 					<Button
 						variant="outline"
 						onClick={() => fetchNextPage()}
-						disabled={isFetchingNextPage}
+						disabled={isFetchingNextPage || !isOnline}
 						className="min-w-50"
 					>
 						{isFetchingNextPage ? "Loading..." : "Load more"}

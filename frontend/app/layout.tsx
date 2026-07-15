@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers/Providers";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { Footer } from "@/components/layout/Footer";
+import { Toaster } from 'sonner';
 
 // font-sans is a Tailwind CSS utility class
 // that applies the CSS rule font-family:
@@ -15,6 +17,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Camaraderie",
   description: "A meetup app that connects people around shared purpose",
+  manifest: '/manifest.json',
 };
 
 /**
@@ -39,22 +42,14 @@ export default function RootLayout({
       <body className={"h-dvh overflow-hidden font-sans antialiased"}>
         <Providers>
           <div className="flex h-dvh flex-col overflow-hidden">
+            <OfflineBanner />
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               {children}
             </div>
-            <footer className="shrink-0 border-t border-border bg-background px-4 py-4 text-sm text-muted-foreground">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
-                <Link href="/privacy" className="hover:text-foreground">
-                  Privacy Policy
-                </Link>
-                <span className="hidden sm:inline">•</span>
-                <Link href="/terms" className="hover:text-foreground">
-                  Terms of Service
-                </Link>
-              </div>
-            </footer>
+			<Footer />
           </div>
         </Providers>
+		<Toaster position="top-center" richColors closeButton />
       </body>
     </html>
   );

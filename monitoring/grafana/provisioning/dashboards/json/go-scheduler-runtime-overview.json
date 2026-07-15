@@ -22,6 +22,7 @@
   "panels": [
     {
       "datasource": "Prometheus",
+      "description": "shows how many goroutines currently exist in the backend process. Expected behavior after scheduler pressure -> goroutines spike while temporary work is active, then drop back toward the normal baseline when the work ends.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -34,10 +35,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
@@ -54,7 +51,10 @@
       "id": 1,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -68,18 +68,19 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "go_goroutines",
+          "expr": "go_goroutines{job=\"backend\"}",
           "instant": false,
-          "legendFormat": "",
+          "legendFormat": "goroutines",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Go Goroutines",
+      "title": "Goroutines",
       "type": "timeseries"
     },
     {
       "datasource": "Prometheus",
+      "description": "shows how many OS threads the Go runtime has created for the backend process. Expected behavior after scheduler pressure -> usually stable, but it may rise if the runtime needs additional threads for parallel execution or blocking work.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -92,14 +93,10 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -112,7 +109,10 @@
       "id": 2,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -126,18 +126,19 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "go_memstats_heap_alloc_bytes",
+          "expr": "go_threads{job=\"backend\"}",
           "instant": false,
-          "legendFormat": "",
+          "legendFormat": "OS threads",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Heap Allocated Bytes",
+      "title": "OS Threads",
       "type": "timeseries"
     },
     {
       "datasource": "Prometheus",
+      "description": "shows the current GOMAXPROCS value, which is the number of OS threads that can execute Go code at the same time. Expected behavior -> this should stay flat unless runtime CPU limits or explicit GOMAXPROCS configuration change.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -150,10 +151,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
@@ -169,33 +166,38 @@
       },
       "id": 3,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "targets": [
         {
           "editorMode": "code",
-          "expr": "go_gc_duration_seconds_count",
-          "instant": false,
-          "legendFormat": "",
-          "range": true,
+          "expr": "go_sched_gomaxprocs_threads{job=\"backend\"}",
+          "instant": true,
+          "legendFormat": "GOMAXPROCS",
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "GC Cycle Count",
-      "type": "timeseries"
+      "title": "GOMAXPROCS",
+      "type": "stat"
     },
     {
       "datasource": "Prometheus",
+      "description": "shows how many CPU seconds per second the backend process used on average over the last 1 minute. A value near 1 means roughly one CPU core is fully used. Expected behavior after CPU scheduler pressure -> upward spike while CPU-bound goroutines run, then a return toward the normal baseline.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -208,14 +210,10 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -228,7 +226,10 @@
       "id": 4,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -242,14 +243,14 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "process_resident_memory_bytes",
+          "expr": "rate(process_cpu_seconds_total{job=\"backend\"}[1m])",
           "instant": false,
-          "legendFormat": "",
+          "legendFormat": "CPU seconds/sec",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Resident Memory Bytes",
+      "title": "Process CPU Usage",
       "type": "timeseries"
     }
   ],
@@ -257,7 +258,8 @@
   "schemaVersion": 41,
   "tags": [
     "monitoring",
-    "chat",
+    "go",
+    "scheduler",
     "runtime"
   ],
   "templating": {
@@ -269,7 +271,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Chat Runtime Overview",
-  "uid": "chat-runtime-overview",
+  "title": "Go Scheduler Runtime Overview",
+  "uid": "go-scheduler-runtime-overview",
   "version": 1
 }

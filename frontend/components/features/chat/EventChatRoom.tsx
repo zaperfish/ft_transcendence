@@ -8,7 +8,11 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { getEventById, getEventParticipants } from '@/lib/api/events';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { buildEventChatWebSocketUrl, getEventChatMessages } from '@/lib/api/chat';
+import {
+	buildEventChatWebSocketUrl,
+	getEventChatMessages,
+	maxChatMessageCharacters,
+} from '@/lib/api/chat';
 import { ApiError } from '@/lib/api/client';
 import type { ChatMessage, ChatMessageInput } from '@/types/chat';
 
@@ -19,6 +23,9 @@ interface EventChatRoomProps {
 type SocketStatus = 'connecting' | 'open' | 'closed' | 'error';
 
 const autoScrollWindowSize = 10;
+// HTML maxLength counts UTF-16 code units, while the application limit counts
+// Unicode code points. Two code units per character keeps astral symbols usable.
+const maxChatMessageInputCodeUnits = maxChatMessageCharacters * 2;
 
 export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 	const { user } = useAuth();
@@ -57,6 +64,8 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 	const eventTitle = eventQuery.data?.title ?? `Event #${eventId}`;
 	const currentUserID = user?.id;
 	const trimmedDraft = draft.trim();
+	const draftCharacterCount = Array.from(draft).length;
+	const isDraftTooLong = draftCharacterCount > maxChatMessageCharacters;
 	// derive message list from history + websocket
 	const chatMessages = useMemo(() => {
 		const historyMessages = historyData ?? [];
@@ -70,7 +79,8 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 
 		return historyMessages.concat(newLiveMessages);
 	}, [historyData, liveMessages]);
-	const canSendMessage = socketStatus === 'open' && trimmedDraft !== '';
+	const canSendMessage =
+		socketStatus === 'open' && trimmedDraft !== '' && !isDraftTooLong;
 	const connectionMessage = {
 		connecting: 'Connecting to the chat room...',
 		open: 'Connected to the chat room.',
@@ -394,8 +404,23 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 							<Input
 								value={draft}
 								onChange={(e) => setDraft(e.target.value)}
+								maxLength={maxChatMessageInputCodeUnits}
+								aria-invalid={isDraftTooLong}
+								aria-describedby="chat-message-help"
 								placeholder="Write a message..."
 							/>
+							<div
+								id="chat-message-help"
+								className="mt-xs flex justify-between gap-sm text-xs text-text-tertiary"
+							>
+								<span>Messages are limited to {maxChatMessageCharacters} characters.</span>
+								<span
+									className={isDraftTooLong ? 'text-error' : undefined}
+									aria-live="polite"
+								>
+									{draftCharacterCount}/{maxChatMessageCharacters}
+								</span>
+							</div>
 						</div>
 						<Button type="submit" disabled={!canSendMessage}>
 							Send

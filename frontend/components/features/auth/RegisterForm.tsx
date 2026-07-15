@@ -39,14 +39,17 @@ const registerSchema = z
 // Typescript enables infering type of each attribute in object automatically
 type RegisterFormData = z.infer<typeof registerSchema>;
 
+interface RegisterFormProps {
+	disabled?: boolean;
+}
+
 /**
  * RegisterForm is a form component for user registration.
  * It captures username, email, password, and password confirmation,
  * validates input using Zod schema, submits data to the registration API,
  * and handles errors such as duplicate credentials or network issues.
  */
-
-export function RegisterForm() {
+export function RegisterForm({ disabled = false }: RegisterFormProps) {
 	const router = useRouter();
 	const {
 		register,
@@ -65,6 +68,11 @@ export function RegisterForm() {
 	});
 	// Data is a frontend object collecting from user input and will send to server later
 	const onSubmit = async (data: RegisterFormData) => {
+		if (disabled) {
+			setError('root', { message: 'You are offline. Please try again later.' });
+			return;
+		}
+
 		try {
 			await registerApi({
 				name: data.username,
@@ -136,7 +144,7 @@ export function RegisterForm() {
 			{errors.root && (
 				<p className='text-sm text-error mt-xs'>{errors.root.message}</p>
 			)}
-			<Button type='submit' disabled={isSubmitting}>
+			<Button type='submit' disabled={isSubmitting || disabled}>
 				{isSubmitting ? "Registering..." : "Register"}
 			</Button>
 		</form>

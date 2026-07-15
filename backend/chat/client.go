@@ -7,6 +7,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	// Extern
 	"github.com/coder/websocket"
@@ -14,15 +15,18 @@ import (
 )
 
 const (
-	clientSendBuffer   = 16
-	clientWriteTimeout = 10 * time.Second
+	clientSendBuffer               = 16
+	clientWriteTimeout             = 10 * time.Second
+	maxMessageCharacters           = 2000
+	maxMessageBytes                = 8000
+	maxWebSocketMessagePayloadSize = 12 * 1024
 )
 
 type Client struct {
 	userID uint
 	conn   *websocket.Conn
 	// channel used as queue
-	send   chan Message
+	send chan Message
 }
 
 type messageCreator interface {
@@ -78,6 +82,12 @@ func newMessageFromInput(eventID uint, userID uint, input createMessageInput) (M
 	content := strings.TrimSpace(input.Content)
 	if content == "" {
 		return Message{}, errors.New("message content cannot be empty")
+	}
+	if len(content) > maxMessageBytes {
+		return Message{}, errors.New("message content exceeds 8000 bytes")
+	}
+	if utf8.RuneCountInString(content) > maxMessageCharacters {
+		return Message{}, errors.New("message content exceeds 2000 characters")
 	}
 
 	return Message{

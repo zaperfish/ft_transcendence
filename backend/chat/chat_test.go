@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -201,6 +202,42 @@ func TestNewMessageFromInputRejectsEmptyContent(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("expected empty message content error")
+	}
+}
+
+func TestNewMessageFromInputAcceptsContentAtLimits(t *testing.T) {
+	content := strings.Repeat("🙂", maxMessageCharacters)
+
+	message, err := newMessageFromInput(42, 3, createMessageInput{Content: content})
+	if err != nil {
+		t.Fatalf("expected message at limits to be accepted, got error: %v", err)
+	}
+	if message.Content != content {
+		t.Fatal("expected message content to be preserved")
+	}
+}
+
+func TestNewMessageFromInputRejectsTooManyCharacters(t *testing.T) {
+	content := strings.Repeat("a", maxMessageCharacters+1)
+
+	_, err := newMessageFromInput(42, 3, createMessageInput{Content: content})
+	if err == nil {
+		t.Fatal("expected overlong message content error")
+	}
+	if !strings.Contains(err.Error(), "characters") {
+		t.Fatalf("expected character limit error, got: %v", err)
+	}
+}
+
+func TestNewMessageFromInputRejectsTooManyBytes(t *testing.T) {
+	content := strings.Repeat("é", maxMessageBytes/2+1)
+
+	_, err := newMessageFromInput(42, 3, createMessageInput{Content: content})
+	if err == nil {
+		t.Fatal("expected oversized message content error")
+	}
+	if !strings.Contains(err.Error(), "bytes") {
+		t.Fatalf("expected byte limit error, got: %v", err)
 	}
 }
 

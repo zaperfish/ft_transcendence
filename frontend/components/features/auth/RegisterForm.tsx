@@ -49,7 +49,7 @@ interface RegisterFormProps {
  * validates input using Zod schema, submits data to the registration API,
  * and handles errors such as duplicate credentials or network issues.
  */
-export function RegisterForm({ disabled = false }) {
+export function RegisterForm({ disabled = false }: RegisterFormProps) {
 	const router = useRouter();
 	const {
 		register,

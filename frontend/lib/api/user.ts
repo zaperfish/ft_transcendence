@@ -1,5 +1,5 @@
 import { ApiError, request } from '@/lib/api/client';
-import type { User } from '@/types/user';
+import type { UpdateProfileRequest, User, UpdatePasswordRequest } from '@/types/user';
 
 /**
  * Restore User information and authtication for refresh and protected pages
@@ -13,5 +13,31 @@ export async function getCurrentUser(): Promise<User | null> {
 			return null;
 		}
 		throw error;
+	}
+}
+
+export async function updateProfile(data: UpdateProfileRequest): Promise<User> {
+	return request<User>('/api/me', {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(data),
+	});
+}
+
+export async function updatePassword(data: UpdatePasswordRequest): Promise<User> {
+	return request<User>('/api/me/password', {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(data),
+	});
+}
+
+export async function deleteAccount(): Promise<void> {
+	const response = await fetch('/api/me', {
+		method: 'DELETE',
+		credentials: 'include',
+	});
+	if (!response.ok) {
+		throw new Error('Failed to delete account');
 	}
 }

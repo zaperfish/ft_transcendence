@@ -17,6 +17,7 @@ interface AuthContextType {
 	isOnline: boolean,
 	login: (credentials: { name: string; password: string }) => Promise<void>;
 	logout: () => Promise<void>;
+	refreshUser: () => Promise<void>;
 }
 
 /**
@@ -29,6 +30,7 @@ export const AuthContext = createContext<AuthContextType>({
 	isOnline: false,
 	login: async () => {},
 	logout: async () => {},
+	refreshUser: async () => {},
 });
 
 /**
@@ -195,8 +197,24 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 		router.push('/login');
 	};
 
+	const refreshUser = async () => {
+		try {
+			const currentUser = await getCurrentUser();
+			if (currentUser) {
+				setUser(currentUser);
+				saveAuthToCache(currentUser);
+			} else {
+				setUser(null);
+				clearAuthCache();
+			}
+		} catch {
+			setUser(null);
+			clearAuthCache();
+		}
+	};
+
 	return (
-		<AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, isOnline, login, logout }}>
+		<AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, isOnline, login, logout, refreshUser }}>
 			{children}
 		</AuthContext.Provider>
 	);

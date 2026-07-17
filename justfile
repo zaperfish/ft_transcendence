@@ -27,6 +27,7 @@ init-backend-env:
     echo "JWT_ALGORITHM={{env_var('JWT_ALGORITHM')}}" >> backend/.env
     echo "JWT_KEY={{env_var('JWT_KEY')}}" >> backend/.env
     echo "JWT_EXPIRATION_MINUTES={{env_var('JWT_EXPIRATION_MINUTES')}}" >> backend/.env
+    echo "ADMIN_PASSWORD={{env_var('ADMIN_PASSWORD')}}" >> backend/.env
     echo "POSTGRES_HOST=localhost" >> backend/.env
     echo "LOCAL_DEV=true" >> backend/.env
 

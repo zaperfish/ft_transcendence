@@ -8,7 +8,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"ft_transcendence/backend/middleware"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -174,7 +176,11 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		db: db,
 	}
 
-	admin := middleware.PasswordVerifier(api, "securepass")
+	password := os.Getenv("ADMIN_PASSWORD")
+	if password == "" {
+		log.Fatal("ADMIN_PASSWORD environment variable is not set")
+	}
+	admin := middleware.PasswordVerifier(api, password)
 
 	huma.Register(api, huma.Operation{
 		OperationID:   "create-api-key",

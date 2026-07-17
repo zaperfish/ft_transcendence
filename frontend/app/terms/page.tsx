@@ -1,16 +1,12 @@
 import Link from "next/link";
+import { BackButton } from "@/components/ui/BackButton"
 
 export default function TermsPage() {
   return (
     <main className="min-h-screen bg-surface-dim px-4 py-12">
       <div className="mx-auto max-w-4xl rounded-xl border border-border bg-background p-6 shadow-sm sm:p-8">
         <div className="mb-6">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← Back
-          </Link>
+          <BackButton />
         </div>
 
         <h1 className="text-3xl font-semibold tracking-tight">Terms of Service</h1>

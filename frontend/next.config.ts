@@ -204,7 +204,10 @@ const pwaConfig = {
 			},
 			// Cache static resources (fonts, images)
 			{
-				urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf)$/,
+				urlPattern: ({ url }: { url: URL }) =>
+					!url.pathname.startsWith('/grafana/') &&
+					!url.pathname.startsWith('/prometheus/') &&
+					/\.(?:png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf)$/.test(url.pathname),
 				handler: 'CacheFirst' as const,
 				options: {
 					cacheName: 'static-assets-cache' as const,
@@ -242,7 +245,7 @@ const pwaConfig = {
 };
 
 const config = process.env.NODE_ENV === 'production'
-  ? withPWA({ ...nextConfig, ...pwaConfig })
+  ? withPWA(pwaConfig)(nextConfig)
   : nextConfig;
 
 export default config;

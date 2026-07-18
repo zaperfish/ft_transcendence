@@ -23,10 +23,11 @@ const (
 )
 
 type Client struct {
-	userID uint
-	conn   *websocket.Conn
+	userID   uint
+	userName string
+	conn     *websocket.Conn
 	// channel used as queue
-	send chan Message
+	send chan MessageDTO
 }
 
 type messageCreator interface {
@@ -52,7 +53,7 @@ func (c *Client) readLoop(ctx context.Context, room *Room, eventID uint, message
 			return
 		}
 
-		if !room.Broadcast(message) {
+		if !room.Broadcast(message.toDTO(c.userName)) {
 			return
 		}
 	}
@@ -69,7 +70,7 @@ func (c *Client) writeLoop(ctx context.Context) {
 			}
 
 			writeCtx, cancel := context.WithTimeout(ctx, clientWriteTimeout)
-			err := wsjson.Write(writeCtx, c.conn, message.toDTO())
+			err := wsjson.Write(writeCtx, c.conn, message)
 			cancel()
 			if err != nil {
 				return

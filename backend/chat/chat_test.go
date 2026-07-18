@@ -35,9 +35,9 @@ func TestNewHubInitializesRooms(t *testing.T) {
 
 func TestHubJoinRoomReusesRoom(t *testing.T) {
 	hub := NewHub()
-	firstClient := &Client{send: make(chan Message)}
-	secondClient := &Client{send: make(chan Message)}
-	otherClient := &Client{send: make(chan Message)}
+	firstClient := &Client{send: make(chan MessageDTO)}
+	secondClient := &Client{send: make(chan MessageDTO)}
+	otherClient := &Client{send: make(chan MessageDTO)}
 
 	firstRoom := hub.JoinRoom(42, firstClient)
 	secondRoom := hub.JoinRoom(42, secondClient)
@@ -57,7 +57,7 @@ func TestHubJoinRoomReusesRoom(t *testing.T) {
 
 func TestHubJoinRoomStartsRoomRunLoop(t *testing.T) {
 	hub := NewHub()
-	client := &Client{send: make(chan Message)}
+	client := &Client{send: make(chan MessageDTO)}
 
 	room := hub.JoinRoom(42, client)
 	room.Leave(client)
@@ -74,7 +74,7 @@ func TestHubJoinRoomStartsRoomRunLoop(t *testing.T) {
 
 func TestHubRemovesRoomWhenLastClientLeaves(t *testing.T) {
 	hub := NewHub()
-	client := &Client{send: make(chan Message)}
+	client := &Client{send: make(chan MessageDTO)}
 
 	room := hub.JoinRoom(42, client)
 	room.Leave(client)
@@ -90,13 +90,13 @@ func TestHubRemovesRoomWhenLastClientLeaves(t *testing.T) {
 
 func TestHubRecreatesRoomAfterPreviousRoomClosed(t *testing.T) {
 	hub := NewHub()
-	firstClient := &Client{send: make(chan Message)}
+	firstClient := &Client{send: make(chan MessageDTO)}
 
 	firstRoom := hub.JoinRoom(42, firstClient)
 	firstRoom.Leave(firstClient)
 	waitForRoomClosed(t, firstRoom)
 
-	secondClient := &Client{send: make(chan Message)}
+	secondClient := &Client{send: make(chan MessageDTO)}
 	secondRoom := hub.JoinRoom(42, secondClient)
 	defer secondRoom.Leave(secondClient)
 
@@ -133,11 +133,12 @@ func TestNewRoomInitializesState(t *testing.T) {
 
 func TestRoomRunBroadcastsToJoinedClients(t *testing.T) {
 	room := NewRoom(42)
-	client := &Client{send: make(chan Message, 1)}
-	message := Message{
-		EventID: 42,
-		UserID:  3,
-		Content: "hello",
+	client := &Client{send: make(chan MessageDTO, 1)}
+	message := MessageDTO{
+		EventID:    42,
+		UserID:     3,
+		SenderName: "sender",
+		Content:    "hello",
 	}
 
 	go room.run()
@@ -254,7 +255,7 @@ func TestMessageToDTO(t *testing.T) {
 		Content: "hello chat",
 	}
 
-	dto := message.toDTO()
+	dto := message.toDTO("sender")
 
 	if dto.ID != message.ID {
 		t.Fatalf("expected ID %d, got %d", message.ID, dto.ID)
@@ -264,6 +265,9 @@ func TestMessageToDTO(t *testing.T) {
 	}
 	if dto.UserID != message.UserID {
 		t.Fatalf("expected userID %d, got %d", message.UserID, dto.UserID)
+	}
+	if dto.SenderName != "sender" {
+		t.Fatalf("expected sender name %q, got %q", "sender", dto.SenderName)
 	}
 	if dto.Content != message.Content {
 		t.Fatalf("expected content %q, got %q", message.Content, dto.Content)
@@ -280,7 +284,10 @@ func TestMessagesToDTOsOldestFirst(t *testing.T) {
 		{Model: gorm.Model{ID: 1}, Content: "oldest"},
 	}
 
-	dtos := messagesToDTOsOldestFirst(messages)
+	senderNames := map[uint]string{
+		0: "sender",
+	}
+	dtos := messagesToDTOsOldestFirst(messages, senderNames)
 
 	if len(dtos) != len(messages) {
 		t.Fatalf("expected %d DTOs, got %d", len(messages), len(dtos))

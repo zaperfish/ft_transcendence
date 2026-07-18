@@ -4,14 +4,14 @@ type Room struct {
 	eventID uint
 	// clients is used as a set of active WebSocket clients in this room
 	// the bool value is not meaningful
-	clients   map[*Client]bool
+	clients map[*Client]bool
 	// channels used as event queues
 	join      chan *Client
 	leave     chan *Client
-	broadcast chan Message
+	broadcast chan MessageDTO
 	// channel used as shutdown signal
-	done      chan struct{}
-	onEmpty   func(uint, *Room)
+	done    chan struct{}
+	onEmpty func(uint, *Room)
 }
 
 func NewRoom(eventID uint) *Room {
@@ -24,7 +24,7 @@ func newRoom(eventID uint, onEmpty func(uint, *Room)) *Room {
 		clients:   make(map[*Client]bool),
 		join:      make(chan *Client),
 		leave:     make(chan *Client),
-		broadcast: make(chan Message),
+		broadcast: make(chan MessageDTO),
 		done:      make(chan struct{}),
 		onEmpty:   onEmpty,
 	}
@@ -46,7 +46,7 @@ func (r *Room) Leave(client *Client) {
 	}
 }
 
-func (r *Room) Broadcast(message Message) bool {
+func (r *Room) Broadcast(message MessageDTO) bool {
 	select {
 	case r.broadcast <- message:
 		return true

@@ -17,7 +17,7 @@ export function BackButton() {
     <button
       type="button"
       onClick={handleBack}
-      className="text-sm text-muted-foreground hover:text-foreground"
+      className="text-sm text-teal-100/70 transition-colors hover:text-teal-50"
     >
       ← Back
     </button>

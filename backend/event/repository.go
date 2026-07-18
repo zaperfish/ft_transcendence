@@ -330,24 +330,24 @@ func (r *eventRepositoryImpl) CreateParticipantAs(ctx context.Context, tx *gorm.
 
 	event, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to find event: %w", err)
+		return errs.ErrorDB(err)
 	}
 	if event.StartTime.Before(time.Now()) {
-		return fmt.Errorf("event expired: %w", err)
+		return errs.NewCamaError(errs.ErrConflict, "event already expired")
 	}
 
 	_, err = gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to find user: %w", err)
+		return errs.ErrorDB(err)
 	}
 
 	var count int64
 	err = db.Model(&eventusers.EventUser{}).Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count).Error
 	if err != nil {
-		return err
+		return errs.ErrorDB(err)
 	}
 	if count > 0 {
-		return fmt.Errorf("user is already participant")
+		return errs.NewCamaError(errs.ErrConflict, "user already subscribed to event")
 	}
 
 	err = db.WithContext(ctx).Create(&eventusers.EventUser{
@@ -357,7 +357,7 @@ func (r *eventRepositoryImpl) CreateParticipantAs(ctx context.Context, tx *gorm.
 	}).Error
 
 	if err != nil {
-		return fmt.Errorf("failed to add user to event: %w", err)
+		return errs.ErrorDB(err)
 	}
 
 	return nil

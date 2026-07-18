@@ -99,15 +99,15 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 
 	// images
 	huma.Register(api, huma.Operation{
-		OperationID:   "create-event-image",
-		Method:        http.MethodPost,
-		Path:          "/api/events/{id}/image",
-		Summary:       "Create event image",
-		RequestBody:   &huma.RequestBody{
-            Content: map[string]*huma.MediaType{
-                "image/png":  {},
-            },
-        },
+		OperationID: "create-event-image",
+		Method:      http.MethodPost,
+		Path:        "/api/events/{id}/image",
+		Summary:     "Create event image",
+		RequestBody: &huma.RequestBody{
+			Content: map[string]*huma.MediaType{
+				"image/png": {},
+			},
+		},
 		Tags:          []string{"Events", "Images"},
 		DefaultStatus: http.StatusCreated,
 		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
@@ -124,15 +124,15 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 	}, eventHandler.GetImage)
 
 	huma.Register(api, huma.Operation{
-		OperationID:   "update-event-image",
-		Method:        http.MethodPatch,
-		Path:          "/api/events/{id}/image",
-		Summary:       "Update event image",
-		RequestBody:   &huma.RequestBody{
-            Content: map[string]*huma.MediaType{
-                "image/png":  {},
-            },
-        },
+		OperationID: "update-event-image",
+		Method:      http.MethodPatch,
+		Path:        "/api/events/{id}/image",
+		Summary:     "Update event image",
+		RequestBody: &huma.RequestBody{
+			Content: map[string]*huma.MediaType{
+				"image/png": {},
+			},
+		},
 		Tags:          []string{"Events", "Images"},
 		DefaultStatus: http.StatusOK,
 		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
@@ -163,7 +163,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Security: []map[string][]string{
 			{"ApiKey": {}},
 		},
-	}, eventHandler.CreateEvent)
+	}, eventHandler.V1CreateEvent)
 
 	// Register PATCH /events/{id}
 	huma.Register(v1, huma.Operation{
@@ -176,7 +176,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Security: []map[string][]string{
 			{"ApiKey": {}},
 		},
-	}, eventHandler.UpdateEvent)
+	}, eventHandler.V1UpdateEvent)
 
 	// Register DELETE /events/{id}
 	huma.Register(v1, huma.Operation{
@@ -189,7 +189,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Security: []map[string][]string{
 			{"ApiKey": {}},
 		},
-	}, eventHandler.DeleteEvent)
+	}, eventHandler.V1DeleteEvent)
 
 	// Register GET /events/{id}
 	huma.Register(v1, huma.Operation{
@@ -202,7 +202,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Security: []map[string][]string{
 			{"ApiKey": {}},
 		},
-	}, eventHandler.GetEvent)
+	}, eventHandler.V1GetEvent)
 
 	// Register GET /events
 	huma.Register(v1, huma.Operation{
@@ -215,41 +215,5 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Security: []map[string][]string{
 			{"ApiKey": {}},
 		},
-	}, eventHandler.ListEvents)
-
-	huma.Register(v1, huma.Operation{
-		OperationID:   "v1-add-participant",
-		Method:        http.MethodPost,
-		Path:          "/events/{id}/participants",
-		Summary:       "Add participant",
-		Tags:          []string{"Public Events"},
-		DefaultStatus: http.StatusOK,
-		Security: []map[string][]string{
-			{"ApiKey": {}},
-		},
-	}, eventHandler.AddParticipant)
-
-	huma.Register(v1, huma.Operation{
-		OperationID:   "v1-remove-participant",
-		Method:        http.MethodDelete,
-		Path:          "/events/{eventID}/participants/{userID}",
-		Summary:       "Remove participant",
-		Tags:          []string{"Public Events"},
-		DefaultStatus: http.StatusOK,
-		Security: []map[string][]string{
-			{"ApiKey": {}},
-		},
-	}, eventHandler.RemoveParticipant)
-
-	huma.Register(v1, huma.Operation{
-		OperationID:   "v1-list-participants",
-		Method:        http.MethodGet,
-		Path:          "/events/{id}/participants",
-		Summary:       "List participants",
-		Tags:          []string{"Public Events"},
-		DefaultStatus: http.StatusOK,
-		Security: []map[string][]string{
-			{"ApiKey": {}},
-		},
-	}, eventHandler.ListParticipants)
+	}, eventHandler.V1ListEvents)
 }

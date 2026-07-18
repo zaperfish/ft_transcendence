@@ -29,8 +29,6 @@ func ConnectDB() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	log.Println("Connected to DB:", dsn)
-
 	return db, nil
 }
 

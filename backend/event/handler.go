@@ -249,6 +249,41 @@ func (h *EventHandler) V1UpdateEvent(ctx context.Context, input *UpdateEventInpu
 	return &UpdateEventOutput{Body: updated.ToDTO()}, nil
 }
 
+type PutEventInput struct {
+	ID   uint `path:"id" doc:"Event ID"`
+	Body struct {
+		Title           string    `json:"title"            minLength:"3"  maxLength:"100" example:"Go Meetup Berlin"                    doc:"Title of the event"`
+		Description     string    `json:"description"      minLength:"10" maxLength:"500" example:"A monthly meetup for Go developers"  doc:"Description of the event"`
+		StartTime       time.Time `json:"start_time"                                      example:"2027-06-15T18:00:00Z"                doc:"Start time of the event"`
+		Duration        int       `json:"duration"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
+		LocationName    string    `json:"location_name"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
+		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
+		MaxCapacity     uint      `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
+	}
+}
+
+func (h *EventHandler) V1PutEvent(ctx context.Context, input *PutEventInput) (*UpdateEventOutput, error) {
+	updates := map[string]any{}
+
+	updates["title"] = input.Body.Title
+	updates["description"] = input.Body.Description
+	updates["start_time"] = input.Body.StartTime
+	updates["duration"] = input.Body.Duration
+	updates["location_name"] = input.Body.LocationName
+	updates["location_address"] = input.Body.LocationAddress
+	updates["max_capacity"] = input.Body.MaxCapacity
+
+	updated, err := h.service.UpdateEvent(ctx, input.ID, updates)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error())
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("handler: failed to update event", err)
+	}
+
+	return &UpdateEventOutput{Body: updated.ToDTO()}, nil
+}
+
 type DeleteEventInput struct {
 	ID uint `path:"id" doc:"Event ID"`
 }
@@ -490,7 +525,7 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 		return nil, huma.Error400BadRequest(err.Error())
 	}
 	if errors.Is(err, errs.ErrInternal) || err != nil {
-		return nil, huma.Error500InternalServerError(err.Error());
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return nil, nil
@@ -508,7 +543,7 @@ func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*Get
 		return nil, huma.Error404NotFound(err.Error())
 	}
 	if errors.Is(err, errs.ErrInternal) || err != nil {
-		return nil, huma.Error500InternalServerError(err.Error());
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &GetImageOutput{ContentType: mime, Body: img}, nil
@@ -536,7 +571,7 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 		return nil, huma.Error404NotFound(err.Error())
 	}
 	if errors.Is(err, errs.ErrInternal) || err != nil {
-		return nil, huma.Error500InternalServerError(err.Error());
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return nil, nil

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEventById, getEventParticipants, deleteEvent, removeParticipant, leaveEvent, updateEventImage } from "@/lib/api/events";
+import { getEventById, getEventParticipants, deleteEvent, removeParticipant, leaveEvent, uploadEventImage, updateEventImage } from "@/lib/api/events";
 import { useAuth } from "@/lib/hooks/useAuth";
 import EditEventModal from "@/components/features/events/EditEventModal";
 import { useState, useRef } from "react";
@@ -171,7 +171,11 @@ export default function EventDetailPage() {
 		}
 		setIsCoverUploading(true);
 		try {
-			await updateEventImage(numericId, file);
+			if (event.has_image) {
+				await updateEventImage(numericId, file);
+			} else {
+				await uploadEventImage(numericId, file);
+			}
 			setCoverRefreshKey(prev => prev + 1);
 			// Update coverSrc if this is the first time uploading image
 			queryClient.invalidateQueries({ queryKey: ['event', numericId] });

@@ -3,7 +3,6 @@ package event
 import (
 	// Std
 	"context"
-	"fmt"
 	"time"
 
 	// Intern
@@ -156,12 +155,12 @@ func (r *eventRepositoryImpl) DeleteParticipants(ctx context.Context, eventID ui
 func (r *eventRepositoryImpl) Get(ctx context.Context, eventID uint) (*Event, error) {
 	model, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	count, err := r.GetParticipantCount(ctx, nil, eventID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	ret := model.ToDomain()
@@ -173,7 +172,7 @@ func (r *eventRepositoryImpl) Get(ctx context.Context, eventID uint) (*Event, er
 func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID uint) (*EventWithRole, error) {
 	count, err := r.GetParticipantCount(ctx, nil, eventID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	var eventRole EventWithRole
@@ -274,10 +273,11 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
         events.*,
         COALESCE(event_users.role, 'none') as role
     `).
+		Where("events.start_time > ?", time.Now().UTC()).
 		Joins(`
         LEFT JOIN event_users 
         ON event_users.event_id = events.id 
-        AND event_users.user_id = ?
+		AND event_users.user_id = ?
 		AND event_users.deleted_at IS NULL
     `, userID)
 
@@ -303,7 +303,7 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 	for i := range eventsRoles {
 		count, err := r.GetParticipantCount(ctx, nil, eventsRoles[i].ID)
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to retrieve event: %w", err)
+			return nil, 0, errs.ErrorDB(err)
 		}
 		eventsRoles[i].NumRegistered = count
 	}

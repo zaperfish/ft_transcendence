@@ -178,6 +178,19 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		},
 	}, eventHandler.V1UpdateEvent)
 
+	// Register PUT /events/{id}
+	huma.Register(v1, huma.Operation{
+		OperationID:   "v1-put-event",
+		Method:        http.MethodPut,
+		Path:          "/events/{id}",
+		Summary:       "Put event",
+		Tags:          []string{"Public Events"},
+		DefaultStatus: http.StatusOK,
+		Security: []map[string][]string{
+			{"ApiKey": {}},
+		},
+	}, eventHandler.V1PutEvent)
+
 	// Register DELETE /events/{id}
 	huma.Register(v1, huma.Operation{
 		OperationID:   "v1-delete-event",

@@ -7,11 +7,16 @@ import { deleteAccount } from '@/lib/api/user';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 export function DeleteAccountSection() {
-	const { logout } = useAuth();
+	const { logout, isOnline } = useAuth();
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	const handleDelete = async () => {
+		if (!isOnline) {
+			setError('You are offline. Account cannot be deleted.');
+			return;
+		}
+
 		if (!confirm('This will permanently delete your account. Continue?')) {
 			return;
 		}
@@ -38,6 +43,7 @@ export function DeleteAccountSection() {
 			<Button
 				type="button"
 				variant="destructive"
+				className={!isOnline ? 'opacity-50 cursor-not-allowed' : ''}
 				disabled={isDeleting}
 				onClick={handleDelete}
 			>

@@ -462,12 +462,15 @@ func (r *eventRepositoryImpl) CreateImagePath(ctx context.Context, eventID uint,
 }
 
 func (r *eventRepositoryImpl) GetImagePath(ctx context.Context, eventID uint) (string, error) {
-	ev, err := r.Get(ctx, eventID)
+	var path string
+	err := r.db.Model(&GormEventModel{}).Select("image_path").Where("id = ?", eventID).Scan(&path).Error
 	if err != nil {
-		return "", err
+		return "", errs.ErrorDB(err)
 	}
-
-	return ev.ImagePath, nil
+	if path == "" {
+		return "", errs.NewCamaError(errs.ErrNotFound, "")
+	}
+	return path, nil
 }
 
 func (r *eventRepositoryImpl) DeleteImagePath(ctx context.Context, eventID uint) error {

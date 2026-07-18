@@ -90,7 +90,7 @@ func (r *userRepositoryImpl) DeleteByID(ctx context.Context, userID uint) error 
 		return errs.ErrorDB(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return errs.ErrNotFound
+		return errs.NewCamaError(errs.ErrNotFound, "")
 	}
 	return nil
 }

@@ -35,6 +35,12 @@
 		}
 	}
 
+	handle /prometheus* {
+		redir /prometheus /prometheus/
+
+		reverse_proxy prometheus:9090
+	}
+
 	handle {
 		reverse_proxy frontend:{$FRONTEND_PORT}
 	}

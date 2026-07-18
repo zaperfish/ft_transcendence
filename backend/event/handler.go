@@ -367,11 +367,8 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 	if errors.Is(err, errs.ErrInvalidInput) {
 		return nil, huma.Error400BadRequest(err.Error());
 	}
-	if errors.Is(err, errs.ErrInternal) {
+	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError(err.Error());
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	return nil, nil
@@ -388,11 +385,8 @@ func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*Get
 	if errors.Is(err, errs.ErrNotFound) {
 		return nil, huma.Error404NotFound(err.Error());
 	}
-	if errors.Is(err, errs.ErrInternal) {
+	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError(err.Error());
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	return &GetImageOutput{ContentType: mime, Body: img}, nil
@@ -419,11 +413,8 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 	if errors.Is(err, errs.ErrNotFound) {
 		return nil, huma.Error404NotFound(err.Error());
 	}
-	if errors.Is(err, errs.ErrInternal) {
+	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError(err.Error());
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	return nil, nil

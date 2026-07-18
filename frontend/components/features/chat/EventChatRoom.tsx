@@ -337,8 +337,8 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 										<div
 											className={
 												isCurrentUserMessage
-													? 'flex w-[75%] flex-row-reverse items-start gap-sm'
-													: 'flex w-[75%] items-start gap-sm'
+													? 'flex min-w-0 max-w-[75%] flex-row-reverse items-start gap-sm'
+													: 'flex min-w-0 max-w-[75%] items-start gap-sm'
 											}
 										>
 											<Avatar size="sm">
@@ -356,8 +356,8 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 											<div
 												className={
 													isCurrentUserMessage
-														? 'flex-1 rounded-md border border-primary/20 bg-primary px-md py-sm text-primary-foreground'
-														: 'flex-1 rounded-md border border-border bg-surface-dim px-md py-sm text-text-primary'
+														? 'min-w-0 flex-1 rounded-md border border-primary/20 bg-primary px-md py-sm text-primary-foreground'
+														: 'min-w-0 flex-1 rounded-md border border-border bg-surface-dim px-md py-sm text-text-primary'
 												}
 											>
 												<div className="mb-xs flex items-center justify-between gap-md">

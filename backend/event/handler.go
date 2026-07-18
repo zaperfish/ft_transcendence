@@ -31,7 +31,7 @@ type EventDTO struct {
 	LocationAddress string        `json:"location_address" doc:"Address of the location"`
 	MaxCapacity     uint          `json:"max_capacity" doc:"Maximum number of people the event supports"`
 	NumRegistered   uint          `json:"num_registered" doc:"Number of people who registered for this event"`
-	HasImage		bool		  `json:"has_image" doc:"Denotes if event has a custom image or not"`
+	HasImage        bool          `json:"has_image" doc:"Denotes if event has a custom image or not"`
 	Self            *EventSelfDTO `json:"self,omitempty" doc:"Information about the authenticated user if authenticated"`
 }
 
@@ -53,7 +53,7 @@ func (e *Event) ToDTO() EventDTO {
 		LocationAddress: e.LocationAddress,
 		MaxCapacity:     e.MaxCapacity,
 		NumRegistered:   e.NumRegistered,
-		HasImage:		 e.ImagePath != "",
+		HasImage:        e.ImagePath != "",
 	}
 
 	return eventDTO
@@ -72,6 +72,19 @@ type CreateEventInput struct {
 		LocationName    string    `json:"location_name"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
 		MaxCapacity     uint      `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
+	}
+}
+
+type V1CreateEventInput struct {
+	Body struct {
+		Title           string    `json:"title"            minLength:"3"  maxLength:"100" example:"Go Meetup Berlin"                    doc:"Title of the event"`
+		Description     string    `json:"description"      minLength:"10" maxLength:"500" example:"A monthly meetup for Go developers"  doc:"Description of the event"`
+		StartTime       time.Time `json:"start_time"                                      example:"2027-06-15T18:00:00Z"                doc:"Start time of the event"`
+		Duration        int       `json:"duration"         minimum:"15"   maximum:"480"   example:"120"                                 doc:"Duration of the event in minutes"`
+		LocationName    string    `json:"location_name"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
+		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
+		MaxCapacity     uint      `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
+		UserID          uint      `json:"user_id" example:"1" doc:"The user admin for the event"`
 	}
 }
 
@@ -107,6 +120,37 @@ func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput)
 	}
 	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
+	return &CreateEventOutput{Body: created.ToDTO()}, nil
+}
+
+func (h *EventHandler) V1CreateEvent(ctx context.Context, input *V1CreateEventInput) (*CreateEventOutput, error) {
+	event := Event{
+		Title:           input.Body.Title,
+		Description:     input.Body.Description,
+		StartTime:       input.Body.StartTime,
+		Duration:        input.Body.Duration,
+		LocationName:    input.Body.LocationName,
+		LocationAddress: input.Body.LocationAddress,
+		MaxCapacity:     input.Body.MaxCapacity,
+	}
+
+	created, err := h.service.CreateEventWithAdmin(ctx, &event, input.Body.UserID)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error())
+	}
+	if errors.Is(err, errs.ErrConflict) {
+		return nil, huma.Error409Conflict(err.Error())
+	}
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	return &CreateEventOutput{Body: created.ToDTO()}, nil
@@ -160,7 +204,43 @@ func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput)
 
 	updated, err := h.service.UpdateEvent(ctx, input.ID, updates)
 	if errors.Is(err, errs.ErrInvalidInput) {
-		return nil, huma.Error400BadRequest(err.Error());
+		return nil, huma.Error400BadRequest(err.Error())
+	}
+	if err != nil {
+		return nil, huma.Error500InternalServerError("handler: failed to update event", err)
+	}
+
+	return &UpdateEventOutput{Body: updated.ToDTO()}, nil
+}
+
+func (h *EventHandler) V1UpdateEvent(ctx context.Context, input *UpdateEventInput) (*UpdateEventOutput, error) {
+	updates := map[string]any{}
+
+	if input.Body.Title != nil {
+		updates["title"] = *input.Body.Title
+	}
+	if input.Body.Description != nil {
+		updates["description"] = *input.Body.Description
+	}
+	if input.Body.StartTime != nil {
+		updates["start_time"] = *input.Body.StartTime
+	}
+	if input.Body.Duration != nil {
+		updates["duration"] = *input.Body.Duration
+	}
+	if input.Body.LocationName != nil {
+		updates["location_name"] = *input.Body.LocationName
+	}
+	if input.Body.LocationAddress != nil {
+		updates["location_address"] = *input.Body.LocationAddress
+	}
+	if input.Body.MaxCapacity != nil {
+		updates["max_capacity"] = *input.Body.MaxCapacity
+	}
+
+	updated, err := h.service.UpdateEvent(ctx, input.ID, updates)
+	if errors.Is(err, errs.ErrInvalidInput) {
+		return nil, huma.Error400BadRequest(err.Error())
 	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to update event", err)
@@ -183,6 +263,15 @@ func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput)
 		return nil, err
 	}
 
+	err := h.service.DeleteEvent(ctx, input.ID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("handler: failed to delete event", err)
+	}
+
+	return &DeleteEventOutput{}, nil
+}
+
+func (h *EventHandler) V1DeleteEvent(ctx context.Context, input *DeleteEventInput) (*DeleteEventOutput, error) {
 	err := h.service.DeleteEvent(ctx, input.ID)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to delete event", err)
@@ -216,6 +305,17 @@ func (h *EventHandler) GetEvent(ctx context.Context, input *GetEventInput) (*Get
 		Role:          event.Role,
 	}
 
+	return &output, nil
+}
+
+func (h *EventHandler) V1GetEvent(ctx context.Context, input *GetEventInput) (*GetEventOutput, error) {
+	event, err := h.service.GetEvent(ctx, input.ID)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("handler: failed to get event", err)
+	}
+
+	output := GetEventOutput{Body: event.ToDTO()}
+	output.Body.Self = nil
 	return &output, nil
 }
 
@@ -262,6 +362,28 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 			IsParticipant: event.IsParticipant,
 			Role:          event.Role,
 		}
+	}
+
+	return &ListEventsOutput{
+		Body: ListEventsOutputBody{
+			Data:     data,
+			Page:     input.Page,
+			PageSize: input.PageSize,
+			Total:    total,
+		},
+	}, nil
+}
+
+func (h *EventHandler) V1ListEvents(ctx context.Context, input *ListEventsInput) (*ListEventsOutput, error) {
+	events, total, err := h.service.V1ListEvents(ctx, input.PageSize, input.PageSize*(input.Page-1), input.Filter)
+	if err != nil {
+		return nil, huma.Error500InternalServerError("handler: failed to list events", err)
+	}
+
+	data := make([]EventDTO, len(events))
+	for i, event := range events {
+		data[i] = event.ToDTO()
+		data[i].Self = nil
 	}
 
 	return &ListEventsOutput{
@@ -365,7 +487,7 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 
 	err := h.service.CreateEventImage(ctx, input.EventID, input.RawBody, input.ContentType)
 	if errors.Is(err, errs.ErrInvalidInput) {
-		return nil, huma.Error400BadRequest(err.Error());
+		return nil, huma.Error400BadRequest(err.Error())
 	}
 	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError(err.Error());
@@ -375,15 +497,15 @@ func (h *EventHandler) CreateImage(ctx context.Context, input *CreateImageInput)
 }
 
 type CreateImageInput struct {
-	EventID uint `path:"id" doc:"Event ID"`
-	ContentType	string `header:"Content-Type" doc:"image type"`
-	RawBody []byte `contentType:"image/png"`
+	EventID     uint   `path:"id" doc:"Event ID"`
+	ContentType string `header:"Content-Type" doc:"image type"`
+	RawBody     []byte `contentType:"image/png"`
 }
 
 func (h *EventHandler) GetImage(ctx context.Context, input *GetImageInput) (*GetImageOutput, error) {
 	img, mime, err := h.service.GetEventImage(ctx, input.EventID)
 	if errors.Is(err, errs.ErrNotFound) {
-		return nil, huma.Error404NotFound(err.Error());
+		return nil, huma.Error404NotFound(err.Error())
 	}
 	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError(err.Error());
@@ -398,7 +520,7 @@ type GetImageInput struct {
 
 type GetImageOutput struct {
 	ContentType string `header:"Content-Type"`
-	Body []byte `contentType:"image/png"`
+	Body        []byte `contentType:"image/png"`
 }
 
 func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput) (*struct{}, error) {
@@ -408,10 +530,10 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 
 	err := h.service.UpdateEventImage(ctx, input.EventID, input.RawBody, input.ContentType)
 	if errors.Is(err, errs.ErrInvalidInput) {
-		return nil, huma.Error400BadRequest(err.Error());
+		return nil, huma.Error400BadRequest(err.Error())
 	}
 	if errors.Is(err, errs.ErrNotFound) {
-		return nil, huma.Error404NotFound(err.Error());
+		return nil, huma.Error404NotFound(err.Error())
 	}
 	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError(err.Error());
@@ -421,9 +543,9 @@ func (h *EventHandler) UpdateImage(ctx context.Context, input *UpdateImageInput)
 }
 
 type UpdateImageInput struct {
-	EventID uint `path:"id" doc:"Event ID"`
-	ContentType	string `header:"Content-Type" doc:"image type"`
-	RawBody []byte `contentType:"image/png"`
+	EventID     uint   `path:"id" doc:"Event ID"`
+	ContentType string `header:"Content-Type" doc:"image type"`
+	RawBody     []byte `contentType:"image/png"`
 }
 
 func (h *EventHandler) DeleteImage(ctx context.Context, input *DeleteImageInput) (*struct{}, error) {
@@ -432,10 +554,10 @@ func (h *EventHandler) DeleteImage(ctx context.Context, input *DeleteImageInput)
 	}
 	err := h.service.DeleteEventImage(ctx, input.EventID)
 	if errors.Is(err, errs.ErrInvalidInput) {
-		return nil, huma.Error400BadRequest(err.Error());
+		return nil, huma.Error400BadRequest(err.Error())
 	}
 	if errors.Is(err, errs.ErrInternal) {
-		return nil, huma.Error500InternalServerError(err.Error());
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return nil, nil

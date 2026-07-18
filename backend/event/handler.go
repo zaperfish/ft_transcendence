@@ -105,11 +105,8 @@ func (h *EventHandler) CreateEvent(ctx context.Context, input *CreateEventInput)
 	if errors.Is(err, errs.ErrNotFound) {
 		return nil, huma.Error404NotFound(err.Error())
 	}
-	if errors.Is(err, errs.ErrInternal) {
+	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	return &CreateEventOutput{Body: created.ToDTO()}, nil

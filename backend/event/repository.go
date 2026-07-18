@@ -91,7 +91,7 @@ func (r *eventRepositoryImpl) Create(ctx context.Context, event *Event) (*Event,
 
 	err := gorm.G[GormEventModel](r.db.Debug()).Create(ctx, &model)
 	if err != nil {
-		return nil, fmt.Errorf("create event failed: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	return model.ToDomain(), nil

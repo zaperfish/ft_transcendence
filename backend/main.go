@@ -14,6 +14,7 @@ import (
 	"ft_transcendence/backend/devtools"
 	"ft_transcendence/backend/event"
 	"ft_transcendence/backend/eventusers"
+	"ft_transcendence/backend/health"
 	"ft_transcendence/backend/me"
 	"ft_transcendence/backend/middleware"
 	"ft_transcendence/backend/user"
@@ -131,6 +132,7 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 
 	apikey.RegisterRoutes(api, db)
 	event.RegisterRoutes(api, db)
+	health.RegisterRoutes(api)
 
 	userHandler := user.NewHandler(db)
 	meHandler := me.NewHandler(db)

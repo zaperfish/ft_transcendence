@@ -3,7 +3,6 @@ package user
 import (
 	// Internal
 	"context"
-	"errors"
 	"net/http"
 
     // Internal
@@ -32,12 +31,12 @@ func NewUserService(repo UserRepository) UserService {
 
 func (s *UserServiceImpl) CreateUser(ctx context.Context, in CreateUserDTO) (*UserSummaryDTO, error) {
 	if err := validateParameters(&in); err != nil {
-		return nil, errs.ErrInvalidInput
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, err.Error())
 	}
 
 	hash, err := auth.CreateHash(in.Password)
 	if err != nil {
-		return nil, errs.ErrInternal
+		return nil, errs.NewCamaError(errs.ErrInternal, "")
 	}
 
     u := User {
@@ -55,16 +54,16 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, in CreateUserDTO) (*Us
 
 func validateParameters(u *CreateUserDTO) error {
 	if err := ValidUserName(u.Name); err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrInvalidInput, err.Error())
 	}
 	if err := ValidUserEmail(u.Email); err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrInvalidInput, err.Error())
 	}
 	if err := ValidUserPassword(u.Password); err != nil {
-		return err
+		return errs.NewCamaError(errs.ErrInvalidInput, err.Error())
 	}
 	if u.Password != u.PasswordConfirm {
-		return errors.New("passwords do not  match")
+		return errs.NewCamaError(errs.ErrInvalidInput, "passwords do not match")
 	}
 	return nil
 }
@@ -120,7 +119,7 @@ func populateUpdates(updates *map[string]any, in *PatchUserDTO) error {
 func (s *UserServiceImpl) PatchUser(ctx context.Context, id uint, in PatchUserDTO) (*UserSummaryDTO, error) {
 	updates := map[string]any{}
  	if err := populateUpdates(&updates, &in); err != nil {
-		return nil, errs.ErrInvalidInput
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, err.Error())
 	}
 	u, err := s.repo.UpdateFieldsByID(ctx, id, updates)
 	if err != nil {
@@ -140,20 +139,20 @@ func (s *UserServiceImpl) PatchPassword(ctx context.Context, id uint, in PatchPa
 		return nil, errs.ErrInternal
 	}
 	if !match {
-		return nil, errs.ErrNotFound
+		return nil, errs.NewCamaError(errs.ErrNotFound, "")
 	}
 
 	if in.NewPassword != in.ConfirmPassword {
-		return nil, errors.New("new passwords do not match")
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, "passwords do not match")
 	}
 
 	if err := ValidUserPassword(in.NewPassword); err != nil {
-		return nil, errs.ErrInvalidInput
+		return nil, errs.NewCamaError(errs.ErrInvalidInput, err.Error())
 	}
 
 	hash, err := auth.CreateHash(in.NewPassword)
 	if err != nil {
-		return nil, errs.ErrInternal
+		return nil, errs.NewCamaError(errs.ErrInternal, "")
 	}
 
 	u, err = s.repo.UpdateFieldsByID(ctx, id, map[string]any{"password_hash": hash})
@@ -175,14 +174,14 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, name, password string) 
 	}
 	match, err := auth.MatchPassword(password, u.PasswordHash)
 	if err != nil {
-        return nil, http.Cookie{}, errs.ErrInternal
+        return nil, http.Cookie{}, errs.NewCamaError(errs.ErrInternal, "")
     }
 	if !match {
-        return nil, http.Cookie{}, errs.ErrNotFound
+		return nil, http.Cookie{}, errs.NewCamaError(errs.ErrNotFound, "")
 	}
 	cookie, err := auth.MakeJWTCookieFromID(u.ID)
 	if err != nil {
-        return nil, http.Cookie{}, errs.ErrInternal
+        return nil, http.Cookie{}, errs.NewCamaError(errs.ErrInternal, "")
     }
 	return u.ToSummaryDTO(), cookie, nil
 }

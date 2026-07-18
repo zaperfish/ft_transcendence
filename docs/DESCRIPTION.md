@@ -1,6 +1,6 @@
 ## Description
 
-**ft_transcendence** is a Meetup-like event platform that enables users to discover, create, and join local events. Built as the final group project of the 42 Common Core curriculum, this full-stack web application simulates a real-world production system with complete architecture and modern development practices.
+**Camaraderie** is a Meetup-like event platform that enables users to discover, create, and join local events. Built as the final group project of the 42 Common Core curriculum, this full-stack web application simulates a real-world production system with complete architecture and modern development practices.
 
 ### Key Features
 

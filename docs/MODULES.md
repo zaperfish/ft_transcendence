@@ -1,6 +1,6 @@
 # Modules
 
-Subject rule: **Major = 2 pts**, **Minor = 1 pt**. Target for validation: **14 pts**.
+Subject rule: **Major = 2 pts**, **Minor = 1 pt**. Target for validation: **15 pts**.
 
 ## Point calculation
 

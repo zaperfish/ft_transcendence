@@ -4,7 +4,6 @@ import (
 	// Std
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	// External

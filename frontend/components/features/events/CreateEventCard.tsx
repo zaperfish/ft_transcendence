@@ -11,13 +11,13 @@ export default function CreateEventCard({ onClick }: CreateEventCardProps) {
 	return (
 		<div
 			onClick={onClick}
-			className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg h-full min-h-[350px] hover:bg-surface-dim cursor-pointer transition-colors duration-200"
+			className="flex h-full min-h-[350px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-teal-700/25 bg-white shadow-md transition-colors duration-200 hover:bg-teal-50"
 		>
-			<div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mb-md">
-				<PlusIcon className="size-6 text-text-tertiary"/>
+			<div className="mb-md flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
+				<PlusIcon className="size-6 text-teal-700"/>
 			</div>
-			<h3 className="text-lg font-semibold text-text-secondary">Create Event</h3>
-			<p className="text-sm text-text-tertiary mt-xs">Host your own event</p>
+			<h3 className="text-lg font-semibold text-text-primary">Create Event</h3>
+			<p className="mt-xs text-sm text-text-secondary">Host your own event</p>
 		</div>
 	);
 }

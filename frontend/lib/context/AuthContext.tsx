@@ -46,49 +46,54 @@ export function AuthProvider({ children } : { children: ReactNode }) {
 	const pathname = usePathname();
 	const isAuthPage = pathname === '/login' || pathname === '/register';
 	const isPublicPage = pathname === '/privacy' || pathname === '/terms';
-	// Get initial network state (considering both client side and server side)
-	const [isOnline, setIsOnline] = useState(
-		typeof window !== 'undefined' ? navigator.onLine : true
-	);
+	// Must match SSR and the first client render. Real status is set after mount
+	// via checkRealOnline / online-offline events (see effects below).
+	const [isOnline, setIsOnline] = useState(true);
 
-	// navigator.onLine can be unreliable, using ping to check network
+	// Prefer a real /health ping. Do not trust navigator.onLine alone — it often
+	// reports false (DevTools "Offline", flaky browser APIs) while the app works.
 	const checkRealOnline = useCallback(async () => {
-		if (!navigator.onLine) {
-			setIsOnline(false);
-			return false;
-		}
-
 		try {
 			const controller = new AbortController();
-			// Abort signal if not responded in 3 seconds
 			const timeoutId = setTimeout(() => controller.abort(), 3000);
 			const response = await fetch('/health', {
 				cache: 'no-store',
 				signal: controller.signal,
 			});
 			clearTimeout(timeoutId);
-			const reallyOnline = response.ok && response.headers.get('X-Network-Status') !== 'offline';
+			const reallyOnline =
+				response.ok && response.headers.get('X-Network-Status') !== 'offline';
 			setIsOnline(reallyOnline);
 			return reallyOnline;
 		} catch {
-			setIsOnline(false);
-			return false;
+			// Only fall back to navigator when the ping itself failed
+			const fallback = typeof navigator !== 'undefined' && navigator.onLine;
+			setIsOnline(fallback);
+			return fallback;
 		}
 	}, []);
 
-	// Add tracker of online && offline states
+	// Re-check when browser connectivity or tab visibility changes
 	useEffect(() => {
-		const handleOnline = async () => {
-			await checkRealOnline();
+		const handleOnline = () => {
+			void checkRealOnline();
 		};
 		const handleOffline = () => {
-			setIsOnline(false);
-		}
+			// Confirm with /health before locking UI into offline mode
+			void checkRealOnline();
+		};
+		const handleVisible = () => {
+			if (document.visibilityState === 'visible') {
+				void checkRealOnline();
+			}
+		};
 		window.addEventListener('online', handleOnline);
 		window.addEventListener('offline', handleOffline);
+		document.addEventListener('visibilitychange', handleVisible);
 		return () => {
 			window.removeEventListener('online', handleOnline);
 			window.removeEventListener('offline', handleOffline);
+			document.removeEventListener('visibilitychange', handleVisible);
 		};
 	}, [checkRealOnline]);
 

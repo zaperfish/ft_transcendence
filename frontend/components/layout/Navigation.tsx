@@ -40,13 +40,13 @@ export default function navigation() {
 	];
 
 	return (
-		<header className='sticky top-0 z-50 bg-surface border-b border-border px-4 py-3 lg:px-lg lg:py-md'>
+		<header className='sticky top-0 z-50 border-b border-teal-400/15 bg-slate-950/80 px-4 py-3 backdrop-blur-md lg:px-lg lg:py-md'>
 			<div className='flex items-center justify-between w-full'>
 				{/* left: logo + navigation links (desktop) */}
 				<div className='flex items-center gap-4 lg:gap-lg'>
 					<Link href='/' className='flex items-center gap-sm'>
 						<Image src='/logo.png' alt='Camaraderie logo' width={32} height={32} className='h-8 w-8' />
-						<span className='text-text-primary font-heading text-xl font-bold'>
+						<span className='font-heading text-xl font-bold text-teal-50'>
 						Camaraderie
 						</span>
 					</Link>
@@ -56,7 +56,7 @@ export default function navigation() {
 							<Link
 								key={item.href}
 								href={item.href}
-								className='text-text-secondary hover:text-primary hover:shadow transition-colors'
+								className='text-teal-100/75 transition-colors hover:text-teal-300'
 							>
 							{item.label}
 							</Link>
@@ -69,7 +69,7 @@ export default function navigation() {
 					<div className='lg:hidden'>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant='ghost' size='icon'>
+								<Button variant='ghost' size='icon' className='text-teal-100 hover:bg-white/10 hover:text-teal-50'>
 									<Menu className='h-5 w-5'/>
 								</Button>
 							</DropdownMenuTrigger>

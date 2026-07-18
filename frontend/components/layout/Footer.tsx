@@ -19,19 +19,19 @@ export function Footer() {
 
 	const onlinePrivacyProps = {
 		href: "/privacy",
-		className: 'hover:text-foreground'
+		className: 'hover:text-teal-50'
 	};
 
 	const onlineTermsProps = {
 		href: "/terms",
-		className: 'hover:text-foreground'
+		className: 'hover:text-teal-50'
 	};
 
 	return (
-		<footer className="shrink-0 border-t border-border bg-background px-4 py-4 text-sm text-muted-foreground">
+		<footer className="shrink-0 border-t border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-teal-100/70 backdrop-blur-sm">
 			<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
 				{isOnline ? (
-					<Link href="/privacy" className="hover:text-foreground">
+					<Link href="/privacy" className="hover:text-teal-50">
 					Privacy Policy
 					</Link>
 				) : (
@@ -39,7 +39,7 @@ export function Footer() {
 				)}
 				<span className="hidden sm:inline">•</span>
 				{isOnline ? (
-					<Link href="/privacy" className="hover:text-foreground">
+					<Link href="/terms" className="hover:text-teal-50">
 					Terms of Service
 					</Link>
 				) : (

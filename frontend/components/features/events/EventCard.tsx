@@ -79,15 +79,14 @@ export default function EventCard({
 
 	return (
 		<div className={`
-			border border-border rounded-lg overflow-hidden
-			flex flex-col bg-surface shadow-sm hover:shadow-md
-			transition-shadow
+			flex flex-col overflow-hidden rounded-lg border border-teal-900/10
+			bg-white shadow-md transition-shadow hover:shadow-lg
 			${isHorizontal ? 'sm:flex-row' : ''}
 			${disabled ? 'pointer-events-none opacity-60' : ''}
 		`}>
 			{/* Cover page */}
 			<div className={`
-				bg-surface-container overflow-hidden shrink-0
+				shrink-0 overflow-hidden bg-slate-100
 				${isHorizontal
 					? 'w-full sm:w-60 h-60 sm:h-auto'
 					: 'aspect-video max-h-40 w-full'
@@ -132,8 +131,7 @@ export default function EventCard({
 						<Button
 							onClick={onDetail}
 							disabled={disabled}
-							className="w-full hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors"
-							variant="outline"
+							className="w-full bg-primary text-primary-foreground hover:bg-primary-dim"
 						>
 							View Detail
 						</Button>

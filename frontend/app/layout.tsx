@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers/Providers";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { Footer } from "@/components/layout/Footer";
 import { Toaster } from 'sonner';
 
-// font-sans is a Tailwind CSS utility class
-// that applies the CSS rule font-family:
-// var(--font-sans)
-const inter = Inter({
-  variable: "--font-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
 });
 
@@ -38,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${dmSans.variable} ${spaceGrotesk.variable}`}>
       <body className={"h-dvh overflow-hidden font-sans antialiased"}>
         <Providers>
           <div className="flex h-dvh flex-col overflow-hidden">

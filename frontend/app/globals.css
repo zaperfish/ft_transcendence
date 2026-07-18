@@ -6,32 +6,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Custom tokens */
+/* Custom tokens — lively teal/emerald, calm surfaces, soft tech feel */
 @theme {
-  /* 1. Font setting
-  --font-sans: var(--font-inter), system-ui, sans-serif; */
-  /* 2. Color setting (exclusive) */
-  --color-primary-dim: #1e40af;
+  /* Accent / interactive */
+  --color-primary-dim: #0f766e;
 
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #666666;
-  --color-text-tertiary: #999999;
+  /* Ink on mint surfaces */
+  --color-text-primary: #0f1f1a;
+  --color-text-secondary: #3d5a4f;
+  --color-text-tertiary: #6b857a;
 
-  --color-surface: #ffffff;
-  --color-surface-dim: #f5f5f5;
-  --color-surface-container: #e5e5e5;
+  /* Green-tinted surfaces */
+  --color-surface: #f7fbf9;
+  --color-surface-dim: #e6f0eb;
+  --color-surface-container: #d3e5dc;
 
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #0891b2;
 
-  /* --color-status-online: #10b981;
-  --color-status-offline: #6b7280;
-  --color-status-busy: #ef4444;
-  --color-status-away: #f59e0b; */
-
-  /* 3. Space setting - 8px */
+  /* Space setting - 8px */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
@@ -44,7 +39,17 @@
 /* Base layer setting */
 @layer base {
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    /* Dark tech grid wallpaper + soft teal wash so mint cards stay readable */
+    background-color: #020617;
+    background-image:
+      linear-gradient(180deg, rgb(2 12 18 / 0.55) 0%, rgb(4 20 24 / 0.35) 40%, rgb(2 12 18 / 0.65) 100%),
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgb(13 148 136 / 0.22), transparent 60%),
+      url('/images/home-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
   * {
     @apply border-border outline-ring/50;
@@ -56,14 +61,14 @@
 
 /* Mixed tokens (including custom and Shadcn settings) */
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
+  --font-heading: var(--font-space-grotesk);
+  --font-sans: var(--font-dm-sans);
 
-  /* Custom Radius setting */
+  /* Slightly sharper radius for a cleaner tech edge */
   --radius-none: 0px;
   --radius-sm: 4px;
-  --radius-md: 8px; /* default rounded-md */
-  --radius-lg: 12px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
   --radius-full: 9999px;
 
   /* Shadcn color setting should be kept for ui components */
@@ -101,38 +106,39 @@
 }
 
 :root {
-  --background: #f5f5f5;/* Custom  */
-  --foreground: #1a1a1a;/* Custom  */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #2563eb;/* Custom  */
-  --primary-foreground: #ffffff;/* Custom  */
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border:  #e2e8f0;/* Custom  */
-  --input: #e2e8f0;/* Custom  */
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.5rem;/* Custom: 8px  */
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Page canvas is the wallpaper; tokens keep light cards + teal accents */
+  --background: #020617;
+  --foreground: #0f1f1a;
+  --card: #f7fbf9;
+  --card-foreground: #0f1f1a;
+  --popover: #f7fbf9;
+  --popover-foreground: #0f1f1a;
+  --primary: #0d9488;
+  --primary-foreground: #f0fdfa;
+  --secondary: #d3e5dc;
+  --secondary-foreground: #134e4a;
+  --muted: #dceae3;
+  --muted-foreground: #3d5a4f;
+  --accent: #ccfbf1;
+  --accent-foreground: #115e59;
+  --destructive: #dc2626;
+  --border: #b7d0c4;
+  --input: #b7d0c4;
+  --ring: #14b8a6;
+  --chart-1: #0d9488;
+  --chart-2: #059669;
+  --chart-3: #0891b2;
+  --chart-4: #134e4a;
+  --chart-5: #6b857a;
+  --radius: 0.375rem;
+  --sidebar: #f0f7f4;
+  --sidebar-foreground: #0f1f1a;
+  --sidebar-primary: #0d9488;
+  --sidebar-primary-foreground: #f0fdfa;
+  --sidebar-accent: #d3e5dc;
+  --sidebar-accent-foreground: #134e4a;
+  --sidebar-border: #b7d0c4;
+  --sidebar-ring: #14b8a6;
 }
 
 /* Unused for current design  */

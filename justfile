@@ -9,10 +9,20 @@ list:
 
 # ── Setup ────────────────────────────────────────────────────
 
+make:
+    just init-env-prod
+    just prod
+
 # Removes your old environment and replaces it with an example environment
 init-env:
     just remove-envs
     cp .env.example .env
+    just init-frontend-env
+    just init-backend-env
+
+init-env-prod:
+    just remove-envs
+    cp .env.example.prod .env
     just init-frontend-env
     just init-backend-env
     

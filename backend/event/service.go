@@ -15,8 +15,8 @@ import (
 	"ft_transcendence/backend/user"
 
 	// External
-	"gorm.io/gorm"
 	"github.com/gabriel-vasile/mimetype"
+	"gorm.io/gorm"
 )
 
 type EventService interface {
@@ -27,6 +27,7 @@ type EventService interface {
 	GetEvent(ctx context.Context, eventID uint) (*Event, error)
 	GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error)
 	ListEvents(ctx context.Context, userID uint, limit, offset int, filer EventFilter) ([]EventWithUserContext, int64, error)
+	V1ListEvents(ctx context.Context, limit, offset int, filer EventFilter) ([]Event, int64, error)
 	AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error
 	RemoveParticipant(ctx context.Context, eventID, userID uint) error
 	ListParticipants(ctx context.Context, eventID uint) ([]user.User, error)
@@ -110,7 +111,7 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 		return nil
 
 	}); err != nil {
-		return nil, errs.ErrorDB(err)
+		return nil, err
 	}
 
 	return &created, nil
@@ -141,7 +142,6 @@ func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error 
 }
 
 func (s *eventServiceImpl) GetEvent(ctx context.Context, eventID uint) (*Event, error) {
-
 	event, err := s.repo.Get(ctx, eventID)
 	if err != nil {
 		return nil, err
@@ -188,6 +188,23 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, o
 	}
 
 	return eventsWithUserCtx, total, nil
+}
+
+func (s *eventServiceImpl) V1ListEvents(ctx context.Context, limit, offset int, filter EventFilter) ([]Event, int64, error) {
+	if limit < 0 {
+		limit = 0
+	}
+
+	if offset < 0 {
+		offset = 0
+	}
+
+	events, total, err := s.repo.List(ctx, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("service: failed to list: %w", err)
+	}
+
+	return events, total, nil
 }
 
 func (s *eventServiceImpl) AddParticipantAs(ctx context.Context, eventID, userID uint, role string) error {
@@ -249,6 +266,7 @@ func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) (
 }
 
 var imagePathPrefix string = "/var/lib/ft_transcendence/images"
+
 const maxImageSize = 104857600
 
 // This should only work, when no image is associated with the event yet. This is why we can not use s.repo.Update() here as it would overwrite an existing image path. s.repo.CreateImagePath() makes sure to not overwrite an existing path.
@@ -275,12 +293,13 @@ func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, i
 
 func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]byte, string, error) {
 	path, err := s.repo.GetImagePath(ctx, eventID)
-	if err != nil {
-		return nil, "", errs.NewCamaError(errs.ErrNotFound, err.Error())
+	if errs.IsCamaError(err) {
+		return nil, "", err
 	}
 
 	image, err := os.ReadFile(path)
 	if err != nil {
+		fmt.Println("ReadFile err: ", err)
 		return nil, "", errs.NewCamaError(errs.ErrInternal, err.Error())
 	}
 
@@ -310,7 +329,7 @@ func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, i
 	return nil
 }
 
-// when db update succeeds and image deletion fails there will 
+// when db update succeeds and image deletion fails there will
 func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
 	path, err := s.repo.GetImagePath(ctx, eventID)
 	if err != nil {

@@ -26,7 +26,7 @@ export default function RegisterPage() {
 			)}
 			<RegisterForm disabled={!isOnline}/>
 			<p className="mt-lg text-sm text-text-tertiary">
-				Already have an account?
+				Already have an account?{' '}
 				<a
 					href={isOnline ? "/login" : "#"}
 					onClick={(e) => {

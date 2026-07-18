@@ -3,7 +3,6 @@ package event
 import (
 	// Std
 	"context"
-	"fmt"
 	"time"
 
 	// Intern
@@ -91,7 +90,7 @@ func (r *eventRepositoryImpl) Create(ctx context.Context, event *Event) (*Event,
 
 	err := gorm.G[GormEventModel](r.db.Debug()).Create(ctx, &model)
 	if err != nil {
-		return nil, fmt.Errorf("create event failed: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	return model.ToDomain(), nil
@@ -109,21 +108,17 @@ func (r *eventRepositoryImpl) Update(ctx context.Context, eventID uint, updates 
 
 	count, err := r.GetParticipantCount(ctx, nil, eventID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
-	rows, err := gorm.G[map[string]any](r.db.Debug()).Table("events").Where("id = ?", eventID).Updates(ctx, updates)
+	_, err = gorm.G[map[string]any](r.db.Debug()).Table("events").Where("id = ?", eventID).Updates(ctx, updates)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update event: %w", err)
-	}
-
-	if rows == 0 {
-		return nil, fmt.Errorf("no event updated")
+		return nil, errs.ErrorDB(err)
 	}
 
 	model, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch updated event: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	ret := model.ToDomain()
@@ -138,11 +133,11 @@ func (r *eventRepositoryImpl) Delete(ctx context.Context, eventID uint) error {
 	}
 	result := r.db.Debug().Delete(&event)
 	if result.Error != nil {
-		return fmt.Errorf("failed to delete event: %w", result.Error)
+		return errs.ErrorDB(result.Error)
 	}
 
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("no event deleted")
+		return errs.NewCamaError(errs.ErrNotFound, "")
 	}
 
 	return nil
@@ -160,12 +155,12 @@ func (r *eventRepositoryImpl) DeleteParticipants(ctx context.Context, eventID ui
 func (r *eventRepositoryImpl) Get(ctx context.Context, eventID uint) (*Event, error) {
 	model, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	count, err := r.GetParticipantCount(ctx, nil, eventID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	ret := model.ToDomain()
@@ -177,7 +172,7 @@ func (r *eventRepositoryImpl) Get(ctx context.Context, eventID uint) (*Event, er
 func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID uint) (*EventWithRole, error) {
 	count, err := r.GetParticipantCount(ctx, nil, eventID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve event: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	var eventRole EventWithRole
@@ -213,7 +208,7 @@ func (r *eventRepositoryImpl) GetCapacity(ctx context.Context, tx *gorm.DB, even
 		Select("max_capacity").
 		Where("id = ?", eventID).
 		Scan(&cap).Error; err != nil {
-		return 0, err
+		return 0, errs.ErrorDB(err)
 	}
 	return cap, nil
 }
@@ -231,7 +226,7 @@ func (r *eventRepositoryImpl) GetParticipantCount(ctx context.Context, tx *gorm.
 	}
 
 	if count < 0 || uint64(count) > uint64(^uint(0)) {
-		return 0, errs.ErrInternal
+		return 0, errs.NewCamaError(errs.ErrInternal, "")
 	}
 
 	return uint(count), nil
@@ -242,7 +237,7 @@ func (r *eventRepositoryImpl) GetParticipantCount(ctx context.Context, tx *gorm.
 func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Event, int64, error) {
 	models, err := gorm.G[GormEventModel](r.db.Debug()).Limit(limit).Offset(offset).Find(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to retrieve list of events: %w", err)
+		return nil, 0, errs.ErrorDB(err)
 	}
 
 	num_retrieved := len(models)
@@ -251,7 +246,7 @@ func (r *eventRepositoryImpl) List(ctx context.Context, limit, offset int) ([]Ev
 		events[i] = *model.ToDomain()
 		count, err := r.GetParticipantCount(ctx, nil, events[i].ID)
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to retrieve event: %w", err)
+			return nil, 0, errs.ErrorDB(err)
 		}
 		events[i].NumRegistered = count
 	}
@@ -278,10 +273,11 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
         events.*,
         COALESCE(event_users.role, 'none') as role
     `).
+		Where("events.start_time > ?", time.Now().UTC()).
 		Joins(`
         LEFT JOIN event_users 
         ON event_users.event_id = events.id 
-        AND event_users.user_id = ?
+		AND event_users.user_id = ?
 		AND event_users.deleted_at IS NULL
     `, userID)
 
@@ -307,7 +303,7 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 	for i := range eventsRoles {
 		count, err := r.GetParticipantCount(ctx, nil, eventsRoles[i].ID)
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to retrieve event: %w", err)
+			return nil, 0, errs.ErrorDB(err)
 		}
 		eventsRoles[i].NumRegistered = count
 	}
@@ -330,24 +326,24 @@ func (r *eventRepositoryImpl) CreateParticipantAs(ctx context.Context, tx *gorm.
 
 	event, err := gorm.G[GormEventModel](db.Debug()).Where("id = ?", eventID).First(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to find event: %w", err)
+		return errs.ErrorDB(err)
 	}
 	if event.StartTime.Before(time.Now()) {
-		return fmt.Errorf("event expired: %w", err)
+		return errs.NewCamaError(errs.ErrConflict, "event already expired")
 	}
 
 	_, err = gorm.G[user.User](db.Debug()).Where("id = ?", userID).First(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to find user: %w", err)
+		return errs.ErrorDB(err)
 	}
 
 	var count int64
 	err = db.Model(&eventusers.EventUser{}).Where("event_id = ? AND user_id = ?", eventID, userID).Count(&count).Error
 	if err != nil {
-		return err
+		return errs.ErrorDB(err)
 	}
 	if count > 0 {
-		return fmt.Errorf("user is already participant")
+		return errs.NewCamaError(errs.ErrConflict, "user already subscribed to event")
 	}
 
 	err = db.WithContext(ctx).Create(&eventusers.EventUser{
@@ -357,7 +353,7 @@ func (r *eventRepositoryImpl) CreateParticipantAs(ctx context.Context, tx *gorm.
 	}).Error
 
 	if err != nil {
-		return fmt.Errorf("failed to add user to event: %w", err)
+		return errs.ErrorDB(err)
 	}
 
 	return nil
@@ -376,10 +372,10 @@ func (r *eventRepositoryImpl) DeleteParticipant(ctx context.Context, tx *gorm.DB
 		Count(&count).
 		Error
 	if err != nil {
-		return err
+		return errs.ErrorDB(err)
 	}
 	if count <= 0 {
-		return fmt.Errorf("user is not a participant")
+		return errs.NewCamaError(errs.ErrNotFound, "user is not a participant")
 	}
 
 	err = db.
@@ -390,7 +386,7 @@ func (r *eventRepositoryImpl) DeleteParticipant(ctx context.Context, tx *gorm.DB
 		Delete(&eventusers.EventUser{}).
 		Error
 	if err != nil {
-		return fmt.Errorf("failed to delete user from event: %w", err)
+		return errs.ErrorDB(err)
 	}
 
 	return nil
@@ -410,7 +406,7 @@ func (r *eventRepositoryImpl) GetParticipants(ctx context.Context, eventID uint)
 		Find(&models).Error
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get participants: %w", err)
+		return nil, errs.ErrorDB(err)
 	}
 
 	return models, nil
@@ -425,7 +421,7 @@ func (r *eventRepositoryImpl) GetParticipantRole(ctx context.Context, eventID, u
 		Where("event_id = ?", eventID).
 		Count(&count).
 		Scan(&role).Error; err != nil || count == 0 {
-		return false, "none", err
+		return false, "none", errs.ErrorDB(err)
 	}
 
 	return true, role.Role, nil
@@ -441,7 +437,7 @@ func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID
 		Pluck("event_id", &participantEventIDs).Error
 
 	if err != nil {
-		return nil, err
+		return nil, errs.ErrorDB(err)
 	}
 
 	return participantEventIDs, nil
@@ -449,35 +445,30 @@ func (r *eventRepositoryImpl) GetParticipantEventIDs(ctx context.Context, userID
 
 func (r *eventRepositoryImpl) CreateImagePath(ctx context.Context, eventID uint, path string) error {
 
-	rows, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).Where("image_path IS NULL or image_path = ''").Update(ctx, "image_path", path)
+	_, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).Where("image_path IS NULL or image_path = ''").Update(ctx, "image_path", path)
 	if err != nil {
-		return fmt.Errorf("failed to update event: %w", err)
-	}
-
-	if rows == 0 {
-		return fmt.Errorf("no event updated")
+		return errs.ErrorDB(err)
 	}
 
 	return nil
 }
 
 func (r *eventRepositoryImpl) GetImagePath(ctx context.Context, eventID uint) (string, error) {
-	ev, err := r.Get(ctx, eventID)
+	var path string
+	err := r.db.Model(&GormEventModel{}).Select("image_path").Where("id = ?", eventID).Scan(&path).Error
 	if err != nil {
-		return "", err
+		return "", errs.ErrorDB(err)
 	}
-
-	return ev.ImagePath, nil
+	if path == "" {
+		return "", errs.NewCamaError(errs.ErrNotFound, "")
+	}
+	return path, nil
 }
 
 func (r *eventRepositoryImpl) DeleteImagePath(ctx context.Context, eventID uint) error {
-	rows, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).Update(ctx, "image_path", "")
+	_, err := gorm.G[GormEventModel](r.db.Debug()).Where("id = ?", eventID).Update(ctx, "image_path", "")
 	if err != nil {
-		return fmt.Errorf("failed to update event: %w", err)
-	}
-
-	if rows == 0 {
-		return fmt.Errorf("no event updated")
+		return errs.ErrorDB(err)
 	}
 
 	return nil

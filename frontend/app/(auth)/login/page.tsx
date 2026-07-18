@@ -37,7 +37,7 @@ export default function LoginPage() {
 				disabled={!isOnline}
 			/>
 			<p className="mt-lg text-sm text-text-tertiary">
-				Don't have an account?
+				Don't have an account?{' '}
 				<a
 					href={isOnline ? "/register" : "#"}
 					onClick={(e) => {

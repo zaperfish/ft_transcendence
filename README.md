@@ -8,6 +8,7 @@ ft_transcendence is the final group project of the 42 Common Core curriculum. It
 - [Architecture](#architecture)
 - [Setup](#setup)
     - [Container tooling](#container-tooling)
+    - [Trust the local HTTPS certificate](#trust-the-local-https-certificate)
 - [Contributing](#contributing)
 - [Implementation](#implementation)
     - [Authentification](#authentification)
@@ -53,6 +54,13 @@ Total achieved points: 4
 | Monitoring system (Prometheus + Grafana) |  | 2 |
 | Health checks & backup system |  | 1 |
 | CI/CD deployment pipeline |  | 1 |
+
+## Technologies Used
+ 
+- **Go** — Backend language, chosen for its performance, low resource overhead, and strong support for concurrent request handling, which suits a lightweight API server.
+- **PostgreSQL** — Primary database, chosen for its reliability, strong support for relational data and constraints, and mature ecosystem for transactional workloads.
+- **React** — Frontend framework, chosen for its component-based architecture, large ecosystem, and ease of building interactive, maintainable user interfaces.
+- **Caddy** — Reverse proxy and web server, chosen for automatic HTTPS, simple configuration via Caddyfile, and straightforward routing to backend/frontend services.
 
 ## Architecture
 
@@ -170,6 +178,37 @@ cd <repo_name>
   just schema-db
   just seed-db
   ```
+
+### Trust the local HTTPS certificate
+
+The local Caddy container generates its own certificate authority for HTTPS. Because a container cannot add that authority to the host trust store, Chrome may reject the certificate and prevent secure features such as PWA service-worker registration.
+
+Export Caddy's local root certificate to your home directory. Replace `username` with your Linux username:
+
+```bash
+docker compose cp \
+  caddy:/data/caddy/pki/authorities/local/root.crt \
+  /home/username/caddy-local-root.crt
+```
+
+Import the certificate into Chrome without administrator privileges:
+
+1. Open `chrome://certificate-manager`.
+2. Go to **Custom → Trusted certificates**.
+3. Select **Import**.
+4. Choose `/home/username/caddy-local-root.crt`.
+5. Enable trust for identifying websites if Chrome asks for a trust purpose.
+6. Completely close Chrome and open it again.
+
+Then visit:
+
+```text
+https://localhost:7443
+```
+
+The page and `https://localhost:7443/sw.js` should load without a certificate warning. If a service-worker installation previously failed, open **Developer Tools → Application → Service Workers**, unregister the failed worker, clear the site's storage, and reload the page.
+
+Only trust the root certificate exported from your own local Caddy container. A trusted root certificate can identify HTTPS websites in the browser profile where it is installed.
 
 ## Contributing
 

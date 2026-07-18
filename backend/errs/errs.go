@@ -45,6 +45,11 @@ type CamaError struct {
 	Message string
 }
 
+func IsCamaError(err error) bool {
+	var target *CamaError
+	return errors.As(err, &target)
+}
+
 func NewCamaError(k ErrKind, msg string) CamaError {
 	return CamaError{Kind: k, Message: msg}
 }
@@ -84,6 +89,8 @@ func ErrorDB(err error) error {
 		case "23502", "23514": // can not be empty / check constraint violation
 			return NewCamaError(ErrInvalidInput, "")
 		}
+	} else {
+		return err
 	}
 
 	// gorm wrapped errors

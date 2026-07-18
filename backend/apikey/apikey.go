@@ -185,7 +185,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 	huma.Register(api, huma.Operation{
 		OperationID:   "create-api-key",
 		Method:        "POST",
-		Path:          "/api-keys",
+		Path:          "/api/api-keys",
 		Summary:       "Create API key",
 		Tags:          []string{"ApiKey"},
 		Middlewares:   huma.Middlewares{admin},
@@ -198,7 +198,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 	huma.Register(api, huma.Operation{
 		OperationID:   "list-api-keys",
 		Method:        "GET",
-		Path:          "/api-keys",
+		Path:          "/api/api-keys",
 		Summary:       "List API keys",
 		Tags:          []string{"ApiKey"},
 		Middlewares:   huma.Middlewares{admin},
@@ -211,7 +211,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 	huma.Register(api, huma.Operation{
 		OperationID:   "delete-api-key",
 		Method:        "DELETE",
-		Path:          "/api-keys/{id}",
+		Path:          "/api/api-keys/{id}",
 		Summary:       "Revoke API key",
 		Tags:          []string{"ApiKey"},
 		Middlewares:   huma.Middlewares{admin},

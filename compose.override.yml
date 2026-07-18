@@ -10,7 +10,3 @@ services:
   postgres:
     ports:
       - "${POSTGRES_HOST_PORT}:${POSTGRES_INTERNAL_PORT}"
-
-  prometheus:
-    ports:
-      - "${PROMETHEUS_HOST_PORT:-9090}:9090"

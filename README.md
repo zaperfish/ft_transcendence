@@ -55,6 +55,13 @@ Total achieved points: 4
 | Health checks & backup system |  | 1 |
 | CI/CD deployment pipeline |  | 1 |
 
+## Technologies Used
+ 
+- **Go** — Backend language, chosen for its performance, low resource overhead, and strong support for concurrent request handling, which suits a lightweight API server.
+- **PostgreSQL** — Primary database, chosen for its reliability, strong support for relational data and constraints, and mature ecosystem for transactional workloads.
+- **React** — Frontend framework, chosen for its component-based architecture, large ecosystem, and ease of building interactive, maintainable user interfaces.
+- **Caddy** — Reverse proxy and web server, chosen for automatic HTTPS, simple configuration via Caddyfile, and straightforward routing to backend/frontend services.
+
 ## Architecture
 
 This project is a containerized full-stack web application. It follows a service-oriented architecture where the frontend, backend, database, and reverse proxy are isolated into separate components and communicate over internal networks.

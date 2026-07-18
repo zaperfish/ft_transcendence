@@ -8,6 +8,10 @@
 # Unset the the variable instead if you want the default value.
 # https://caddyserver.com/docs/caddyfile/concepts#environment-variables
 {$DOMAINS:https://localhost http://localhost} {
+	tls internal {
+		on_demand
+	}
+	
 	handle /api/* {
 		reverse_proxy backend:{$BACKEND_PORT}
 	}

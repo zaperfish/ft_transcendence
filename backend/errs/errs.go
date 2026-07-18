@@ -45,6 +45,11 @@ type CamaError struct {
 	Message string
 }
 
+func IsCamaError(err error) bool {
+	var target *CamaError
+	return errors.As(err, &target)
+}
+
 func NewCamaError(k ErrKind, msg string) CamaError {
 	return CamaError{Kind: k, Message: msg}
 }

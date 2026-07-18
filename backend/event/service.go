@@ -275,12 +275,13 @@ func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, i
 
 func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]byte, string, error) {
 	path, err := s.repo.GetImagePath(ctx, eventID)
-	if err != nil {
-		return nil, "", errs.NewCamaError(errs.ErrNotFound, err.Error())
+	if errs.IsCamaError(err) {
+		return nil, "", err
 	}
 
 	image, err := os.ReadFile(path)
 	if err != nil {
+		fmt.Println("ReadFile err: ", err)
 		return nil, "", errs.NewCamaError(errs.ErrInternal, err.Error())
 	}
 

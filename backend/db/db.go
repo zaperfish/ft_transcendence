@@ -4,7 +4,6 @@ import (
 	// Std
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	// External
@@ -28,8 +27,6 @@ func ConnectDB() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println("Connected to DB:", dsn)
 
 	return db, nil
 }

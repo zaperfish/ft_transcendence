@@ -95,6 +95,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Summary:       "List participants",
 		Tags:          []string{"Events", "Images"},
 		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
 	}, eventHandler.ListParticipants)
 
 	// images

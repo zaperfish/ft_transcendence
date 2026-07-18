@@ -273,10 +273,11 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
         events.*,
         COALESCE(event_users.role, 'none') as role
     `).
+		Where("events.start_time > ?", time.Now().UTC()).
 		Joins(`
         LEFT JOIN event_users 
         ON event_users.event_id = events.id 
-        AND event_users.user_id = ?
+		AND event_users.user_id = ?
 		AND event_users.deleted_at IS NULL
     `, userID)
 

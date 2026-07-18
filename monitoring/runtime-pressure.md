@@ -42,7 +42,7 @@ SIZE_MB=128 HOLD_SECONDS=30 ./scripts/trigger-gc-pressure.sh
 Direct request:
 
 ```bash
-curl -X POST "http://localhost:7080/api/debug/gc-pressure?size_mb=128&hold_seconds=30"
+curl --insecure -X POST "https://localhost:7443/api/debug/gc-pressure?size_mb=128&hold_seconds=30"
 ```
 
 Parameters:
@@ -108,8 +108,8 @@ MODE=cpu GOROUTINES=500 HOLD_SECONDS=30 ./scripts/trigger-scheduler-pressure.sh
 Direct request:
 
 ```bash
-curl -X POST "http://localhost:7080/api/debug/scheduler-pressure?mode=sleep&goroutines=1000&hold_seconds=30"
-curl -X POST "http://localhost:7080/api/debug/scheduler-pressure?mode=cpu&goroutines=500&hold_seconds=30"
+curl --insecure -X POST "https://localhost:7443/api/debug/scheduler-pressure?mode=sleep&goroutines=1000&hold_seconds=30"
+curl --insecure -X POST "https://localhost:7443/api/debug/scheduler-pressure?mode=cpu&goroutines=500&hold_seconds=30"
 ```
 
 Parameters:

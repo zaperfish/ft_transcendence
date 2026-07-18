@@ -1,7 +1,13 @@
+{
+	skip_install_trust
+	http_port 7080
+	https_port 7443
+}
+
 # Setting HTTP_DOMAINS? to null (empty string) will NOT trigger default replacement!
 # Unset the the variable instead if you want the default value.
 # https://caddyserver.com/docs/caddyfile/concepts#environment-variables
-{$DOMAINS:http://localhost https://localhost} {
+{$DOMAINS:https://localhost http://localhost} {
 	handle /api/* {
 		reverse_proxy backend:{$BACKEND_PORT}
 	}

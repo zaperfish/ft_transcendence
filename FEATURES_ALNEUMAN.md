@@ -40,3 +40,32 @@ Full CRUD for event images (create, get, update, delete) with file storage on di
 
 ### Custom Error Type System
 Introduced `CamaError` type carrying both error kind (for programmatic matching) and human-readable message. Implemented `Is()` interface for `errors.Is()` pattern matching. Created error kind enum and constructor for consistent error creation across the application.
+
+# Challenges
+
+The most persistent and recurring challenges had to do with misunderstandings about HUMA, the backend framework, and GORM, the ORM. Those were solved by a mix of reading documentation and consulting AI.
+
+# Resources
+
+https://go.dev/tour/list
+https://go-chi.io/#/README
+https://huma.rocks/
+https://gorm.io/
+
+Go Programming Language, The (Addison-Wesley Professional Computing Series) (ISBN-10: 9780134190440)
+Learning Go: An Idiomatic Approach to Real-World Go Programming (ISBN-10: 1492077216)
+
+https://pkg.go.dev/github.com/alexedwards/argon2id
+https://pkg.go.dev/github.com/danielgtaylor/huma/v2
+https://pkg.go.dev/github.com/go-chi/chi/v5
+https://pkg.go.dev/github.com/go-chi/jwtauth
+https://pkg.go.dev/github.com/go-ozzo/ozzo-validation
+
+# AI usage
+
+- research best practices
+- discuss architecture
+- ask for common patterns to solve specific problems
+- research language features or libraries to solve specific problems
+- explain unfamiliar concepts
+- assist with documentation

@@ -115,7 +115,7 @@ export default function EventDetailPage() {
 		window.open(
 			`/events/${numericId}/chat`,
 			'_blank',
-			'noopener,noreferrer,width=960,height=720'
+			'noopener,noreferrer'
 		);
 	};
 

@@ -89,6 +89,8 @@ func ErrorDB(err error) error {
 		case "23502", "23514": // can not be empty / check constraint violation
 			return NewCamaError(ErrInvalidInput, "")
 		}
+	} else {
+		return err
 	}
 
 	// gorm wrapped errors

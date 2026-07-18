@@ -179,9 +179,53 @@ Grafana is available through Caddy:
 https://localhost:7443/grafana/
 ```
 
+Prometheus is available through Caddy:
+
+```text
+https://localhost:7443/prometheus/
+```
+
+Useful Prometheus pages:
+
+| Page | URL |
+| --- | --- |
+| Alerts | `https://localhost:7443/prometheus/alerts` |
+| Targets | `https://localhost:7443/prometheus/targets` |
+| Query interface | `https://localhost:7443/prometheus/query` |
+
 The dashboards are provisioned in the `Monitoring` folder:
 
 ```text
 Go GC Runtime Overview
 Go Scheduler Runtime Overview
 ```
+
+## Test The BackendDown Alert
+
+The `BackendDown` alert fires when Prometheus cannot scrape the backend for one minute. To test it locally, first open the Prometheus alerts page:
+
+```text
+https://localhost:7443/prometheus/alerts
+```
+
+Stop only the backend container:
+
+```bash
+docker compose stop backend
+```
+
+Prometheus scrapes the backend every five seconds. The alert initially appears as `Pending` and changes to `Firing` after the backend has remained unavailable for one minute.
+
+You can also confirm that the backend target is down on:
+
+```text
+https://localhost:7443/prometheus/targets
+```
+
+After confirming the alert, start the backend again:
+
+```bash
+docker compose start backend
+```
+
+The `BackendDown` alert resolves after Prometheus successfully scrapes the backend again. Starting the backend may also trigger the `BackendRestartedRecently` alert, which is expected because the backend process start time changed.

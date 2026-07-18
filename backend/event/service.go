@@ -111,7 +111,7 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 		return nil
 
 	}); err != nil {
-		return nil, errs.ErrorDB(err)
+		return nil, err
 	}
 
 	return &created, nil

@@ -259,7 +259,7 @@ func (s *eventServiceImpl) RemoveParticipant(ctx context.Context, eventID, userI
 func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) ([]user.User, error) {
 	users, err := s.repo.GetParticipants(ctx, eventID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get participants: %w", err)
+		return nil, err
 	}
 
 	return users, nil

@@ -29,33 +29,6 @@ This project is a clone of the popular Meetup app, implementing its core functio
 **Developers:** dlemaire, shutan
 <br><br>
 
-## Modules
-
-Total achieved points: 4
-
-### List of potential modules
-
-| Module | Status | Points |
-|--------|--------|--------|
-| Use a framework for both frontend and backend | ✅ | 2 |
-| Real-time features (WebSockets or similar) |  | 2 |
-| User interaction system (chat, profiles, friends) |  | 2 |
-| Public API (auth, rate limiting, 5 endpoints) |  | 2 |
-| Organization system (CRUD + user management) |  | 2 |
-| User management & authentication |  | 2 |
-| Advanced permissions system (roles & access control) |  | 2 |
-| ORM usage | ✅ | 1 |
-| Notification system |  | 1 |
-| Server-Side Rendering (SSR) | ✅ | 1 |
-| Custom design system |  | 1 |
-| Advanced search (filters, sorting, pagination) |  | 1 |
-| OAuth 2.0 authentication |  | 1 |
-| Two-Factor Authentication (2FA) |  | 1 |
-| User analytics dashboard |  | 1 |
-| Monitoring system (Prometheus + Grafana) |  | 2 |
-| Health checks & backup system |  | 1 |
-| CI/CD deployment pipeline |  | 1 |
-
 ## Technologies Used
  
 - **Go** — Backend language, chosen for its performance, low resource overhead, and strong support for concurrent request handling, which suits a lightweight API server.

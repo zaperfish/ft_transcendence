@@ -43,6 +43,16 @@ func (h *Hub) JoinRoom(eventID uint, client *Client) *Room {
 	}
 }
 
+func (h *Hub) DisconnectParticipant(eventID uint, userID uint) {
+	h.mu.Lock()
+	room := h.rooms[eventID]
+	h.mu.Unlock()
+
+	if room != nil {
+		room.RemoveUser(userID)
+	}
+}
+
 func (h *Hub) removeRoom(eventID uint, room *Room) {
 	h.mu.Lock()
 	defer h.mu.Unlock()

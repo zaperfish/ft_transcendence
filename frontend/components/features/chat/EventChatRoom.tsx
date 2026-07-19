@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { getEventById, getEventParticipants } from '@/lib/api/events';
+import { getEventById } from '@/lib/api/events';
 import { useAuth } from '@/lib/hooks/useAuth';
 import {
 	buildEventChatWebSocketUrl,
@@ -45,12 +45,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 		retry: false,
 		refetchOnWindowFocus: false,
 	});
-
-	const participantsQuery = useQuery({
-		queryKey: ['event-participants', eventId],
-		queryFn: () => getEventParticipants(eventId),
-		retry: false,
-	});
+	const recheckChatAccess = historyQuery.refetch;
 
 	const eventQuery = useQuery({
 		queryKey: ['event', eventId],
@@ -60,7 +55,6 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 
 	// REST history
 	const historyData = historyQuery.data?.data;
-	const participantsData = participantsQuery.data ?? [];
 	const eventTitle = eventQuery.data?.title ?? `Event #${eventId}`;
 	const currentUserID = user?.id;
 	const trimmedDraft = draft.trim();
@@ -89,18 +83,6 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 	}[socketStatus];
 	const connectionStatusDotClass =
 		socketStatus === 'open' ? 'bg-success' : 'bg-error';
-
-	const participantNamesById = useMemo(
-		() =>
-			new Map(
-				(participantsData ?? []).map((participant) => [participant.id, participant.name])
-			),
-		[participantsData]
-	);
-	const participantsById = useMemo(
-		() => new Map(participantsData.map((participant) => [participant.id, participant])),
-		[participantsData]
-	);
 
 	const historyError = historyQuery.error instanceof ApiError ? historyQuery.error : null;
 	const lastMessage = chatMessages[chatMessages.length - 1] ?? null;
@@ -193,6 +175,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 			);
 			if (socketRef.current === socket) {
 				socketRef.current = null;
+				void recheckChatAccess();
 			}
 		};
 
@@ -202,7 +185,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 			}
 			socket.close();
 		};
-	}, [eventId, historyQuery.isSuccess]);
+	}, [eventId, historyQuery.isSuccess, recheckChatAccess]);
 
 	function handleSendMessage(event: React.SubmitEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -273,7 +256,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 		);
 	}
 
-	if (historyQuery.isError) {
+	if (historyQuery.isError && historyQuery.data === undefined) {
 		return (
 			<div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-none border-y border-border bg-surface px-xl text-center shadow-sm md:rounded-lg md:border md:shadow-sm">
 				<h1 className="text-2xl font-heading font-bold text-text-primary">
@@ -317,14 +300,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 						<div className="space-y-md">
 							{chatMessages.map((message, index) => {
 								const isCurrentUserMessage = currentUserID === message.user_id;
-								const participant = participantsById.get(message.user_id);
-								const senderName =
-									(isCurrentUserMessage ? user?.name : participant?.name) ??
-									participantNamesById.get(message.user_id) ??
-									`User #${message.user_id}`;
-								const senderAvatar = isCurrentUserMessage
-									? user?.avatar
-									: participant?.avatar;
+								const senderName = message.sender_name || `User #${message.user_id}`;
 
 								return (
 									<div
@@ -337,12 +313,11 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 										<div
 											className={
 												isCurrentUserMessage
-													? 'flex w-[75%] flex-row-reverse items-start gap-sm'
-													: 'flex w-[75%] items-start gap-sm'
+													? 'flex min-w-0 max-w-[75%] flex-row-reverse items-start gap-sm'
+													: 'flex min-w-0 max-w-[75%] items-start gap-sm'
 											}
 										>
 											<Avatar size="sm">
-												<AvatarImage src={senderAvatar} alt={senderName} />
 												<AvatarFallback
 													className={
 														isCurrentUserMessage
@@ -356,8 +331,8 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 											<div
 												className={
 													isCurrentUserMessage
-														? 'flex-1 rounded-md border border-primary/20 bg-primary px-md py-sm text-primary-foreground'
-														: 'flex-1 rounded-md border border-border bg-surface-dim px-md py-sm text-text-primary'
+														? 'min-w-0 flex-1 rounded-md border border-primary/20 bg-primary px-md py-sm text-primary-foreground'
+														: 'min-w-0 flex-1 rounded-md border border-border bg-surface-dim px-md py-sm text-text-primary'
 												}
 											>
 												<div className="mb-xs flex items-center justify-between gap-md">

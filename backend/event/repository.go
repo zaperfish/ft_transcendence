@@ -176,7 +176,7 @@ func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID ui
 	}
 
 	var eventRole EventWithRole
-	if err := r.db.WithContext(ctx).
+	tx := r.db.WithContext(ctx).
 		Model(&GormEventModel{}).
 		Select(`
         events.*,
@@ -189,8 +189,12 @@ func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID ui
 		AND event_users.deleted_at IS NULL
     `, userID).
 		Where("events.id = ?", eventID).
-		Scan(&eventRole).Error; err != nil {
-		return nil, errs.ErrorDB(err)
+		Scan(&eventRole)
+	if tx.Error != nil {
+		return nil, errs.ErrorDB(tx.Error)
+	}
+	if tx.RowsAffected == 0 {
+		return nil, errs.NewCamaError(errs.ErrNotFound, "")
 	}
 
 	eventRole.NumRegistered = count
@@ -203,12 +207,16 @@ func (r *eventRepositoryImpl) GetCapacity(ctx context.Context, tx *gorm.DB, even
 		tx = r.db
 	}
 	var cap uint
-	if err := tx.WithContext(ctx).
+	ret := tx.WithContext(ctx).
 		Model(&Event{}).
 		Select("max_capacity").
 		Where("id = ?", eventID).
-		Scan(&cap).Error; err != nil {
-		return 0, errs.ErrorDB(err)
+		Scan(&cap)
+	if ret.Error != nil {
+		return 0, errs.ErrorDB(ret.Error)
+	}
+	if ret.RowsAffected == 0 {
+		return 0, errs.NewCamaError(errs.ErrNotFound, "")
 	}
 	return cap, nil
 }
@@ -328,7 +336,7 @@ func (r *eventRepositoryImpl) CreateParticipantAs(ctx context.Context, tx *gorm.
 	if err != nil {
 		return errs.ErrorDB(err)
 	}
-	if event.StartTime.Before(time.Now()) {
+	if event.StartTime.Before(time.Now().UTC()) {
 		return errs.NewCamaError(errs.ErrConflict, "event already expired")
 	}
 

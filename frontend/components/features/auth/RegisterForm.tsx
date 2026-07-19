@@ -97,6 +97,7 @@ export function RegisterForm({ disabled = false }: RegisterFormProps) {
 				<Input
 					type='text' // Specify the type of input to enable browser behaviors
 					placeholder='Username'
+					autoComplete='username'
 					{...register('username')} // Register passing data collected from user input to 'Input'
 					className={errors.username ? 'border-error' : ''}
 				/>
@@ -109,6 +110,7 @@ export function RegisterForm({ disabled = false }: RegisterFormProps) {
 				<Input
 					type='email'
 					placeholder='Email'
+					autoComplete='email'
 					{...register('email')}
 					className={errors.email ? 'border-error' : ''}
 				/>
@@ -121,6 +123,7 @@ export function RegisterForm({ disabled = false }: RegisterFormProps) {
 				<Input
 					type='password'
 					placeholder='Password'
+					autoComplete='new-password'
 					{...register('password')}
 					className={errors.password ? 'border-error' : ''}
 				/>
@@ -133,6 +136,7 @@ export function RegisterForm({ disabled = false }: RegisterFormProps) {
 				<Input
 					type='password'
 					placeholder='Confirm Password'
+					autoComplete='new-password'
 					{...register('confirmPassword')}
 					className={errors.confirmPassword ? 'border-error' : ''}
 				/>

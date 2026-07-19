@@ -37,13 +37,22 @@ type EventService interface {
 	DeleteEventImage(ctx context.Context, eventID uint) error
 }
 
-type eventServiceImpl struct {
-	repo EventRepository
-	db   *gorm.DB
+type ParticipantDisconnector interface {
+	DisconnectParticipant(eventID uint, userID uint)
 }
 
-func NewEventService(repo EventRepository, db *gorm.DB) EventService {
-	return &eventServiceImpl{repo: repo, db: db}
+type eventServiceImpl struct {
+	repo                    EventRepository
+	db                      *gorm.DB
+	participantDisconnector ParticipantDisconnector
+}
+
+func NewEventService(repo EventRepository, db *gorm.DB, participantDisconnector ParticipantDisconnector) EventService {
+	return &eventServiceImpl{
+		repo:                    repo,
+		db:                      db,
+		participantDisconnector: participantDisconnector,
+	}
 }
 
 type EventWithUserContext struct {
@@ -61,7 +70,7 @@ func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, e
 		return nil, errs.NewCamaError(errs.ErrInvalidInput, "duration must be greater than 0")
 	}
 
-	if e.StartTime.Before(time.Now()) {
+	if e.StartTime.Before(time.Now().UTC()) {
 		return nil, errs.NewCamaError(errs.ErrInvalidInput, "start time can not be in the past")
 	}
 
@@ -83,7 +92,7 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 		return nil, errs.NewCamaError(errs.ErrInvalidInput, "duration must be greater than 0")
 	}
 
-	if e.StartTime.Before(time.Now()) {
+	if e.StartTime.Before(time.Now().UTC()) {
 		return nil, errs.NewCamaError(errs.ErrInvalidInput, "start time can not be in the past")
 	}
 
@@ -121,7 +130,7 @@ func (s *eventServiceImpl) UpdateEvent(ctx context.Context, eventID uint, update
 
 	if updates["start_time"] != nil {
 		t, ok := updates["start_time"].(time.Time)
-		if ok && t.Before(time.Now()) {
+		if ok && t.Before(time.Now().UTC()) {
 			return nil, errs.NewCamaError(errs.ErrInvalidInput, "start time can not be in the past")
 		}
 	}
@@ -153,6 +162,7 @@ func (s *eventServiceImpl) GetEvent(ctx context.Context, eventID uint) (*Event, 
 func (s *eventServiceImpl) GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error) {
 
 	event, err := s.repo.GetForUser(ctx, userID, eventID)
+	log.Printf("repo error: %v\n", err)
 	if err != nil {
 		return nil, err
 	}
@@ -252,6 +262,9 @@ func (s *eventServiceImpl) RemoveParticipant(ctx context.Context, eventID, userI
 
 	if err := s.repo.DeleteParticipant(ctx, nil, eventID, userID); err != nil {
 		return fmt.Errorf("failed to remove participant: %w", err)
+	}
+	if s.participantDisconnector != nil {
+		s.participantDisconnector.DisconnectParticipant(eventID, userID)
 	}
 	return nil
 }

@@ -5,8 +5,9 @@ ft_transcendence is the final group project of the 42 Common Core curriculum. It
 
 - [About This Project](#about-this-project)
 - [Team Roles](#team-roles)
+- [Technologies Used](#technologies-used)
 - [Architecture](#architecture)
-- [Setup](#setup)
+- [Instructions](#instructions)
     - [Container tooling](#container-tooling)
     - [Trust the local HTTPS certificate](#trust-the-local-https-certificate)
 - [Contributing](#contributing)
@@ -58,6 +59,7 @@ Total achieved points: 4
 ## Technologies Used
  
 - **Go** — Backend language, chosen for its performance, low resource overhead, and strong support for concurrent request handling, which suits a lightweight API server.
+- **Huma** — Go API framework, chosen for generating OpenAPI documentation and request/response validation directly from Go structs and types, reducing boilerplate while keeping the API self-documenting.
 - **PostgreSQL** — Primary database, chosen for its reliability, strong support for relational data and constraints, and mature ecosystem for transactional workloads.
 - **React** — Frontend framework, chosen for its component-based architecture, large ecosystem, and ease of building interactive, maintainable user interfaces.
 - **Caddy** — Reverse proxy and web server, chosen for automatic HTTPS, simple configuration via Caddyfile, and straightforward routing to backend/frontend services.
@@ -113,7 +115,7 @@ When developing the frontend:
   <img src="./docs/assets/backend_dev_architecture.drawio.svg" width="400"/>
 </p>
 
-## Setup
+## Instructions
 
 ### Container tooling
 
@@ -167,16 +169,21 @@ cd <repo_name>
   - You can create your own .env file, or
   - Use the provided example setup and execute:
   ```bash
-  just init-env
+  just init-env-prod
   ```
 
-3. Reset your database and seed it with example values (if you want)
+3. (Optional) Reset your database and seed it with example values.
   - Make sure your postgres container is running
   ```bash
   just serve postgres
   just reset-db
   just schema-db
   just seed-db
+  ```
+
+4. Run the app with:
+  ```bash
+  just prod
   ```
 
 ### Trust the local HTTPS certificate

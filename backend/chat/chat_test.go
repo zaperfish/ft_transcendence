@@ -35,9 +35,9 @@ func TestNewHubInitializesRooms(t *testing.T) {
 
 func TestHubJoinRoomReusesRoom(t *testing.T) {
 	hub := NewHub()
-	firstClient := &Client{send: make(chan Message)}
-	secondClient := &Client{send: make(chan Message)}
-	otherClient := &Client{send: make(chan Message)}
+	firstClient := &Client{send: make(chan MessageDTO)}
+	secondClient := &Client{send: make(chan MessageDTO)}
+	otherClient := &Client{send: make(chan MessageDTO)}
 
 	firstRoom := hub.JoinRoom(42, firstClient)
 	secondRoom := hub.JoinRoom(42, secondClient)
@@ -57,7 +57,7 @@ func TestHubJoinRoomReusesRoom(t *testing.T) {
 
 func TestHubJoinRoomStartsRoomRunLoop(t *testing.T) {
 	hub := NewHub()
-	client := &Client{send: make(chan Message)}
+	client := &Client{send: make(chan MessageDTO)}
 
 	room := hub.JoinRoom(42, client)
 	room.Leave(client)
@@ -74,7 +74,7 @@ func TestHubJoinRoomStartsRoomRunLoop(t *testing.T) {
 
 func TestHubRemovesRoomWhenLastClientLeaves(t *testing.T) {
 	hub := NewHub()
-	client := &Client{send: make(chan Message)}
+	client := &Client{send: make(chan MessageDTO)}
 
 	room := hub.JoinRoom(42, client)
 	room.Leave(client)
@@ -90,13 +90,13 @@ func TestHubRemovesRoomWhenLastClientLeaves(t *testing.T) {
 
 func TestHubRecreatesRoomAfterPreviousRoomClosed(t *testing.T) {
 	hub := NewHub()
-	firstClient := &Client{send: make(chan Message)}
+	firstClient := &Client{send: make(chan MessageDTO)}
 
 	firstRoom := hub.JoinRoom(42, firstClient)
 	firstRoom.Leave(firstClient)
 	waitForRoomClosed(t, firstRoom)
 
-	secondClient := &Client{send: make(chan Message)}
+	secondClient := &Client{send: make(chan MessageDTO)}
 	secondRoom := hub.JoinRoom(42, secondClient)
 	defer secondRoom.Leave(secondClient)
 
@@ -123,6 +123,9 @@ func TestNewRoomInitializesState(t *testing.T) {
 	if room.leave == nil {
 		t.Fatal("expected leave channel to be initialized")
 	}
+	if room.removeUser == nil {
+		t.Fatal("expected removeUser channel to be initialized")
+	}
 	if room.broadcast == nil {
 		t.Fatal("expected broadcast channel to be initialized")
 	}
@@ -133,11 +136,12 @@ func TestNewRoomInitializesState(t *testing.T) {
 
 func TestRoomRunBroadcastsToJoinedClients(t *testing.T) {
 	room := NewRoom(42)
-	client := &Client{send: make(chan Message, 1)}
-	message := Message{
-		EventID: 42,
-		UserID:  3,
-		Content: "hello",
+	client := &Client{send: make(chan MessageDTO, 1)}
+	message := MessageDTO{
+		EventID:    42,
+		UserID:     3,
+		SenderName: "sender",
+		Content:    "hello",
 	}
 
 	go room.run()
@@ -161,6 +165,71 @@ func TestRoomRunBroadcastsToJoinedClients(t *testing.T) {
 
 	room.Leave(client)
 	waitForRoomClosed(t, room)
+}
+
+func TestRoomRunRemovesAllConnectionsForUser(t *testing.T) {
+	room := NewRoom(42)
+	firstRemoved := &Client{userID: 3, send: make(chan MessageDTO, 1)}
+	secondRemoved := &Client{userID: 3, send: make(chan MessageDTO, 1)}
+	remaining := &Client{userID: 4, send: make(chan MessageDTO, 1)}
+
+	go room.run()
+
+	if !room.Join(firstRemoved) || !room.Join(secondRemoved) || !room.Join(remaining) {
+		t.Fatal("expected clients to join the room")
+	}
+	if !room.RemoveUser(3) {
+		t.Fatal("expected room to receive user removal event")
+	}
+
+	message := MessageDTO{Content: "still connected"}
+	if !room.Broadcast(message) {
+		t.Fatal("expected room to remain active for the other user")
+	}
+
+	assertClientSendClosed(t, firstRemoved)
+	assertClientSendClosed(t, secondRemoved)
+
+	select {
+	case got := <-remaining.send:
+		if got.Content != message.Content {
+			t.Fatalf("expected message content %q, got %q", message.Content, got.Content)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected remaining client to receive broadcast")
+	}
+
+	room.Leave(remaining)
+	waitForRoomClosed(t, room)
+}
+
+func TestHubDisconnectParticipantDoesNotCreateRoom(t *testing.T) {
+	hub := NewHub()
+
+	hub.DisconnectParticipant(42, 3)
+
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
+	if len(hub.rooms) != 0 {
+		t.Fatalf("expected no rooms, got %d", len(hub.rooms))
+	}
+}
+
+func TestHubDisconnectParticipantRemovesConnectedUser(t *testing.T) {
+	hub := NewHub()
+	client := &Client{userID: 3, send: make(chan MessageDTO)}
+
+	room := hub.JoinRoom(42, client)
+	hub.DisconnectParticipant(42, 3)
+
+	waitForRoomClosed(t, room)
+	assertClientSendClosed(t, client)
+
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
+	if len(hub.rooms) != 0 {
+		t.Fatalf("expected no rooms, got %d", len(hub.rooms))
+	}
 }
 
 func TestNewHandlerInitializesHubAndDB(t *testing.T) {
@@ -254,7 +323,7 @@ func TestMessageToDTO(t *testing.T) {
 		Content: "hello chat",
 	}
 
-	dto := message.toDTO()
+	dto := message.toDTO("sender")
 
 	if dto.ID != message.ID {
 		t.Fatalf("expected ID %d, got %d", message.ID, dto.ID)
@@ -264,6 +333,9 @@ func TestMessageToDTO(t *testing.T) {
 	}
 	if dto.UserID != message.UserID {
 		t.Fatalf("expected userID %d, got %d", message.UserID, dto.UserID)
+	}
+	if dto.SenderName != "sender" {
+		t.Fatalf("expected sender name %q, got %q", "sender", dto.SenderName)
 	}
 	if dto.Content != message.Content {
 		t.Fatalf("expected content %q, got %q", message.Content, dto.Content)
@@ -280,7 +352,10 @@ func TestMessagesToDTOsOldestFirst(t *testing.T) {
 		{Model: gorm.Model{ID: 1}, Content: "oldest"},
 	}
 
-	dtos := messagesToDTOsOldestFirst(messages)
+	senderNames := map[uint]string{
+		0: "sender",
+	}
+	dtos := messagesToDTOsOldestFirst(messages, senderNames)
 
 	if len(dtos) != len(messages) {
 		t.Fatalf("expected %d DTOs, got %d", len(messages), len(dtos))
@@ -356,5 +431,18 @@ func waitForRoomClosed(t *testing.T, room *Room) {
 	case <-room.done:
 	case <-time.After(time.Second):
 		t.Fatal("expected room to close")
+	}
+}
+
+func assertClientSendClosed(t *testing.T, client *Client) {
+	t.Helper()
+
+	select {
+	case _, ok := <-client.send:
+		if ok {
+			t.Fatal("expected client send channel to be closed")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected client send channel to be closed")
 	}
 }

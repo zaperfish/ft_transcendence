@@ -14,10 +14,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(api huma.API, db *gorm.DB) {
+func RegisterRoutes(api huma.API, db *gorm.DB, participantDisconnector ParticipantDisconnector) {
 	// Setup layers
 	eventRepo := NewEventRepository(db)
-	eventService := NewEventService(eventRepo, db)
+	eventService := NewEventService(eventRepo, db, participantDisconnector)
 	eventHandler := NewEventHandler(eventService)
 
 	// Register POST /events
@@ -95,6 +95,7 @@ func RegisterRoutes(api huma.API, db *gorm.DB) {
 		Summary:       "List participants",
 		Tags:          []string{"Events", "Images"},
 		DefaultStatus: http.StatusOK,
+		Middlewares:   huma.Middlewares{auth.Verifier(api), auth.Refresher(api)},
 	}, eventHandler.ListParticipants)
 
 	// images

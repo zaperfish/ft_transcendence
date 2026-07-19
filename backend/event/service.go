@@ -153,6 +153,7 @@ func (s *eventServiceImpl) GetEvent(ctx context.Context, eventID uint) (*Event, 
 func (s *eventServiceImpl) GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error) {
 
 	event, err := s.repo.GetForUser(ctx, userID, eventID)
+	log.Printf("repo error: %v\n", err)
 	if err != nil {
 		return nil, err
 	}

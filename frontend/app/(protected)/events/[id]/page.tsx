@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEventById, getEventParticipants, deleteEvent, removeParticipant, leaveEvent, uploadEventImage, updateEventImage } from "@/lib/api/events";
+import { getEventByIdSafe, getEventParticipants, deleteEvent, removeParticipant, leaveEvent, uploadEventImage, updateEventImage } from "@/lib/api/events";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useTheme } from "@/lib/context/ThemeContext";
 import EditEventModal from "@/components/features/events/EditEventModal";
@@ -45,9 +45,9 @@ export default function EventDetailPage() {
 		return false;
 	};
 
-	const { data: event, isLoading: eventLoading, fetchStatus: eventFetchStatus } = useQuery({
+	const { data: event, isLoading: eventLoading, isError, error, fetchStatus: eventFetchStatus } = useQuery({
 		queryKey: ['event', numericId],
-		queryFn: () => getEventById(numericId),
+		queryFn: () => getEventByIdSafe(numericId),
 		networkMode: 'offlineFirst',
 	});
 
@@ -131,8 +131,37 @@ export default function EventDetailPage() {
 
 	if (eventLoading || participantsLoading)
 		return <div className="text-center py-2xl text-text-secondary">Loading...</div>
-	if (!event)
-		return <div className="text-center py-2xl text-error">Failed to load events...</div>
+	if (isError) {
+		return (
+			<div className="w-full px-xl max-w-6xl mx-auto flex flex-col items-center justify-center min-h-[80vh]">
+				<h1 className="text-4xl font-bold text-text-primary mb-md">
+					Failed to load event
+				</h1>
+				<p className="text-text-secondary mb-lg">
+					Something went wrong when loading the event. Please try later.
+				</p>
+				<Button onClick={() => router.push('/home')}>
+					← Back to Discovery
+				</Button>
+			</div>
+		);
+	}
+
+	if (!event) {
+		return (
+			<div className="w-full px-xl max-w-6xl mx-auto flex flex-col items-center justify-center min-h-[80vh]">
+				<h1 className="text-4xl font-bold text-text-primary mb-md">
+					Event not found
+				</h1>
+				<p className="text-text-secondary mb-lg">
+					The event you are looking for does not exist.
+				</p>
+				<Button onClick={() => router.push('/home')}>
+					← Back to Discovery
+				</Button>
+			</div>
+		);
+	}
 	if ((eventFetchStatus === 'paused' || participantsFetchStatus === 'paused')
 	&& !isOnline)
 		return <div className="text-center py-2xl text-text-secondary">You are offline, no cached data...Please retry after you are online.</div>

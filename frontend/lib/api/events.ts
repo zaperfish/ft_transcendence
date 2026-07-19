@@ -53,6 +53,18 @@ export async function getEventById(id: number): Promise<EventEntity> {
 	return request<EventEntity>(`/api/events/${id}`);
 }
 
+// Avoid 404 error when user query an invalid event
+export async function getEventByIdSafe(id: number): Promise<EventEntity | null> {
+	try {
+		return await getEventById(id);
+	} catch (error: any) {
+		if (error?.status === 404) {
+			return null;
+		}
+		throw error;
+	}
+}
+
 // Get list of participants of an event
 export async function getEventParticipants(id: number): Promise<User[]> {
 	const response = await request<{ data: User[] }>(

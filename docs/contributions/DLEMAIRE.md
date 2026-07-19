@@ -55,3 +55,18 @@ The event chat was implemented across the Go backend and Next.js frontend:
 - **Combining history with live updates:** The frontend loads persisted messages before opening the WebSocket, then merges both sources by message ID to avoid duplicates.
 - **Scrolling without interrupting the reader:** The interface auto-scrolls only on initial load or when the user is already viewing recent messages.
 - **Consistent message limits:** Character and byte limits are enforced in the frontend, backend, and database so Unicode input is handled consistently and safely.
+
+### AI Usage
+
+- Topic research
+- AI-assisted code reviews
+- Documentation drafting
+- Structural bug detection
+- Design discussions and evaluation of implementation alternatives
+
+### Resources
+
+- Complete Intro to React, Brian Holt - Frontend Masters
+- Go Programming Language, The (Addison-Wesley Professional Computing Series)
+- Learning Go: An Idiomatic Approach to Real-World Go Programming
+- Haverbeke, M. (2024). Eloquent JavaScript (4th ed.). No Starch Press.

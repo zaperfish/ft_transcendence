@@ -93,10 +93,20 @@ export default function navigation() {
 							</Avatar>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align='end' className='min-w-45'>
-							<DropdownMenuItem asChild>
-								<Link href='/settings' className='cursor-pointer w-full'>
+							<DropdownMenuItem
+								onClick={() => {
+									if (!isOnline) {
+										toast.error('Settings is unavailable when you are offline, please retry later.')
+										return;
+									}
+									router.push('/settings');
+								}}
+								className={`cursor-pointer w-full ${
+									!isOnline ? 'opacity-50 cursor-not-allowed' : ''
+								}`}
+								aria-disabled={!isOnline}
+							>
 								Settings
-								</Link>
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								onClick={handleLogout}

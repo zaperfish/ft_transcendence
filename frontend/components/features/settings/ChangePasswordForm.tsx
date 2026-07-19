@@ -9,6 +9,7 @@ import { FormLabel } from '@/components/ui/FormLabel';
 import { SettingsPanel } from '@/components/features/settings/SettingsPanel';
 import { updatePassword } from '@/lib/api/user';
 import { ApiError } from '@/lib/api/client';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 const passwordSchema = z
 	.object({
@@ -31,6 +32,7 @@ const passwordSchema = z
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export function ChangePasswordForm() {
+	const { isOnline } = useAuth();
 	const {
 		register,
 		handleSubmit,
@@ -48,6 +50,11 @@ export function ChangePasswordForm() {
 	});
 
 	const onSubmit = async (data: PasswordFormData) => {
+		if (!isOnline) {
+			setError('root', { message: 'You are offline. Password cannot be changed.' });
+			return;
+		}
+
 		try {
 			await updatePassword({
 				current_password: data.currentPassword,
@@ -113,7 +120,11 @@ export function ChangePasswordForm() {
 					<p className="text-sm text-error">{errors.root.message}</p>
 				)}
 
-				<Button type="submit" disabled={isSubmitting}>
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className={!isOnline ? 'opacity-50 cursor-not-allowed' : ''}
+				>
 					{isSubmitting ? 'Updating...' : 'Update password'}
 				</Button>
 			</form>

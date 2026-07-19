@@ -22,7 +22,7 @@ const emailSchema = z.object({
 type EmailFormData = z.infer<typeof emailSchema>;
 
 export function EmailSettingsForm() {
-	const { user, refreshUser } = useAuth();
+	const { user, refreshUser, isOnline } = useAuth();
 	const {
 		register,
 		handleSubmit,
@@ -42,6 +42,11 @@ export function EmailSettingsForm() {
 	}, [user, reset]);
 
 	const onSubmit = async (data: EmailFormData) => {
+		if (!isOnline) {
+			setError('root', { message: 'You are offline. Changes cannot be saved.' });
+			return;
+		}
+
 		try {
 			await updateProfile({ email: data.email });
 			await refreshUser();
@@ -87,7 +92,11 @@ export function EmailSettingsForm() {
 					<p className="text-sm text-error">{errors.root.message}</p>
 				)}
 
-				<Button type="submit" disabled={isSubmitting || !isDirty}>
+				<Button
+					type="submit"
+					disabled={isSubmitting || !isDirty}
+					className={!isOnline ? 'opacity-50 cursor-not-allowed' : ''}
+				>
 					{isSubmitting ? 'Saving...' : 'Save changes'}
 				</Button>
 			</form>

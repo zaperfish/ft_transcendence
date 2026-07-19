@@ -37,10 +37,12 @@ export default function EventCard({
 	const [isRegistering, setIsRegistering] = useState(false);
 	// Avoid crash when backend returns undefined self
 	const isRegistered = data.self?.is_participant ?? false;
+	const isFull = data.num_registered >= data.max_capacity;
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
 	const queryClient = useQueryClient();
 	const { theme } = useTheme();
 	const isClassic = theme === "classic";
+	const isButtonDisabled = disabled || isRegistering || isRegistered || (!isRegistered && isFull);
 
 	const eventDate = new Date(data.start_time);
 	const dateStr = eventDate.toLocaleDateString("en-US", {
@@ -152,16 +154,24 @@ export default function EventCard({
 					) : (
 						<Button
 							onClick={handleRegister}
-							disabled={disabled || isRegistering || isRegistered}
+							disabled={isButtonDisabled}
 							className={`w-full ${
 								isRegistered
 									? "bg-success text-white cursor-not-allowed"
 									: isRegistering
 										? "bg-text-tertiary text-white cursor-wait"
-										: "bg-primary text-primary-foreground hover:bg-primary-dim"
+										: isFull
+											? "bg-gray-300 text-gray-500 cursor-not-allowed"
+											: "bg-primary text-primary-foreground hover:bg-primary-dim"
 							}`}
 						>
-							{ isRegistered ? "Registered" : isRegistering ? "Registering..." : "Register"}
+							{ isRegistered
+								? "Registered"
+								: isRegistering
+									? "Registering..."
+									: isFull
+										? "Full"
+										: "Register"}
 						</Button>
 					)}
 					{errorMsg && !isDetailMode && <p className="text-error text-xs mt-xs"></p>}

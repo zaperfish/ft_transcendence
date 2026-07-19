@@ -328,7 +328,7 @@ func (r *eventRepositoryImpl) CreateParticipantAs(ctx context.Context, tx *gorm.
 	if err != nil {
 		return errs.ErrorDB(err)
 	}
-	if event.StartTime.Before(time.Now()) {
+	if event.StartTime.Before(time.Now().UTC()) {
 		return errs.NewCamaError(errs.ErrConflict, "event already expired")
 	}
 

@@ -61,7 +61,7 @@ func (s *eventServiceImpl) CreateEvent(ctx context.Context, e *Event) (*Event, e
 		return nil, errs.NewCamaError(errs.ErrInvalidInput, "duration must be greater than 0")
 	}
 
-	if e.StartTime.Before(time.Now()) {
+	if e.StartTime.Before(time.Now().UTC()) {
 		return nil, errs.NewCamaError(errs.ErrInvalidInput, "start time can not be in the past")
 	}
 
@@ -83,7 +83,7 @@ func (s *eventServiceImpl) CreateEventWithAdmin(ctx context.Context, e *Event, u
 		return nil, errs.NewCamaError(errs.ErrInvalidInput, "duration must be greater than 0")
 	}
 
-	if e.StartTime.Before(time.Now()) {
+	if e.StartTime.Before(time.Now().UTC()) {
 		return nil, errs.NewCamaError(errs.ErrInvalidInput, "start time can not be in the past")
 	}
 
@@ -121,7 +121,7 @@ func (s *eventServiceImpl) UpdateEvent(ctx context.Context, eventID uint, update
 
 	if updates["start_time"] != nil {
 		t, ok := updates["start_time"].(time.Time)
-		if ok && t.Before(time.Now()) {
+		if ok && t.Before(time.Now().UTC()) {
 			return nil, errs.NewCamaError(errs.ErrInvalidInput, "start time can not be in the past")
 		}
 	}

@@ -17,6 +17,9 @@ import (
 	"gorm.io/gorm"
 )
 
+var imagePathPrefix string = "/var/lib/ft_transcendence/images"
+const maxImageSize = 5242880
+
 type EventService interface {
 	CreateEvent(ctx context.Context, event *Event) (*Event, error)
 	CreateEventWithAdmin(ctx context.Context, event *Event, userID uint) (*Event, error)
@@ -142,7 +145,8 @@ func (s *eventServiceImpl) UpdateEvent(ctx context.Context, eventID uint, update
 }
 
 func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error {
-	if err := s.DeleteEventImage(ctx, eventID); err != nil {
+	err := s.DeleteEventImage(ctx, eventID)
+	if err != nil && !errors.Is(err, errs.ErrNotFound) {
 		return err
 	}
 	return s.repo.Delete(ctx, eventID)
@@ -275,10 +279,6 @@ func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) (
 	return users, nil
 }
 
-var imagePathPrefix string = "/var/lib/ft_transcendence/images"
-
-const maxImageSize = 104857600
-
 // This should only work, when no image is associated with the event yet. This is why we can not use s.repo.Update() here as it would overwrite an existing image path. s.repo.CreateImagePath() makes sure to not overwrite an existing path.
 func (s *eventServiceImpl) CreateEventImage(ctx context.Context, eventID uint, image []byte, contentType string) error {
 
@@ -342,7 +342,7 @@ func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, i
 func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
 	path, err := s.repo.GetImagePath(ctx, eventID)
 	if err != nil {
-		return errs.NewCamaError(errs.ErrInvalidInput, err.Error())
+		return err
 	}
 
 	err = s.repo.DeleteImagePath(ctx, eventID)

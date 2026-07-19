@@ -71,7 +71,7 @@ export function EmailSettingsForm() {
 			<form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
 				<div className="space-y-sm">
 					<FormLabel htmlFor="username" required={false}>Username</FormLabel>
-					<Input id="username" type="text" value={user.name} disabled />
+					<Input id="username" type="text" autoComplete="username" value={user.name} disabled />
 				</div>
 
 				<div className="space-y-sm">
@@ -80,6 +80,7 @@ export function EmailSettingsForm() {
 						id="email"
 						type="email"
 						placeholder="Email"
+						autoComplete="email"
 						{...register('email')}
 						className={errors.email ? 'border-error' : ''}
 					/>

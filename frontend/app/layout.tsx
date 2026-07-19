@@ -8,7 +8,7 @@ import { Toaster } from 'sonner';
 
 // Shared by both classic and aurora themes
 const inter = Inter({
-  variable: "--font-sans",
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 

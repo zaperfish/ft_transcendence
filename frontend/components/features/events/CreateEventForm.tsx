@@ -268,6 +268,7 @@ export default function CreateEventForm({ open, onClose, onSuccess }: CreateEven
 							variant='outline'
 							onClick={onClose}
 							disabled={isSubmitting}
+							className='border-error bg-error/10 text-error hover:bg-transparent hover:text-error'
 						>
 						Cancel
 						</Button>

@@ -31,7 +31,7 @@ export function Footer() {
 		<footer className="shrink-0 border-t border-border bg-background px-4 py-4 text-sm text-muted-foreground">
 			<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
 				{isOnline ? (
-					<Link href="/privacy" className="hover:text-foreground">
+					<Link {...onlinePrivacyProps}>
 					Privacy Policy
 					</Link>
 				) : (
@@ -39,7 +39,7 @@ export function Footer() {
 				)}
 				<span className="hidden sm:inline">•</span>
 				{isOnline ? (
-					<Link href="/privacy" className="hover:text-foreground">
+					<Link {...onlineTermsProps}>
 					Terms of Service
 					</Link>
 				) : (

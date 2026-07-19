@@ -90,10 +90,10 @@ export default function HomePage() {
 		<div className="w-full px-xl py-2xl">
 		{ /*Header description*/ }
 			<div className="mb-2xl">
-				<h1 className="mb-md font-heading text-4xl font-bold text-teal-50">
+				<h1 className="mb-md font-heading text-4xl font-bold text-chrome-title">
 				Discover Events
 				</h1>
-				<p className="w-full text-lg text-teal-100/80">
+				<p className="w-full text-lg text-chrome-body">
 				Connect with your local community through shared interests,
 				professional workshops, and social gatherings.
 				</p>
@@ -112,7 +112,7 @@ export default function HomePage() {
 						variant="outline"
 						onClick={() => fetchNextPage()}
 						disabled={isFetchingNextPage || !isOnline}
-						className="min-w-50 border-teal-300/40 bg-teal-700/40 text-white hover:bg-teal-600/50 hover:text-white"
+						className="btn-chrome-loadmore min-w-50"
 					>
 						{isFetchingNextPage ? "Loading..." : "Load more"}
 					</Button>

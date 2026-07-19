@@ -41,10 +41,10 @@ export default function EventsPage() {
 		<div className="w-full px-xl py-2xl">
 		{ /*Header description*/ }
 			<div className="mb-2xl">
-				<h1 className="mb-md font-heading text-4xl font-bold text-teal-50">
+				<h1 className="mb-md font-heading text-4xl font-bold text-chrome-title">
 				My Events
 				</h1>
-				<p className="w-full text-lg text-teal-100/80">
+				<p className="w-full text-lg text-chrome-body">
 				Stay organized with your community schedules.
 				</p>
 			</div>
@@ -54,8 +54,8 @@ export default function EventsPage() {
 					onClick={() => setActiveTab('attending')}
 					className={`w-30 pb-sm text-center text-sm font-medium transition ${
 						activeTab === 'attending'
-							? 'border-b-2 border-teal-300 font-semibold text-teal-300'
-							: 'text-teal-100/70 hover:text-teal-200'
+							? 'border-b-2 border-chrome-tab-active font-semibold text-chrome-tab-active'
+							: 'text-chrome-muted hover:text-chrome-title'
 					}`}
 				>
 					Attending
@@ -64,8 +64,8 @@ export default function EventsPage() {
 					onClick={() => setActiveTab('hosting')}
 					className={`w-30 pb-sm text-center text-sm font-medium transition ${
 						activeTab === 'hosting'
-							? 'border-b-2 border-teal-300 font-semibold text-teal-300'
-							: 'text-teal-100/70 hover:text-teal-200'
+							? 'border-b-2 border-chrome-tab-active font-semibold text-chrome-tab-active'
+							: 'text-chrome-muted hover:text-chrome-title'
 					}`}
 				>
 					Hosting
@@ -74,7 +74,7 @@ export default function EventsPage() {
 		{ /*Event cards list*/ }
 			{isLoading ? (
 				<div className='flex justify-center py-2xl'>
-					<span className='text-teal-100/60'>Loading...</span>
+					<span className='text-chrome-muted'>Loading...</span>
 				</div>
 			) : isError ? (
 				<div className='text-center py-2xl text-error'>
@@ -93,7 +93,7 @@ export default function EventsPage() {
 					))}
 				</div>
 			) : (
-				<div className='py-2xl text-center text-teal-100/60'>No events found</div>
+				<div className='py-2xl text-center text-chrome-muted'>No events found</div>
 			)}
 		{ /*Load more button*/ }
 			{hasNextPage && (
@@ -102,7 +102,7 @@ export default function EventsPage() {
 						variant="outline"
 						onClick={() => fetchNextPage()}
 						disabled={isFetchingNextPage || !isOnline}
-						className="min-w-50 border-teal-300/40 bg-teal-700/40 text-white hover:bg-teal-600/50 hover:text-white"
+						className="btn-chrome-loadmore min-w-50"
 					>
 						{isFetchingNextPage ? "Loading..." : "Load more"}
 					</Button>
@@ -110,7 +110,7 @@ export default function EventsPage() {
 			)}
 		{ /*All pages loaded*/ }
 			{!hasNextPage && events.length > 0 && (
-				<p className="mt-xl text-center text-teal-100/60">No more events</p>
+				<p className="mt-xl text-center text-chrome-muted">No more events</p>
 			)}
 		</div>
 	);

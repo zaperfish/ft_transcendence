@@ -11,6 +11,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/Dropdown-menu';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -40,13 +41,13 @@ export default function navigation() {
 	];
 
 	return (
-		<header className='sticky top-0 z-50 border-b border-teal-400/15 bg-slate-950/80 px-4 py-3 backdrop-blur-md lg:px-lg lg:py-md'>
+		<header className='sticky top-0 z-50 border-b border-chrome-nav bg-chrome-nav px-4 py-3 backdrop-blur-md lg:px-lg lg:py-md'>
 			<div className='flex items-center justify-between w-full'>
 				{/* left: logo + navigation links (desktop) */}
 				<div className='flex items-center gap-4 lg:gap-lg'>
 					<Link href='/' className='flex items-center gap-sm'>
 						<Image src='/logo.png' alt='Camaraderie logo' width={32} height={32} className='h-8 w-8' />
-						<span className='font-heading text-xl font-bold text-teal-50'>
+						<span className='font-heading text-xl font-bold text-chrome-title'>
 						Camaraderie
 						</span>
 					</Link>
@@ -56,20 +57,21 @@ export default function navigation() {
 							<Link
 								key={item.href}
 								href={item.href}
-								className='text-teal-100/75 transition-colors hover:text-teal-300'
+								className='text-chrome-nav transition-colors hover:text-chrome-nav-hover'
 							>
 							{item.label}
 							</Link>
 						))}
 					</nav>
 				</div>
-				{/* right: navigation links (mobile) + user avatar */}
+				{/* right: theme toggle + navigation links (mobile) + user avatar */}
 				<div className='flex items-center gap-2 lg:gap-md'>
+					<ThemeToggle />
 					{/* NavLinks for Mobile (dropdown menu) */}
 					<div className='lg:hidden'>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant='ghost' size='icon' className='text-teal-100 hover:bg-white/10 hover:text-teal-50'>
+								<Button variant='ghost' size='icon' className='text-chrome-nav hover:bg-white/10 hover:text-chrome-title'>
 									<Menu className='h-5 w-5'/>
 								</Button>
 							</DropdownMenuTrigger>

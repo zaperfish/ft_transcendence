@@ -8,16 +8,16 @@ export default function PrivacyPage() {
           <BackButton />
         </div>
 
-        <h1 className="font-heading text-4xl font-bold text-teal-50">
+        <h1 className="font-heading text-4xl font-bold text-chrome-title">
           Privacy Policy
         </h1>
-        <p className="mt-4 text-sm text-teal-100/60">
+        <p className="mt-4 text-sm text-chrome-muted">
           Last updated: June 22, 2026
         </p>
 
-        <div className="mt-8 space-y-6 text-sm leading-6 text-teal-100/80">
+        <div className="mt-8 space-y-6 text-sm leading-6 text-chrome-body">
           <section>
-            <h2 className="text-base font-semibold text-teal-50">Information we collect</h2>
+            <h2 className="text-base font-semibold text-chrome-title">Information we collect</h2>
             <p className="mt-2">
               We collect the information needed to provide and improve our service,
               including your account details, profile information, event activity,
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-teal-50">How we use your information</h2>
+            <h2 className="text-base font-semibold text-chrome-title">How we use your information</h2>
             <p className="mt-2">
               We use your information to create and manage your account, allow you
               to join and organize events, improve security and performance, and
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-teal-50">Sharing of information</h2>
+            <h2 className="text-base font-semibold text-chrome-title">Sharing of information</h2>
             <p className="mt-2">
               We do not sell your personal information. We may share information
               when required by law, to protect user safety, or to enforce our
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-teal-50">Your choices</h2>
+            <h2 className="text-base font-semibold text-chrome-title">Your choices</h2>
             <p className="mt-2">
               You may request access to, correction of, or deletion of your
               personal information by contacting us. We will do our best to
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-teal-50">Changes to this policy</h2>
+            <h2 className="text-base font-semibold text-chrome-title">Changes to this policy</h2>
             <p className="mt-2">
               We may update this Privacy Policy from time to time. Continued use
               of the service after changes are made means you accept the updated

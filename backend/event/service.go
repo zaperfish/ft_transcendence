@@ -153,7 +153,6 @@ func (s *eventServiceImpl) GetEvent(ctx context.Context, eventID uint) (*Event, 
 func (s *eventServiceImpl) GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error) {
 
 	event, err := s.repo.GetForUser(ctx, userID, eventID)
-	log.Printf("repo error: %v\n", err)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +177,7 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, o
 
 	events, total, err := s.repo.ListByUserID(ctx, limit, offset, userID, filter)
 	if err != nil {
-		return nil, 0, fmt.Errorf("service: failed to list: %w", err)
+		return nil, 0, err
 	}
 
 	eventsWithUserCtx := make([]EventWithUserContext, len(events))

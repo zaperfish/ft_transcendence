@@ -271,6 +271,10 @@ type EventWithRole struct {
 // having to individually query the participant count for each event is the tradeof for getting rid of NumParticipants in the GormEventModel
 // there might be a smarter, more sql heavy version to do this with a single query but I don't know how
 func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset int, userID uint, filter EventFilter) ([]EventWithRole, int64, error) {
+	if _, err := user.NewUserRepository(r.db).GetByID(ctx, userID); err != nil {
+		return nil, 0, err
+	}
+
 	q := r.db.WithContext(ctx).
 		Model(&GormEventModel{}).
 		Select(`
@@ -284,6 +288,10 @@ func (r *eventRepositoryImpl) ListByUserID(ctx context.Context, limit, offset in
 		AND event_users.user_id = ?
 		AND event_users.deleted_at IS NULL
     `, userID)
+
+	if q.Error != nil {
+		return nil, 0, errs.ErrorDB(q.Error)
+	}
 
 	switch filter {
 	case EventFilterMember:

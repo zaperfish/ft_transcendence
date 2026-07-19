@@ -84,7 +84,7 @@ type V1CreateEventInput struct {
 		LocationName    string    `json:"location_name"    minLength:"3"  maxLength:"100" example:"Betahaus"                            doc:"Name of the location"`
 		LocationAddress string    `json:"location_address" minLength:"5"  maxLength:"200" example:"Prinzessinnenstraße 19, 10969 Berlin" doc:"Address of the location"`
 		MaxCapacity     uint      `json:"max_capacity"     minimum:"1"    maximum:"10000" example:"100"                                 doc:"Maximum number of attendees"`
-		UserID          uint      `json:"user_id" example:"1" doc:"The user admin for the event"`
+		UserID          uint      `json:"user_id" minimum:"1" example:"1" doc:"The user admin for the event"`
 	}
 }
 
@@ -242,6 +242,9 @@ func (h *EventHandler) V1UpdateEvent(ctx context.Context, input *UpdateEventInpu
 	if errors.Is(err, errs.ErrInvalidInput) {
 		return nil, huma.Error400BadRequest(err.Error())
 	}
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to update event", err)
 	}
@@ -276,6 +279,9 @@ func (h *EventHandler) V1PutEvent(ctx context.Context, input *PutEventInput) (*U
 	updated, err := h.service.UpdateEvent(ctx, input.ID, updates)
 	if errors.Is(err, errs.ErrInvalidInput) {
 		return nil, huma.Error400BadRequest(err.Error())
+	}
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
 	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to update event", err)
@@ -392,6 +398,9 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 	}
 
 	events, total, err := h.service.ListEvents(ctx, userID, input.PageSize, input.PageSize*(input.Page-1), input.Filter)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to list events", err)
 	}
@@ -615,10 +624,13 @@ func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) 
 		return huma.Error401Unauthorized("no authenticated user", err)
 	}
 	event, err := h.service.GetEventForUser(ctx, userID, eventID)
-	if err != nil && errors.Is(err, errs.ErrInternal) {
+	if errors.Is(err, errs.ErrNotFound) {
+		return huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return huma.Error500InternalServerError(err.Error())
 	}
-	if err != nil || event.Role != "admin" {
+	if event.Role != "admin" {
 		return huma.Error401Unauthorized("must be admin")
 	}
 	return nil

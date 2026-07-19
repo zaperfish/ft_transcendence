@@ -1,3 +1,8 @@
+'use client';
+
+import { useTheme } from "@/lib/context/ThemeContext";
+import { cn } from "@/lib/utils";
+
 interface CreateEventCardProps {
 	onClick?: () => void;
 }
@@ -8,16 +13,48 @@ interface CreateEventCardProps {
  * and triggers the provided onClick callback when clicked.
  */
 export default function CreateEventCard({ onClick }: CreateEventCardProps) {
+	const { theme } = useTheme();
+	const isClassic = theme === "classic";
+
 	return (
 		<div
 			onClick={onClick}
-			className="flex h-full min-h-[350px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-teal-700/25 bg-white shadow-md transition-colors duration-200 hover:bg-teal-50"
+			className={cn(
+				"flex h-full min-h-[350px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors duration-200",
+				isClassic
+					? "border-border hover:bg-surface-dim"
+					: "border-teal-700/25 bg-white shadow-md hover:bg-teal-50",
+			)}
 		>
-			<div className="mb-md flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
-				<PlusIcon className="size-6 text-teal-700"/>
+			<div
+				className={cn(
+					"mb-md flex h-12 w-12 items-center justify-center rounded-full",
+					isClassic ? "bg-surface-container" : "bg-teal-100",
+				)}
+			>
+				<PlusIcon
+					className={cn(
+						"size-6",
+						isClassic ? "text-text-tertiary" : "text-teal-700",
+					)}
+				/>
 			</div>
-			<h3 className="text-lg font-semibold text-text-primary">Create Event</h3>
-			<p className="mt-xs text-sm text-text-secondary">Host your own event</p>
+			<h3
+				className={cn(
+					"text-lg font-semibold",
+					isClassic ? "text-text-secondary" : "text-text-primary",
+				)}
+			>
+				Create Event
+			</h3>
+			<p
+				className={cn(
+					"mt-xs text-sm",
+					isClassic ? "text-text-tertiary" : "text-text-secondary",
+				)}
+			>
+				Host your own event
+			</p>
 		</div>
 	);
 }

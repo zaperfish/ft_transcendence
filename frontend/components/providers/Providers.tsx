@@ -22,8 +22,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 				<AuthProvider>
 					{children}
 				</AuthProvider>
+				<ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
 			</ThemeProvider>
-			<ReactQueryDevtools initialIsOpen={false} />
 		</QueryClientProvider>
 	);
 }

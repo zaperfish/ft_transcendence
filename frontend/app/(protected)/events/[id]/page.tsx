@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getEventById, getEventParticipants, deleteEvent, removeParticipant, leaveEvent, uploadEventImage, updateEventImage } from "@/lib/api/events";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useTheme } from "@/lib/context/ThemeContext";
 import EditEventModal from "@/components/features/events/EditEventModal";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
 import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon, MessageSquareIcon, EditIcon, XIcon, PencilIcon } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 /**
  * EventDetailPage displays detailed information for a single event,
@@ -24,6 +26,8 @@ export default function EventDetailPage() {
 	const numericId = Number(eventId);
 	const router = useRouter();
 	const { user, isOnline } = useAuth();
+	const { theme } = useTheme();
+	const isClassic = theme === "classic";
 	const queryClient = useQueryClient();
 	// Use ref to operate hidden file input in DOM
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -192,7 +196,15 @@ export default function EventDetailPage() {
 	return (
 		<div className="w-full px-xl pt-2 pb-8 max-w-6xl mx-auto">
 			{ /* Return button */ }
-			<Button variant="ghost" onClick={handleBackToEvents}>
+			<Button
+				variant="ghost"
+				onClick={handleBackToEvents}
+				className={cn(
+					isClassic
+						? "text-muted-foreground hover:text-foreground"
+						: "text-chrome-muted hover:bg-white/10 hover:text-chrome-title",
+				)}
+			>
 			← Back to MyEvents
 			</Button>
 			{ /* Card for Event information display */ }
@@ -276,11 +288,10 @@ export default function EventDetailPage() {
 				{ /* Admin-only operations */ }
 				{isCreator && (
 					<>
-						{ /* Edit event information */ }
+						{ /* Edit event information — same fill as Open Event Chatroom */ }
 						<Button
 							onClick={handleEditClick}
-							variant="outline"
-							className={`w-full ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
+							className={`w-full bg-primary text-white ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
 						>
 							<EditIcon className="size-4 mr-2" />
 							Modify Event Information
@@ -289,19 +300,19 @@ export default function EventDetailPage() {
 						<Button
 							onClick={handleDeleteEvent}
 							variant="outline"
-							className={`w-full text-error border-error hover:bg-error/10 ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
+							className={`w-full border-error bg-error/10 text-error hover:bg-transparent hover:text-error ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
 							disabled={deleteMutation.isPending}
 						>
 							{deleteMutation.isPending ? 'deleting..' : 'Delete Event'}
 						</Button>
 					</>
 				)}
-				{ /* Leave event */ }
+				{ /* Leave event — swapped default/hover fill vs outline red */ }
 				{isParticipant && !isCreator && (
 					<Button
 						onClick={handleLeaveEvent}
 						variant="outline"
-						className={`w-full text-error border-error hover:bg-error/10 ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
+						className={`w-full border-error bg-error/10 text-error hover:bg-transparent hover:text-error ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
 						disabled={leaveMutation.isPending}
 					>
 						{leaveMutation.isPending ? 'unregistering..' : 'Unregister'}

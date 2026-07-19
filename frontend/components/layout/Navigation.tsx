@@ -11,10 +11,11 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/Dropdown-menu';
-import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useTheme } from '@/lib/context/ThemeContext';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 /**
  * Top-level navigation bar with logo, primary links (links for desktop and dropdown menu for mobile), and user dropdown menu.
@@ -23,6 +24,8 @@ import { toast } from 'sonner';
  */
 export default function navigation() {
 	const { user, logout, isOnline } = useAuth();
+	const { theme } = useTheme();
+	const isClassic = theme === 'classic';
 	const router = useRouter();
 
 	const handleLogout = async () => {
@@ -41,13 +44,25 @@ export default function navigation() {
 	];
 
 	return (
-		<header className='sticky top-0 z-50 border-b border-chrome-nav bg-chrome-nav px-4 py-3 backdrop-blur-md lg:px-lg lg:py-md'>
+		<header
+			className={cn(
+				'sticky top-0 z-50 px-4 py-3 lg:px-lg lg:py-md',
+				isClassic
+					? 'border-b border-border bg-surface'
+					: 'border-b border-chrome-nav bg-chrome-nav backdrop-blur-md',
+			)}
+		>
 			<div className='flex items-center justify-between w-full'>
 				{/* left: logo + navigation links (desktop) */}
 				<div className='flex items-center gap-4 lg:gap-lg'>
 					<Link href='/' className='flex items-center gap-sm'>
 						<Image src='/logo.png' alt='Camaraderie logo' width={32} height={32} className='h-8 w-8' />
-						<span className='font-heading text-xl font-bold text-chrome-title'>
+						<span
+							className={cn(
+								'font-heading text-xl font-bold',
+								isClassic ? 'text-text-primary' : 'text-chrome-title',
+							)}
+						>
 						Camaraderie
 						</span>
 					</Link>
@@ -57,21 +72,31 @@ export default function navigation() {
 							<Link
 								key={item.href}
 								href={item.href}
-								className='text-chrome-nav transition-colors hover:text-chrome-nav-hover'
+								className={cn(
+									'transition-colors',
+									isClassic
+										? 'text-text-secondary hover:text-primary hover:shadow'
+										: 'text-chrome-nav hover:text-chrome-nav-hover',
+								)}
 							>
 							{item.label}
 							</Link>
 						))}
 					</nav>
 				</div>
-				{/* right: theme toggle + navigation links (mobile) + user avatar */}
+				{/* right: navigation links (mobile) + user avatar */}
 				<div className='flex items-center gap-2 lg:gap-md'>
-					<ThemeToggle />
 					{/* NavLinks for Mobile (dropdown menu) */}
 					<div className='lg:hidden'>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant='ghost' size='icon' className='text-chrome-nav hover:bg-white/10 hover:text-chrome-title'>
+								<Button
+									variant='ghost'
+									size='icon'
+									className={cn(
+										!isClassic && 'text-chrome-nav hover:bg-white/10 hover:text-chrome-title',
+									)}
+								>
 									<Menu className='h-5 w-5'/>
 								</Button>
 							</DropdownMenuTrigger>

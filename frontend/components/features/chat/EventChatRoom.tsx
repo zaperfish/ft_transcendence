@@ -45,6 +45,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 		retry: false,
 		refetchOnWindowFocus: false,
 	});
+	const recheckChatAccess = historyQuery.refetch;
 
 	const eventQuery = useQuery({
 		queryKey: ['event', eventId],
@@ -174,6 +175,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 			);
 			if (socketRef.current === socket) {
 				socketRef.current = null;
+				void recheckChatAccess();
 			}
 		};
 
@@ -183,7 +185,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 			}
 			socket.close();
 		};
-	}, [eventId, historyQuery.isSuccess]);
+	}, [eventId, historyQuery.isSuccess, recheckChatAccess]);
 
 	function handleSendMessage(event: React.SubmitEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -254,7 +256,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 		);
 	}
 
-	if (historyQuery.isError) {
+	if (historyQuery.isError && historyQuery.data === undefined) {
 		return (
 			<div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-none border-y border-border bg-surface px-xl text-center shadow-sm md:rounded-lg md:border md:shadow-sm">
 				<h1 className="text-2xl font-heading font-bold text-text-primary">

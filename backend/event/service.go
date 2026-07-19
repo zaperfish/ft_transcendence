@@ -142,7 +142,8 @@ func (s *eventServiceImpl) UpdateEvent(ctx context.Context, eventID uint, update
 }
 
 func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error {
-	if err := s.DeleteEventImage(ctx, eventID); err != nil {
+	err := s.DeleteEventImage(ctx, eventID)
+	if err != nil && !errors.Is(err, errs.ErrNotFound) {
 		return err
 	}
 	return s.repo.Delete(ctx, eventID)
@@ -342,7 +343,7 @@ func (s *eventServiceImpl) UpdateEventImage(ctx context.Context, eventID uint, i
 func (s *eventServiceImpl) DeleteEventImage(ctx context.Context, eventID uint) error {
 	path, err := s.repo.GetImagePath(ctx, eventID)
 	if err != nil {
-		return errs.NewCamaError(errs.ErrInvalidInput, err.Error())
+		return err
 	}
 
 	err = s.repo.DeleteImagePath(ctx, eventID)

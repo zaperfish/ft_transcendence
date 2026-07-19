@@ -25,7 +25,7 @@ func RegisterPublicRoutes(api huma.API, h UserHandler) {
         Method:         http.MethodPost,
         Path:           "/api/auth/login",
 		Summary:		"Login",
-		Description:	"Acquire a testing JWT",
+		Description:	"Acquire a JWT",
         DefaultStatus:  http.StatusOK,
         Tags:           []string{"Authentification"},
     }, h.handleLoginUser)

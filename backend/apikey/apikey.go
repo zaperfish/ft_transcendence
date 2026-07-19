@@ -55,7 +55,7 @@ func StoreApiKey(key string, ctx context.Context, db *gorm.DB) error {
 
 	err := gorm.G[GormApiKeyModel](db.Debug()).Create(ctx, &model)
 	if err != nil {
-		return err
+		return huma.Error409Conflict("api key exists")
 	}
 
 	return nil
@@ -127,7 +127,7 @@ func (h *ApiKeyHandler) DeleteApiKeyHandler(ctx context.Context, input *DeleteAp
 	}
 
 	if rows == 0 {
-		return nil, fmt.Errorf("api key not found")
+		return nil, huma.Error404NotFound("record not found")
 	}
 
 	return &DeleteApiKeyOutput{}, nil

@@ -176,7 +176,7 @@ func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID ui
 	}
 
 	var eventRole EventWithRole
-	if err := r.db.WithContext(ctx).
+	tx := r.db.WithContext(ctx).
 		Model(&GormEventModel{}).
 		Select(`
         events.*,
@@ -189,8 +189,12 @@ func (r *eventRepositoryImpl) GetForUser(ctx context.Context, userID, eventID ui
 		AND event_users.deleted_at IS NULL
     `, userID).
 		Where("events.id = ?", eventID).
-		Scan(&eventRole).Error; err != nil {
-		return nil, errs.ErrorDB(err)
+		Scan(&eventRole)
+	if tx.Error != nil {
+		return nil, errs.ErrorDB(tx.Error)
+	}
+	if tx.RowsAffected == 0 {
+		return nil, errs.NewCamaError(errs.ErrNotFound, "")
 	}
 
 	eventRole.NumRegistered = count

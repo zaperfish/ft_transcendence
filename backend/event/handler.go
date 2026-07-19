@@ -330,7 +330,10 @@ func (h *EventHandler) GetEvent(ctx context.Context, input *GetEventInput) (*Get
 	}
 
 	event, err := h.service.GetEventForUser(ctx, userID, input.ID)
-	if err != nil {
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to get event", err)
 	}
 
@@ -345,7 +348,10 @@ func (h *EventHandler) GetEvent(ctx context.Context, input *GetEventInput) (*Get
 
 func (h *EventHandler) V1GetEvent(ctx context.Context, input *GetEventInput) (*GetEventOutput, error) {
 	event, err := h.service.GetEvent(ctx, input.ID)
-	if err != nil {
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to get event", err)
 	}
 

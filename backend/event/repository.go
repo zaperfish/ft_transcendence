@@ -4,6 +4,7 @@ import (
 	// Std
 	"context"
 	"time"
+	"log"
 
 	// Intern
 	"ft_transcendence/backend/errs"
@@ -133,10 +134,12 @@ func (r *eventRepositoryImpl) Delete(ctx context.Context, eventID uint) error {
 	}
 	result := r.db.Debug().Delete(&event)
 	if result.Error != nil {
+		log.Printf("db error: %v\n", result.Error)
 		return errs.ErrorDB(result.Error)
 	}
 
 	if result.RowsAffected == 0 {
+		log.Printf("no rows affected\n")
 		return errs.NewCamaError(errs.ErrNotFound, "")
 	}
 

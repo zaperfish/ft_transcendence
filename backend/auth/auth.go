@@ -32,8 +32,8 @@ func MakeLogoutCookie() http.Cookie {
 func MakeJWT(sub string) (string, error) {
 	claims := map[string]any{
 		"sub": sub,
-		"exp": time.Now().Add(jwtExpirationTime).Unix(),
-		"iat": time.Now().Unix(),
+		"exp": time.Now().UTC().Add(jwtExpirationTime).Unix(),
+		"iat": time.Now().UTC().Unix(),
 	}
 	_, ts, err := tokenAuth.Encode(claims)
 	if err != nil {
@@ -68,7 +68,7 @@ func MakeJWTCookie(sub string) (http.Cookie, error) {
 		Name:     "jwt",
 		Value:    t,
 		Path:     "/api",
-		Expires:  time.Now().Add(jwtExpirationTime),
+		Expires:  time.Now().UTC().Add(jwtExpirationTime),
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,

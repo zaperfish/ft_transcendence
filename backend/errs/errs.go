@@ -17,7 +17,6 @@ const (
 	ErrInvalidInput
 	ErrInternal
 	ErrCanNotRemoveAdmin
-	ErrUserNotInEvent
 )
 
 func (k ErrKind) Error() string {
@@ -32,8 +31,6 @@ func (k ErrKind) Error() string {
 		return "internal error"
 	case ErrCanNotRemoveAdmin:
 		return "can not remove admin from event"
-	case ErrUserNotInEvent:
-		return "user is not registered for the event"
 	default:
 		return "unknown error"
 	}

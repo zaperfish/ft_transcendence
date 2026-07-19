@@ -316,7 +316,7 @@ export default function EventDetailPage() {
 					<span className="text-text-secondary">{event.num_registered}/{event.max_capacity}</span>
 				</div>
 				{ /* Display participants */ }
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-md">
+				<div className="flex flex-col gap-md">
 					{participants.map((participant) => (
 						<div key={participant.id} className="flex items-center gap-sm">
 							{ /* Display participant's avatar*/ }

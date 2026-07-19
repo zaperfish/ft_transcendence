@@ -22,9 +22,7 @@ Additional work in progress / not counted toward the claimable total yet:
 |--------|------|--------|--------|-------|
 | Standard user management and authentication | Major | 2 | 🟡 Partial | Login/register + **Settings page** done; friends system / avatar upload / dedicated profile page still missing for full Major claim |
 | User interaction (chat, profiles, friends) | Major | 2 | 🟡 Partial | Event chat exists; friends system missing |
-| File upload and management system | Minor | 1 | ✅ Extra | Event cover image upload/get/update/delete with validation |
-| Advanced search (filters, pagination) | Minor | 1 | 🟡 Partial | Pagination + membership filters; no full multi-field search/sort |
-| CI/CD deployment pipeline | Minor (Modules of choice) | 1 | ✅ Extra | Tag → SSH → Podman Compose deploy |
+| File upload and management system | Minor | 1 | 🟡 Partial | Event cover image upload/get/update/delete with validation |
 
 ## List of chosen modules (Major and Minor)
 

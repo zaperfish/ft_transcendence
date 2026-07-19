@@ -65,6 +65,9 @@ func (h *MeHandler) handlePatchMe(ctx context.Context, in *PatchMeInput) (*user.
 		Email: in.Body.Email,
 	}
 	u, err := h.su.PatchUser(ctx, id, patch)
+	if errors.Is(err, errs.ErrConflict) {
+		return nil, huma.Error409Conflict(err.Error())
+	}
 	if errors.Is(err, errs.ErrNotFound) {
 		return nil, huma.Error404NotFound(err.Error())
 	}

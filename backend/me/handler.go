@@ -164,7 +164,7 @@ func (h *MeHandler) handleLeaveEventMe(ctx context.Context, input *LeaveEventInp
 	if err != nil && errors.Is(err, errs.ErrCanNotRemoveAdmin) {
 		return nil, huma.Error403Forbidden(err.Error())
 	}
-	if err != nil && errors.Is(err, errs.ErrUserNotInEvent) {
+	if err != nil && errors.Is(err, errs.ErrNotFound) {
 		return nil, huma.Error404NotFound(err.Error())
 	}
 	if err != nil {

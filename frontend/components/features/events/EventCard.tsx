@@ -106,8 +106,8 @@ export default function EventCard({
 			{/* Event info */}
 			<div className="p-md flex flex-col flex-1">
 				<div className="flex-1">
-					<h3 className="text-xl font-semibold text-text-primary line-clamp-2 leading-snug">{data.title}</h3>
-					<p className="text-sm text-text-secondary mt-xs overflow-y-auto max-h-18 pr-1">{data.description}</p>
+					<h3 className="text-xl font-semibold text-text-primary truncate leading-snug">{data.title}</h3>
+					<p className="text-sm text-text-secondary mt-xs truncate">{data.description}</p>
 				</div>
 				<div className="mt-md space-y-sm text-text-secondary text-sm shrink-0">
 					<div className="flex items-center gap-sm">
@@ -119,8 +119,8 @@ export default function EventCard({
 						<span>{timeStr} ({data.duration} min)</span>
 					</div>
 					<div className="flex items-center gap-sm">
-						<MapPinIcon className="size-4 text-text-tertiary"/>
-						<span>{data.location_name} {data.location_address}</span>
+						<MapPinIcon className="size-4 text-text-tertiary shrink-0"/>
+						<span className="truncate">{data.location_name} {data.location_address}</span>
 					</div>
 					<div className="flex items-center gap-sm">
 						<UserIcon className="size-4 text-text-tertiary"/>

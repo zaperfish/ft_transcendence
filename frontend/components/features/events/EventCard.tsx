@@ -104,8 +104,8 @@ export default function EventCard({
 				/>
 			</div>
 			{/* Event info */}
-			<div className="p-md flex flex-col flex-1">
-				<div className="flex-1">
+			<div className="p-md flex flex-col flex-1 min-w-0">
+				<div className="min-h-0 overflow-hidden">
 					<h3 className="text-xl font-semibold text-text-primary truncate leading-snug">{data.title}</h3>
 					<p className="text-sm text-text-secondary mt-xs truncate">{data.description}</p>
 				</div>
@@ -118,7 +118,7 @@ export default function EventCard({
 						<ClockIcon className="size-4 text-text-tertiary"/>
 						<span>{timeStr} ({data.duration} min)</span>
 					</div>
-					<div className="flex items-center gap-sm">
+					<div className="flex items-center gap-sm min-w-0">
 						<MapPinIcon className="size-4 text-text-tertiary shrink-0"/>
 						<span className="truncate">{data.location_name} {data.location_address}</span>
 					</div>
@@ -127,7 +127,7 @@ export default function EventCard({
 						<span>{data.num_registered}/{data.max_capacity} registered</span>
 					</div>
 				</div>
-				<div className="mt-auto pt-md">
+				<div className="mt-auto pt-md w-full">
 					{isDetailMode ? (
 						<Button
 							onClick={onDetail}

@@ -621,10 +621,13 @@ func confirmAdminPriviliges(ctx context.Context, h *EventHandler, eventID uint) 
 		return huma.Error401Unauthorized("no authenticated user", err)
 	}
 	event, err := h.service.GetEventForUser(ctx, userID, eventID)
-	if err != nil && errors.Is(err, errs.ErrInternal) {
+	if errors.Is(err, errs.ErrNotFound) {
+		return huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) || err != nil {
 		return huma.Error500InternalServerError(err.Error())
 	}
-	if err != nil || event.Role != "admin" {
+	if event.Role != "admin" {
 		return huma.Error401Unauthorized("must be admin")
 	}
 	return nil

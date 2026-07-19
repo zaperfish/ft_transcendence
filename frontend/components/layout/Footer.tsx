@@ -37,6 +37,7 @@ export function Footer() {
 					{isOnline ? (
 						<Link
 							href="/privacy"
+							prefetch={false}
 							className={isClassic ? "hover:text-foreground" : "hover:text-chrome-title"}
 						>
 						Privacy Policy
@@ -48,6 +49,7 @@ export function Footer() {
 					{isOnline ? (
 						<Link
 							href="/terms"
+							prefetch={false}
 							className={isClassic ? "hover:text-foreground" : "hover:text-chrome-title"}
 						>
 						Terms of Service

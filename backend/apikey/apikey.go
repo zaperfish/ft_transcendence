@@ -112,7 +112,7 @@ func (h *ApiKeyHandler) CreateApiKeyHandler(ctx context.Context, input *CreateAp
 }
 
 type DeleteApiKeyInput struct {
-	ID string `path:"id"`
+	ID uint `path:"id"`
 }
 
 type DeleteApiKeyOutput struct{}

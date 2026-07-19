@@ -61,10 +61,14 @@ func (h *Handler) handleGetEventMessages(ctx context.Context, input *getMessages
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
+	senderNames, err := h.getMessageSenderNames(ctx, messages)
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
 
 	return &messagesOutput{
 		Body: MessageListDTO{
-			Data: messagesToDTOsOldestFirst(messages),
+			Data: messagesToDTOsOldestFirst(messages, senderNames),
 		},
 	}, nil
 }
@@ -108,6 +112,17 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	senderNames, err := h.getUserNamesByIDs(r.Context(), []uint{userID})
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	senderName, ok := senderNames[userID]
+	if !ok {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	conn, err := websocket.Accept(w, r, nil)
 	if err != nil {
 		return
@@ -116,9 +131,10 @@ func (h *Handler) handleEventChatWebSocket(w http.ResponseWriter, r *http.Reques
 	conn.SetReadLimit(maxWebSocketMessagePayloadSize)
 
 	client := &Client{
-		userID: userID,
-		conn:   conn,
-		send:   make(chan Message, clientSendBuffer),
+		userID:   userID,
+		userName: senderName,
+		conn:     conn,
+		send:     make(chan MessageDTO, clientSendBuffer),
 	}
 
 	room := h.Hub.JoinRoom(eventID, client)

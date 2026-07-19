@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { getEventById, getEventParticipants } from '@/lib/api/events';
+import { getEventById } from '@/lib/api/events';
 import { useAuth } from '@/lib/hooks/useAuth';
 import {
 	buildEventChatWebSocketUrl,
@@ -46,12 +46,6 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 		refetchOnWindowFocus: false,
 	});
 
-	const participantsQuery = useQuery({
-		queryKey: ['event-participants', eventId],
-		queryFn: () => getEventParticipants(eventId),
-		retry: false,
-	});
-
 	const eventQuery = useQuery({
 		queryKey: ['event', eventId],
 		queryFn: () => getEventById(eventId),
@@ -60,7 +54,6 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 
 	// REST history
 	const historyData = historyQuery.data?.data;
-	const participantsData = participantsQuery.data ?? [];
 	const eventTitle = eventQuery.data?.title ?? `Event #${eventId}`;
 	const currentUserID = user?.id;
 	const trimmedDraft = draft.trim();
@@ -89,18 +82,6 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 	}[socketStatus];
 	const connectionStatusDotClass =
 		socketStatus === 'open' ? 'bg-success' : 'bg-error';
-
-	const participantNamesById = useMemo(
-		() =>
-			new Map(
-				(participantsData ?? []).map((participant) => [participant.id, participant.name])
-			),
-		[participantsData]
-	);
-	const participantsById = useMemo(
-		() => new Map(participantsData.map((participant) => [participant.id, participant])),
-		[participantsData]
-	);
 
 	const historyError = historyQuery.error instanceof ApiError ? historyQuery.error : null;
 	const lastMessage = chatMessages[chatMessages.length - 1] ?? null;
@@ -317,14 +298,7 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 						<div className="space-y-md">
 							{chatMessages.map((message, index) => {
 								const isCurrentUserMessage = currentUserID === message.user_id;
-								const participant = participantsById.get(message.user_id);
-								const senderName =
-									(isCurrentUserMessage ? user?.name : participant?.name) ??
-									participantNamesById.get(message.user_id) ??
-									`User #${message.user_id}`;
-								const senderAvatar = isCurrentUserMessage
-									? user?.avatar
-									: participant?.avatar;
+								const senderName = message.sender_name || `User #${message.user_id}`;
 
 								return (
 									<div
@@ -342,7 +316,6 @@ export default function EventChatRoom({ eventId }: EventChatRoomProps) {
 											}
 										>
 											<Avatar size="sm">
-												<AvatarImage src={senderAvatar} alt={senderName} />
 												<AvatarFallback
 													className={
 														isCurrentUserMessage

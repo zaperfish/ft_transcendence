@@ -17,27 +17,29 @@ type Message struct {
 }
 
 type MessageDTO struct {
-	ID        uint      `json:"id" doc:"ID of the message"`
-	EventID   uint      `json:"event_id" doc:"ID of the event"`
-	UserID    uint      `json:"user_id" doc:"ID of the sender"`
-	Content   string    `json:"content" doc:"Message content"`
-	CreatedAt time.Time `json:"created_at" doc:"Time the message was created"`
+	ID         uint      `json:"id" doc:"ID of the message"`
+	EventID    uint      `json:"event_id" doc:"ID of the event"`
+	UserID     uint      `json:"user_id" doc:"ID of the sender"`
+	SenderName string    `json:"sender_name" doc:"Username of the sender"`
+	Content    string    `json:"content" doc:"Message content"`
+	CreatedAt  time.Time `json:"created_at" doc:"Time the message was created"`
 }
 
-func (m *Message) toDTO() MessageDTO {
+func (m *Message) toDTO(senderName string) MessageDTO {
 	return MessageDTO{
-		ID:        m.ID,
-		EventID:   m.EventID,
-		UserID:    m.UserID,
-		Content:   m.Content,
-		CreatedAt: m.CreatedAt,
+		ID:         m.ID,
+		EventID:    m.EventID,
+		UserID:     m.UserID,
+		SenderName: senderName,
+		Content:    m.Content,
+		CreatedAt:  m.CreatedAt,
 	}
 }
 
-func messagesToDTOsOldestFirst(messages []Message) []MessageDTO {
+func messagesToDTOsOldestFirst(messages []Message, senderNames map[uint]string) []MessageDTO {
 	dtos := make([]MessageDTO, len(messages))
 	for i, message := range messages {
-		dtos[len(messages)-1-i] = message.toDTO()
+		dtos[len(messages)-1-i] = message.toDTO(senderNames[message.UserID])
 	}
 
 	return dtos

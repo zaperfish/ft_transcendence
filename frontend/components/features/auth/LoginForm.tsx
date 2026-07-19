@@ -76,6 +76,7 @@ export function LoginForm({ onSuccess, disabled = false }: LoginFormProps) {
 				<Input
 					type='text' // Specify the type of input to enable browser behaviors
 					placeholder='Username'
+					autoComplete='username'
 					{...register('username')} // Register passing data collected from user input to 'Input'
 					className={errors.username ? 'border-error' : ''}
 				/>
@@ -88,6 +89,7 @@ export function LoginForm({ onSuccess, disabled = false }: LoginFormProps) {
 				<Input
 					type='password'
 					placeholder='Password'
+					autoComplete='current-password'
 					{...register('password')}
 					className={errors.password ? 'border-error' : ''}
 				/>

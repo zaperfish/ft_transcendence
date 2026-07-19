@@ -4,8 +4,6 @@ import (
 	// Std
 	"context"
 	"errors"
-	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -145,7 +143,7 @@ func (s *eventServiceImpl) UpdateEvent(ctx context.Context, eventID uint, update
 
 func (s *eventServiceImpl) DeleteEvent(ctx context.Context, eventID uint) error {
 	if err := s.DeleteEventImage(ctx, eventID); err != nil {
-		log.Printf("DeleteEventImage: %v\n", err)
+		return err
 	}
 	return s.repo.Delete(ctx, eventID)
 }
@@ -162,7 +160,6 @@ func (s *eventServiceImpl) GetEvent(ctx context.Context, eventID uint) (*Event, 
 func (s *eventServiceImpl) GetEventForUser(ctx context.Context, userID, eventID uint) (*EventWithUserContext, error) {
 
 	event, err := s.repo.GetForUser(ctx, userID, eventID)
-	log.Printf("repo error: %v\n", err)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +184,7 @@ func (s *eventServiceImpl) ListEvents(ctx context.Context, userID uint, limit, o
 
 	events, total, err := s.repo.ListByUserID(ctx, limit, offset, userID, filter)
 	if err != nil {
-		return nil, 0, fmt.Errorf("service: failed to list: %w", err)
+		return nil, 0, err
 	}
 
 	eventsWithUserCtx := make([]EventWithUserContext, len(events))
@@ -211,7 +208,7 @@ func (s *eventServiceImpl) V1ListEvents(ctx context.Context, limit, offset int, 
 
 	events, total, err := s.repo.List(ctx, limit, offset)
 	if err != nil {
-		return nil, 0, fmt.Errorf("service: failed to list: %w", err)
+		return nil, 0, err
 	}
 
 	return events, total, nil
@@ -237,7 +234,7 @@ func (s *eventServiceImpl) AddParticipantAs(ctx context.Context, eventID, userID
 		}
 
 		if err := s.repo.CreateParticipantAs(ctx, tx, eventID, userID, role); err != nil {
-			return fmt.Errorf("failed to create participant: %w", err)
+			return err
 		}
 
 		return nil
@@ -251,17 +248,17 @@ func isValidRole(role string) bool {
 func (s *eventServiceImpl) RemoveParticipant(ctx context.Context, eventID, userID uint) error {
 	event, err := s.repo.GetForUser(ctx, userID, eventID)
 	if err != nil {
-		return errors.New("failed to get event user information")
+		return err
 	}
 	if event.Role == "none" {
-		return errs.ErrUserNotInEvent
+		return errs.NewCamaError(errs.ErrNotFound, "user not in event")
 	}
 	if event.Role == "admin" {
-		return errs.ErrCanNotRemoveAdmin
+		return errs.NewCamaError(errs.ErrCanNotRemoveAdmin, "")
 	}
 
 	if err := s.repo.DeleteParticipant(ctx, nil, eventID, userID); err != nil {
-		return fmt.Errorf("failed to remove participant: %w", err)
+		return err
 	}
 	if s.participantDisconnector != nil {
 		s.participantDisconnector.DisconnectParticipant(eventID, userID)
@@ -272,7 +269,7 @@ func (s *eventServiceImpl) RemoveParticipant(ctx context.Context, eventID, userI
 func (s *eventServiceImpl) ListParticipants(ctx context.Context, eventID uint) ([]user.User, error) {
 	users, err := s.repo.GetParticipants(ctx, eventID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get participants: %w", err)
+		return nil, err
 	}
 
 	return users, nil
@@ -312,7 +309,6 @@ func (s *eventServiceImpl) GetEventImage(ctx context.Context, eventID uint) ([]b
 
 	image, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Println("ReadFile err: ", err)
 		return nil, "", errs.NewCamaError(errs.ErrInternal, err.Error())
 	}
 

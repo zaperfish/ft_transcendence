@@ -206,6 +206,9 @@ func (h *EventHandler) UpdateEvent(ctx context.Context, input *UpdateEventInput)
 	if errors.Is(err, errs.ErrInvalidInput) {
 		return nil, huma.Error400BadRequest(err.Error())
 	}
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to update event", err)
 	}
@@ -284,7 +287,7 @@ func (h *EventHandler) V1PutEvent(ctx context.Context, input *PutEventInput) (*U
 		return nil, huma.Error404NotFound(err.Error())
 	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError("handler: failed to update event", err)
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &UpdateEventOutput{Body: updated.ToDTO()}, nil
@@ -305,8 +308,11 @@ func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput)
 	}
 
 	err := h.service.DeleteEvent(ctx, input.ID)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError("handler: failed to delete event", err)
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &DeleteEventOutput{}, nil
@@ -314,8 +320,11 @@ func (h *EventHandler) DeleteEvent(ctx context.Context, input *DeleteEventInput)
 
 func (h *EventHandler) V1DeleteEvent(ctx context.Context, input *DeleteEventInput) (*DeleteEventOutput, error) {
 	err := h.service.DeleteEvent(ctx, input.ID)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
-		return nil, huma.Error500InternalServerError("handler: failed to delete event", err)
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &DeleteEventOutput{}, nil
@@ -340,7 +349,7 @@ func (h *EventHandler) GetEvent(ctx context.Context, input *GetEventInput) (*Get
 		return nil, huma.Error404NotFound(err.Error())
 	}
 	if errors.Is(err, errs.ErrInternal) || err != nil {
-		return nil, huma.Error500InternalServerError("handler: failed to get event", err)
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	output := GetEventOutput{Body: event.ToDTO()}
@@ -398,6 +407,9 @@ func (h *EventHandler) ListEvents(ctx context.Context, input *ListEventsInput) (
 	}
 
 	events, total, err := h.service.ListEvents(ctx, userID, input.PageSize, input.PageSize*(input.Page-1), input.Filter)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
 	if err != nil {
 		return nil, huma.Error500InternalServerError("handler: failed to list events", err)
 	}
@@ -459,8 +471,11 @@ type AddParticipantOutput struct {
 func (h *EventHandler) AddParticipant(ctx context.Context, input *AddParticipantInput) (*AddParticipantOutput, error) {
 
 	err := h.service.AddParticipantAs(ctx, input.EventID, input.Body.UserID, input.Body.Role)
-	if err != nil {
-		return nil, huma.Error500InternalServerError("", err)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) || err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &AddParticipantOutput{}, nil
@@ -485,7 +500,7 @@ func (h *EventHandler) RemoveParticipant(ctx context.Context, input *RemoveParti
 	if err != nil && errors.Is(err, errs.ErrCanNotRemoveAdmin) {
 		return nil, huma.Error403Forbidden(err.Error())
 	}
-	if err != nil && errors.Is(err, errs.ErrUserNotInEvent) {
+	if err != nil && errors.Is(err, errs.ErrNotFound) {
 		return nil, huma.Error404NotFound(err.Error())
 	}
 	if err != nil {
@@ -509,8 +524,11 @@ type ListParticipantsOutputBody struct {
 
 func (h *EventHandler) ListParticipants(ctx context.Context, input *ListParticipantsInput) (*ListParticipantsOutput, error) {
 	users, err := h.service.ListParticipants(ctx, input.EventID)
-	if err != nil {
-		return nil, huma.Error500InternalServerError("", err)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) || err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	total := len(users)

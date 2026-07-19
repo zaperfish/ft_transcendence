@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
+import { useTheme } from "@/lib/context/ThemeContext";
 import CreateEventCard from "@/components/features/events/CreateEventCard";
 import CreateEventForm from "@/components/features/events/CreateEventForm";
 import EventCard from "@/components/features/events/EventCard";
@@ -9,6 +10,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { getEvents } from "@/lib/api/events";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 7
 
@@ -23,6 +25,8 @@ const PAGE_SIZE = 7
  */
 export default function HomePage() {
 	const { isOnline } = useAuth();
+	const { theme } = useTheme();
+	const isClassic = theme === "classic";
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const queryClient = useQueryClient();
 
@@ -90,10 +94,20 @@ export default function HomePage() {
 		<div className="w-full px-xl py-2xl">
 		{ /*Header description*/ }
 			<div className="mb-2xl">
-				<h1 className="text-4xl font-heading font-bold text-text-primary mb-md">
+				<h1
+					className={cn(
+						"mb-md font-heading text-4xl font-bold",
+						isClassic ? "text-text-primary" : "text-chrome-title",
+					)}
+				>
 				Discover Events
 				</h1>
-				<p className="text-text-secondary text-lg w-full">
+				<p
+					className={cn(
+						"w-full text-lg",
+						isClassic ? "text-text-secondary" : "text-chrome-body",
+					)}
+				>
 				Connect with your local community through shared interests,
 				professional workshops, and social gatherings.
 				</p>
@@ -112,7 +126,7 @@ export default function HomePage() {
 						variant="outline"
 						onClick={() => fetchNextPage()}
 						disabled={isFetchingNextPage || !isOnline}
-						className="min-w-50"
+						className={cn("min-w-50", !isClassic && "btn-chrome-loadmore")}
 					>
 						{isFetchingNextPage ? "Loading..." : "Load more"}
 					</Button>

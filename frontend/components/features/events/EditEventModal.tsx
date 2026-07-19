@@ -218,11 +218,12 @@ export default function EditEventModal({
 							variant='outline'
 							onClick={onClose}
 							disabled={isSubmitting}
+							className='border-error bg-error/10 text-error hover:bg-transparent hover:text-error'
 						>
 						Cancel
 						</Button>
 						<Button type='submit' disabled={updateMutation.isPending || isSubmitting}>
-							{updateMutation.isPending ? "Submitting..." : "submit"}
+							{updateMutation.isPending ? "Submitting..." : "Submit"}
 						</Button>
 					</div>
 					</form>

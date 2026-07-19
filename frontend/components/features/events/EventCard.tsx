@@ -1,9 +1,13 @@
+'use client';
+
 import { Button } from "@/components/ui/Button";
 import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon } from 'lucide-react';
 import type { EventEntity } from "@/types/event";
 import { useState } from "react";
 import { joinEvent } from "@/lib/api/events";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTheme } from "@/lib/context/ThemeContext";
+import { cn } from "@/lib/utils";
 
 const DEFAULT_IMAGE = '/images/default-event-cover.jpg';
 
@@ -35,6 +39,8 @@ export default function EventCard({
 	const isRegistered = data.self?.is_participant ?? false;
 	const [errorMsg, setErrorMsg] = useState<string | null>(null);
 	const queryClient = useQueryClient();
+	const { theme } = useTheme();
+	const isClassic = theme === "classic";
 
 	const eventDate = new Date(data.start_time);
 	const dateStr = eventDate.toLocaleDateString("en-US", {
@@ -78,21 +84,22 @@ export default function EventCard({
 	const isHorizontal = layout === 'horizontal';
 
 	return (
-		<div className={`
-			border border-border rounded-lg overflow-hidden
-			flex flex-col bg-surface shadow-sm hover:shadow-md
-			transition-shadow
-			${isHorizontal ? 'sm:flex-row' : ''}
-			${disabled ? 'pointer-events-none opacity-60' : ''}
-		`}>
+		<div className={cn(
+			'flex flex-col overflow-hidden rounded-lg border transition-shadow',
+			isClassic
+				? 'border-border bg-surface shadow-sm hover:shadow-md'
+				: 'border-teal-900/10 bg-white shadow-md hover:shadow-lg',
+			isHorizontal && 'sm:flex-row',
+			disabled && 'pointer-events-none opacity-60',
+		)}>
 			{/* Cover page */}
-			<div className={`
-				bg-surface-container overflow-hidden shrink-0
-				${isHorizontal
+			<div className={cn(
+				'shrink-0 overflow-hidden',
+				isClassic ? 'bg-surface-container' : 'bg-slate-100',
+				isHorizontal
 					? 'w-full sm:w-60 h-60 sm:h-auto'
-					: 'aspect-video max-h-40 w-full'
-				}
-			`}>
+					: 'aspect-video max-h-40 w-full',
+			)}>
 				<img
 					src={data.image}
 					alt={data.title}
@@ -132,8 +139,13 @@ export default function EventCard({
 						<Button
 							onClick={onDetail}
 							disabled={disabled}
-							className="w-full hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors"
-							variant="outline"
+							variant={isClassic ? "outline" : "default"}
+							className={cn(
+								"w-full",
+								isClassic
+									? "hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors"
+									: "bg-primary text-primary-foreground hover:bg-primary-dim",
+							)}
 						>
 							View Detail
 						</Button>

@@ -14,10 +14,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(api huma.API, db *gorm.DB) {
+func RegisterRoutes(api huma.API, db *gorm.DB, participantDisconnector ParticipantDisconnector) {
 	// Setup layers
 	eventRepo := NewEventRepository(db)
-	eventService := NewEventService(eventRepo, db)
+	eventService := NewEventService(eventRepo, db, participantDisconnector)
 	eventHandler := NewEventHandler(eventService)
 
 	// Register POST /events

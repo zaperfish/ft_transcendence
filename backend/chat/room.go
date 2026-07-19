@@ -6,9 +6,10 @@ type Room struct {
 	// the bool value is not meaningful
 	clients map[*Client]bool
 	// channels used as event queues
-	join      chan *Client
-	leave     chan *Client
-	broadcast chan MessageDTO
+	join       chan *Client
+	leave      chan *Client
+	removeUser chan uint
+	broadcast  chan MessageDTO
 	// channel used as shutdown signal
 	done    chan struct{}
 	onEmpty func(uint, *Room)
@@ -20,13 +21,14 @@ func NewRoom(eventID uint) *Room {
 
 func newRoom(eventID uint, onEmpty func(uint, *Room)) *Room {
 	return &Room{
-		eventID:   eventID,
-		clients:   make(map[*Client]bool),
-		join:      make(chan *Client),
-		leave:     make(chan *Client),
-		broadcast: make(chan MessageDTO),
-		done:      make(chan struct{}),
-		onEmpty:   onEmpty,
+		eventID:    eventID,
+		clients:    make(map[*Client]bool),
+		join:       make(chan *Client),
+		leave:      make(chan *Client),
+		removeUser: make(chan uint),
+		broadcast:  make(chan MessageDTO),
+		done:       make(chan struct{}),
+		onEmpty:    onEmpty,
 	}
 }
 
@@ -43,6 +45,15 @@ func (r *Room) Leave(client *Client) {
 	select {
 	case r.leave <- client:
 	case <-r.done:
+	}
+}
+
+func (r *Room) RemoveUser(userID uint) bool {
+	select {
+	case r.removeUser <- userID:
+		return true
+	case <-r.done:
+		return false
 	}
 }
 
@@ -71,12 +82,27 @@ func (r *Room) run() {
 				r.closeIfEmpty()
 				return
 			}
+		case userID := <-r.removeUser:
+			for client := range r.clients {
+				if client.userID != userID {
+					continue
+				}
+				delete(r.clients, client)
+				if client.conn != nil {
+					_ = client.conn.CloseNow()
+				}
+				close(client.send)
+			}
+			if len(r.clients) == 0 {
+				r.closeIfEmpty()
+				return
+			}
 		case message := <-r.broadcast:
 			for client := range r.clients {
 				select {
 				case client.send <- message:
 				default:
-					// prioritizes server stability
+					// Remove slow clients instead of blocking broadcasts to the room
 					delete(r.clients, client)
 					close(client.send)
 				}

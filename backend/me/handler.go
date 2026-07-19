@@ -24,9 +24,9 @@ type MeHandler struct {
 	se event.EventService
 }
 
-func NewHandler(db *gorm.DB) MeHandler {
+func NewHandler(db *gorm.DB, participantDisconnector event.ParticipantDisconnector) MeHandler {
 	return MeHandler{su: user.NewUserService(user.NewUserRepository(db)),
-					 se: event.NewEventService(event.NewEventRepository(db), db)}
+					 se: event.NewEventService(event.NewEventRepository(db), db, participantDisconnector)}
 }
 
 func (h *MeHandler) handleGetMe(ctx context.Context, in *struct{}) (*user.UserOutput, error) {

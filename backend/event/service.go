@@ -230,7 +230,7 @@ func (s *eventServiceImpl) AddParticipantAs(ctx context.Context, eventID, userID
 		}
 
 		if count >= cap {
-			return errors.New("event full")
+			return errs.NewCamaError(errs.ErrConflict, "event full")
 		}
 
 		if err := s.repo.CreateParticipantAs(ctx, tx, eventID, userID, role); err != nil {

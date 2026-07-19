@@ -141,8 +141,14 @@ func (h *MeHandler) handleJoinEventMe(ctx context.Context, input *JoinEventInput
 	}
 
 	err = h.se.AddParticipantAs(ctx, input.EventID, uid, "member")
-	if err != nil {
-		return nil, huma.Error500InternalServerError("", err)
+	if errors.Is(err, errs.ErrConflict) {
+		return nil, huma.Error409Conflict(err.Error())
+	}
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, huma.Error404NotFound(err.Error())
+	}
+	if errors.Is(err, errs.ErrInternal) || err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &event.AddParticipantOutput{}, nil

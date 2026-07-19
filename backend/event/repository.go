@@ -207,12 +207,16 @@ func (r *eventRepositoryImpl) GetCapacity(ctx context.Context, tx *gorm.DB, even
 		tx = r.db
 	}
 	var cap uint
-	if err := tx.WithContext(ctx).
+	ret := tx.WithContext(ctx).
 		Model(&Event{}).
 		Select("max_capacity").
 		Where("id = ?", eventID).
-		Scan(&cap).Error; err != nil {
-		return 0, errs.ErrorDB(err)
+		Scan(&cap)
+	if ret.Error != nil {
+		return 0, errs.ErrorDB(ret.Error)
+	}
+	if ret.RowsAffected == 0 {
+		return 0, errs.NewCamaError(errs.ErrNotFound, "")
 	}
 	return cap, nil
 }

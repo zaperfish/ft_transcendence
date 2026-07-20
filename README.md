@@ -92,42 +92,18 @@ When developing the frontend:
 
 ### Container tooling
 
-This project uses Compose files to describe the container stack, and those files can be run with either Docker or Podman.
+This project uses Docker and Docker Compose to build and run the complete application stack.
 
-- `Docker` and `Podman` are container runtimes. They build images and run containers.
-- `docker-compose` / `docker compose` and `podman compose` are Compose-compatible orchestration commands. They start the full stack from `compose.yml`.
-- `compose.yml` is the shared service definition. It is not Docker-specific.
+- `docker compose` is the supported Compose v2 command.
+- `compose.yml` contains the production service definitions.
 - `compose.override.yml` is used during development to expose frontend, backend, and Postgres ports on the host.
 
-We do not run Docker and Podman together for the same environment. Use one runtime per machine.
-
-The current project convention is:
-
-- Local development defaults to Docker Compose through `.env.example`:
-  ```env
-  CONTAINER_TOOL=docker
-  CONTAINER_ORCHESTRATION_TOOL=docker-compose
-  ```
-- Production deployment uses Podman Compose. The GitHub Actions deploy workflow runs:
-  ```bash
-  podman compose down --remove-orphans
-  podman compose up -d --build --force-recreate
-  ```
-
-If you want to use Podman locally, change your local `.env` to:
-
-```env
-CONTAINER_TOOL=podman
-CONTAINER_ORCHESTRATION_TOOL="podman compose"
-```
-
-The `justfile` reads these variables, so commands like `just up`, `just down`, `just logs backend`, and `just serve postgres` work with whichever runtime you configured.
+For local development, Docker Compose automatically merges `compose.yml` and `compose.override.yml`. To use only the production service definition, pass `-f compose.yml` explicitly.
 
 For this project you need:
   - `just` the command runner
-  - A Compose-compatible container setup:
-    - Docker + `docker-compose` / `docker compose`, or
-    - Podman + `podman compose`
+  - Docker Engine or Docker Desktop
+  - Docker Compose v2, available through `docker compose`
   - `go` if you develop on the backend
   - `nodejs` if you develop on the frontend
 Make sure they are installed on your system.
@@ -139,11 +115,11 @@ cd <repo_name>
 ```
 
 2. Set up your environment variables:
-  - You can create your own .env file, or
-  - Use the provided example setup and execute:
+  - Copy the provided example file:
   ```bash
-  just init-env-prod
+  cp .env.example .env
   ```
+  - Fill every required blank value in `.env`. Do not commit this file.
 
 3. (Optional) Reset your database and seed it with example values.
   - Make sure your postgres container is running
@@ -156,7 +132,12 @@ cd <repo_name>
 
 4. Run the app with:
   ```bash
-  just prod
+  docker compose up --build -d
+  ```
+
+5. Verify that every service is running:
+  ```bash
+  docker compose ps
   ```
 
 ### Trust the local HTTPS certificate

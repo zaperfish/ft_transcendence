@@ -13,10 +13,15 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { ApiError } from '@/lib/api/client';
 
 const emailSchema = z.object({
-	email: z.pipe(
-		z.string().min(1, 'Please enter your email address'),
-		z.email('Invalid email address')
-	),
+	email: z
+		.string()
+		.min(1, 'Please enter your email address')
+		.min(5, 'Email address should be at least 5 characters long')
+		.max(64, 'Email address should be no more than 64 characters long')
+		.regex(
+			/^(?!.*\.\.)([A-Za-z0-9_%+-]+(?:\.[A-Za-z0-9_%+-]+)*)@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/,
+			'Invalid email address'
+		),
 });
 
 type EmailFormData = z.infer<typeof emailSchema>;

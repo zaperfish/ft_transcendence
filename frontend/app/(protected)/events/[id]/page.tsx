@@ -257,9 +257,9 @@ export default function EventDetailPage() {
 			</Button>
 			{ /* Card for Event information display */ }
 			<Card className="overflow-hidden p-0 gap-0">
-				<div className="grid min-w-0 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)] lg:items-stretch">
+				<div className="grid min-w-0 md:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)] md:items-stretch">
 					{/* Cover page */}
-					<div className="aspect-video max-h-64 bg-surface-container flex items-center justify-center shrink-0 relative lg:aspect-auto lg:min-h-80 lg:max-h-105">
+					<div className="w-full aspect-video max-h-64 bg-surface-container flex items-center justify-center shrink-0 relative md:aspect-auto md:min-h-80 md:max-h-105">
 						<img
 							key={coverRefreshKey}
 							src={coverSrc}
@@ -297,10 +297,10 @@ export default function EventDetailPage() {
 						)}
 					</div>
 					{/* Event info */}
-					<div className="p-lg flex flex-col flex-1 min-w-0 lg:min-h-80 lg:max-h-105 lg:overflow-y-auto">
-						<div className="flex-1">
-							<h3 className="text-xl font-semibold text-text-primary truncate leading-snug">{event.title}</h3>
-							<p className="text-sm text-text-secondary mt-xs truncate">{event.description}</p>
+					<div className="p-lg flex flex-col flex-1 min-w-0 md:min-h-80 md:max-h-105 md:overflow-y-auto">
+						<div className="flex-1 min-w-0">
+							<h3 className="text-xl font-semibold text-text-primary break-words leading-snug">{event.title}</h3>
+							<p className="text-sm text-text-secondary mt-xs break-words">{event.description}</p>
 						</div>
 						<div className="mt-md space-y-sm text-text-secondary text-sm shrink-0">
 							<div className="flex items-center gap-sm">
@@ -311,9 +311,9 @@ export default function EventDetailPage() {
 								<ClockIcon className="size-4 text-text-tertiary"/>
 								<span>{timeStr} ({event.duration} min)</span>
 							</div>
-							<div className="flex items-center gap-sm">
-								<MapPinIcon className="size-4 text-text-tertiary shrink-0"/>
-								<span className="truncate">{event.location_name} {event.location_address}</span>
+							<div className="flex items-start gap-sm">
+								<MapPinIcon className="size-4 text-text-tertiary shrink-0 mt-0.5"/>
+								<span className="flex-1 min-w-0 break-words">{event.location_name} {event.location_address}</span>
 							</div>
 							<div className="flex items-center gap-sm">
 								<UserIcon className="size-4 text-text-tertiary"/>

@@ -2,11 +2,13 @@ package user
 
 import (
     // Std
+	"errors"
 	"regexp"
+	"strings"
 
     // External
 	"github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
+	// "github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 const (
@@ -24,10 +26,13 @@ func ValidUserName(name string) error {
 		)
 }
 
+var emailRegex = `^([A-Za-z0-9_%+-]+(?:\.[A-Za-z0-9_%+-]+)*)@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$`
+
 func ValidUserEmail(email string) error {
 	return validation.Validate(email, 
 			validation.Required,
-			is.Email,
+			makeRule(noConsecutiveDots),
+			validation.Match(regexp.MustCompile(emailRegex)).Error("must be a valid email address"),
 		)
 }
 
@@ -39,6 +44,13 @@ func ValidUserPassword(password string) error {
 			validation.Match(regexp.MustCompile(`[A-Z]`)).Error("must contain at least one upper case character"),
 			validation.Match(regexp.MustCompile(`[0-9]`)).Error("must contain at least one digit"),
 		)
+}
+
+func noConsecutiveDots(s string) error {
+	if strings.Contains(s, `..`) {
+		return errors.New("must be a valid email address")
+	}
+	return nil
 }
 
 func makeRule(test func(s string) error) validation.Rule {

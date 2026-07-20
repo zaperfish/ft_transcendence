@@ -1,3 +1,0 @@
-# project management
-
-We used slack, github issues and weekly meetings for communication. Other than that there was tight cooperation within the backend team (lmiehler, alneuman) and the frontend team (yingzhan, shutan), which did not need additional information channels. The openapi format and Skalar rendering was essential for communicating backend features to the frontend developers. As dlemaire was more limited when it came to onsite availability he was charged with implementing features that did only require minimal communication with other teammembers. During the weekly meeting newly implemented features were presented and todos for each teammember until the next meeting were assigned.

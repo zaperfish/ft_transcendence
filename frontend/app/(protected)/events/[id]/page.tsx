@@ -50,6 +50,7 @@ export default function EventDetailPage() {
 		queryKey: ['event', numericId],
 		queryFn: () => getEventByIdSafe(numericId),
 		networkMode: 'offlineFirst',
+		enabled: !isDeleted,
 	});
 
 	// Define as empty array if undefined to avoid crash
@@ -57,6 +58,7 @@ export default function EventDetailPage() {
 		queryKey: ['participants', numericId],
 		queryFn: () => getEventParticipants(numericId),
 		networkMode: 'offlineFirst',
+		enabled: !isDeleted,
 	});
 
 	const coverSrc = event?.has_image
@@ -93,6 +95,7 @@ export default function EventDetailPage() {
 	const deleteMutation = useMutation({
 		mutationFn: () => deleteEvent(numericId),
 		onSuccess: async () => {
+			setIsDeleted(true);
 			// Cancel queries to prevent them from refetching after deletion
 			await queryClient.cancelQueries({ queryKey: ['event', numericId] });
 			await queryClient.cancelQueries({ queryKey: ['participants', numericId] });
@@ -254,9 +257,9 @@ export default function EventDetailPage() {
 			</Button>
 			{ /* Card for Event information display */ }
 			<Card className="overflow-hidden p-0 gap-0">
-				<div className="grid lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)] lg:items-stretch">
+				<div className="grid min-w-0 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.55fr)] lg:items-stretch">
 					{/* Cover page */}
-					<div className="aspect-video bg-surface-container flex items-center justify-center shrink-0 relative lg:aspect-auto lg:min-h-80 lg:max-h-105">
+					<div className="aspect-video max-h-64 bg-surface-container flex items-center justify-center shrink-0 relative lg:aspect-auto lg:min-h-80 lg:max-h-105">
 						<img
 							key={coverRefreshKey}
 							src={coverSrc}
@@ -294,7 +297,7 @@ export default function EventDetailPage() {
 						)}
 					</div>
 					{/* Event info */}
-					<div className="p-lg flex flex-col flex-1 lg:min-h-80 lg:max-h-105 lg:overflow-y-auto">
+					<div className="p-lg flex flex-col flex-1 min-w-0 lg:min-h-80 lg:max-h-105 lg:overflow-y-auto">
 						<div className="flex-1">
 							<h3 className="text-xl font-semibold text-text-primary truncate leading-snug">{event.title}</h3>
 							<p className="text-sm text-text-secondary mt-xs truncate">{event.description}</p>

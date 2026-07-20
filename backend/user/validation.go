@@ -3,6 +3,7 @@ package user
 import (
     // Std
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -16,12 +17,14 @@ const (
 	maxUsernameLength = 20
 	minPasswordLength = 8
 	maxPasswordLength = 128
+	minEmailLength = 5
+	maxEmailLength = 64
 )
 
 func ValidUserName(name string) error {
 	return validation.Validate(name, 
 			validation.Required,
-			validation.Length(minUsernameLength, maxUsernameLength),
+			validation.Length(minUsernameLength, maxUsernameLength).Error(fmt.Sprintf("the lenghth of the username must be between %d and %d characters", minUsernameLength, maxUsernameLength)),
 			validation.Match(regexp.MustCompile(`^\S+$`)).Error("must not contain spaces"),
 		)
 }
@@ -31,6 +34,7 @@ var emailRegex = `^([A-Za-z0-9_%+-]+(?:\.[A-Za-z0-9_%+-]+)*)@(?:[A-Za-z0-9](?:[A
 func ValidUserEmail(email string) error {
 	return validation.Validate(email, 
 			validation.Required,
+			validation.Length(minEmailLength, maxEmailLength).Error(fmt.Sprintf("the lenghth of the email must be between %d and %d characters", minEmailLength, maxEmailLength)),
 			makeRule(noConsecutiveDots),
 			validation.Match(regexp.MustCompile(emailRegex)).Error("must be a valid email address"),
 		)
@@ -39,7 +43,7 @@ func ValidUserEmail(email string) error {
 func ValidUserPassword(password string) error {
 	return validation.Validate(password, 
 			validation.Required,
-			validation.Length(minPasswordLength, maxPasswordLength),
+			validation.Length(minPasswordLength, maxPasswordLength).Error(fmt.Sprintf("the lenghth of the password must be between %d and %d characters", minPasswordLength, maxPasswordLength)),
 			validation.Match(regexp.MustCompile(`[a-z]`)).Error("must contain at least one lower case character"),
 			validation.Match(regexp.MustCompile(`[A-Z]`)).Error("must contain at least one upper case character"),
 			validation.Match(regexp.MustCompile(`[0-9]`)).Error("must contain at least one digit"),

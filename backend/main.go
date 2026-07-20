@@ -88,6 +88,8 @@ func initDB() *gorm.DB {
 }
 
 func initApi(r *chi.Mux, db *gorm.DB) {
+	r.Use(chiMiddleware.Logger)
+
 	err := auth.Init()
 	if err != nil {
 		log.Fatal(err)
@@ -99,7 +101,6 @@ func initApi(r *chi.Mux, db *gorm.DB) {
 	}
 
 	r.Use(middleware.RateLimiterMiddleware(&limiterStore))
-	r.Use(chiMiddleware.Logger)
 
 	config := huma.DefaultConfig("ft_transcendence api", "0.1.0")
 	config.DocsRenderer = huma.DocsRendererScalar

@@ -70,10 +70,18 @@ export default function EventDetailPage() {
 
 	const leaveMutation = useMutation({
 		mutationFn: () => leaveEvent(numericId),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['event', numericId] });
-			queryClient.invalidateQueries({ queryKey: ['participants', numericId] });
-		},
+		onSuccess: async () => {
+			setIsDeleted(true);
+			// Cancel queries to prevent them from refetching after leaving
+			await queryClient.cancelQueries({ queryKey: ['event', numericId] });
+			await queryClient.cancelQueries({ queryKey: ['participants', numericId] });
+			// Remove cached data
+			queryClient.removeQueries({ queryKey: ['event', numericId] });
+			queryClient.removeQueries({ queryKey: ['participants', numericId] });
+			// Invalidate events list to update the list
+			queryClient.invalidateQueries({ queryKey: ['events'] });
+			router.push('/events');
+		}
 	});
 
 	const removeMutation = useMutation({

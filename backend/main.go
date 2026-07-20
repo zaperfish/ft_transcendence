@@ -88,8 +88,6 @@ func initDB() *gorm.DB {
 }
 
 func initApi(r *chi.Mux, db *gorm.DB) {
-	r.Use(chiMiddleware.Logger)
-
 	err := auth.Init()
 	if err != nil {
 		log.Fatal(err)

@@ -36,6 +36,7 @@ export default function EventDetailPage() {
 	// Logic of getting new image when updated
 	const [coverRefreshKey, setCoverRefreshKey] = useState(0);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [isDeleted, setIsDeleted] = useState(false);
 
 	const checkOffline = (action: string) => {
 		if (!isOnline) {
@@ -49,6 +50,7 @@ export default function EventDetailPage() {
 		queryKey: ['event', numericId],
 		queryFn: () => getEventByIdSafe(numericId),
 		networkMode: 'offlineFirst',
+		enabled: !isDeleted,
 	});
 
 	// Define as empty array if undefined to avoid crash
@@ -56,6 +58,7 @@ export default function EventDetailPage() {
 		queryKey: ['participants', numericId],
 		queryFn: () => getEventParticipants(numericId),
 		networkMode: 'offlineFirst',
+		enabled: !isDeleted,
 	});
 
 	const coverSrc = event?.has_image
@@ -83,8 +86,16 @@ export default function EventDetailPage() {
 
 	const deleteMutation = useMutation({
 		mutationFn: () => deleteEvent(numericId),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['event'] });
+		onSuccess: async () => {
+			setIsDeleted(true);
+			// Cancel queries to prevent them from refetching after deletion
+			await queryClient.cancelQueries({ queryKey: ['event', numericId] });
+			await queryClient.cancelQueries({ queryKey: ['participants', numericId] });
+			// Remove cached data
+			queryClient.removeQueries({ queryKey: ['event', numericId] });
+			queryClient.removeQueries({ queryKey: ['participants', numericId] });
+			// Invalidate events list to update the list
+			queryClient.invalidateQueries({ queryKey: ['events'] });
 			router.push('/events');
 		}
 	});
